@@ -9,9 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@stage/shared": "*",
+    "@tanstack/react-query": "^5.90.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@stage/shared": "*"
+    "react-router-dom": "^7.13.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

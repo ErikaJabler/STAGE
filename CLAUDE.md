@@ -85,6 +85,12 @@ export default events;
 - **Email-interface:** abstrakt provider → Resend nu, O365 senare
 - **Error handling:** ErrorBoundary + Toast (från session 1)
 
+## Sessionsavslut — OBLIGATORISKT
+Varje session MÅSTE avslutas med:
+1. **Git commit** av alla ändringar (med beskrivande commit-meddelande)
+2. **Uppdatera PROGRESS.md** — markera sessionen som DONE, lista deliverables
+3. **Ge användaren en kopierbar prompt** för att starta nästa session (som kan klistras in efter omstart av Claude)
+
 ## Vad INTE göra
 - Använd INTE egna färger — bara Consid-paletten
 - Använd INTE Inter/system-typsnitt om Consid Sans finns
