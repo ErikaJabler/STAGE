@@ -4,3 +4,4 @@ export { Input } from './Input';
 export { Modal } from './Modal';
 export { ToastProvider, useToast } from './Toast';
 export { ErrorBoundary } from './ErrorBoundary';
+export { Skeleton, EventCardSkeleton, EventGridSkeleton, EventDetailSkeleton } from './Skeleton';

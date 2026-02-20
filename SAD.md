@@ -47,6 +47,11 @@ Framtida integrationer (ej implementerade ännu):
 | Metod | Path | Beskrivning | Session |
 |---|---|---|---|
 | GET | `/api/health` | Hälsokontroll | 0 |
+| GET | `/api/events` | Lista alla events (med participant_count) | 2 |
+| GET | `/api/events/:id` | Hämta enskilt event | 2 |
+| POST | `/api/events` | Skapa nytt event | 2 |
+| PUT | `/api/events/:id` | Uppdatera event (partiell) | 2 |
+| DELETE | `/api/events/:id` | Soft-delete event | 2 |
 
 ## Databasschema
 

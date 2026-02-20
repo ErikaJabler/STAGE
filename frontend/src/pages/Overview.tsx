@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Topbar } from '../components/layout';
-import { Badge, Button } from '../components/ui';
-import { mockEvents } from './mockdata';
+import { Badge, Button, EventGridSkeleton } from '../components/ui';
+import { useEvents } from '../hooks/useEvents';
 import type { EventWithCount } from '@stage/shared';
 
 export function Overview() {
-  const events = mockEvents;
+  const { data: events, isLoading, error } = useEvents();
 
   return (
     <>
       <Topbar
         title="Översikt"
-        subtitle={`${events.length} event`}
+        subtitle={events ? `${events.length} event` : undefined}
         actions={
           <Button variant="primary" size="md">
             + Nytt event
@@ -19,11 +19,15 @@ export function Overview() {
         }
       />
       <div style={styles.content}>
-        {events.length === 0 ? (
+        {isLoading ? (
+          <EventGridSkeleton count={4} />
+        ) : error ? (
+          <ErrorState message="Kunde inte hämta events." />
+        ) : events && events.length === 0 ? (
           <EmptyState />
         ) : (
           <div style={styles.grid}>
-            {events.map((event) => (
+            {events?.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
           </div>
@@ -79,6 +83,22 @@ function EmptyState() {
       <h3 style={styles.emptyTitle}>Inga event ännu</h3>
       <p style={styles.emptyText}>Skapa ditt första event för att komma igång.</p>
       <Button variant="primary">+ Nytt event</Button>
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div style={styles.empty}>
+      <div style={styles.emptyIcon}>
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="24" stroke="var(--color-danger)" strokeWidth="2" />
+          <path d="M32 20v16" stroke="var(--color-danger)" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="32" cy="44" r="1.5" fill="var(--color-danger)" />
+        </svg>
+      </div>
+      <h3 style={styles.emptyTitle}>Något gick fel</h3>
+      <p style={styles.emptyText}>{message}</p>
     </div>
   );
 }

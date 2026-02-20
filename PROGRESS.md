@@ -58,6 +58,36 @@
 
 ---
 
+## Session 2: CRUD Events API + frontend-integration
+**Datum:** 2026-02-20
+**Status:** DONE
+
+### Deliverables
+- [x] Typsäkra D1-queries i `backend/src/db/queries.ts` (listEvents, getEventById, createEvent, updateEvent, softDeleteEvent)
+- [x] CRUD-routes i `backend/src/routes/events.ts` (GET, GET/:id, POST, PUT, DELETE)
+- [x] Input-validering: required fields, datumformat (YYYY-MM-DD), tidsformat (HH:MM), email-format, enum-värden
+- [x] Slug-generering från eventnamn (med svensk ä/å/ö-hantering)
+- [x] Soft-delete för DELETE /api/events/:id (sätter deleted_at)
+- [x] API-klient i `frontend/src/api/client.ts` (typad fetch-wrapper med felhantering)
+- [x] TanStack Query hooks i `frontend/src/hooks/useEvents.ts` (useEvents, useEvent, useCreateEvent, useUpdateEvent, useDeleteEvent)
+- [x] Overview.tsx: Ersatt mockdata med useEvents() hook, loading-skeleton, error-state
+- [x] EventDetail.tsx: Ersatt mockdata med useEvent() hook, loading-skeleton, error-state
+- [x] Skeleton-komponent i `frontend/src/components/ui/Skeleton.tsx` (generisk + EventCard + EventGrid + EventDetail)
+- [x] Skeleton-puls CSS-animation i globals.css
+- [x] Tester: 9 events-tester + 1 health-test (10 totalt, alla passerar)
+- [x] SAD.md uppdaterad med 5 nya API-endpoints
+- [x] vitest.config.ts: explicit `include` för att bara köra .ts-filer (undviker tsc build-outputs)
+
+### Anteckningar
+- Ingen ny migration krävdes — befintligt schema (0001) stödjer alla CRUD-operationer
+- D1.exec() kräver single-line SQL i tester — multiline template literals fungerar inte med miniflare
+- vitest med cloudflare workers pool isolerar D1-data mellan describe-block — tester måste vara self-contained
+- Frontend Vite build: 300KB JS, 4.1KB CSS (gzipped: 92KB JS, 1.4KB CSS)
+- Deltagartab visar count men listar ej deltagare (participants CRUD i framtida session)
+- Mockdata-filen (`pages/mockdata.ts`) behålls som referens men importeras inte längre
+
+---
+
 ## Arkitekturbeslut
 
 | # | Beslut | Motivering | Session |
@@ -71,6 +101,9 @@
 | 7 | CSS custom properties för design tokens | Konsekvent branding, lätt att ändra, CSS-native | 1 |
 | 8 | Native dialog-element för Modal | Bättre tillgänglighet, inbyggd backdrop, focus trap | 1 |
 | 9 | Toast via React Context | Global åtkomst via useToast(), auto-dismiss | 1 |
+| 10 | Self-contained API-tester | Varje test skapar sin egen data, ej beroende mellan describe-block | 2 |
+| 11 | Dynamisk partial update (PUT) | Bygger SET-klausul från inskickade fält, ej full replace | 2 |
+| 12 | Slug auto-generering | Genereras från eventnamn med svensk teckenhantering | 2 |
 
 ---
 

@@ -17,3 +17,6 @@ vitest.config.js
 frontend/vite.config.d.ts
 frontend/vite.config.d.ts.map
 frontend/vite.config.js
+backend/src/**/*.d.ts
+backend/src/**/*.d.ts.map
+backend/src/**/*.js

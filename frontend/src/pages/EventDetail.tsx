@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Topbar } from '../components/layout';
-import { Badge, Button } from '../components/ui';
-import { getEventById, getParticipantsByEventId } from './mockdata';
-import type { Participant } from '@stage/shared';
+import { Badge, Button, EventDetailSkeleton } from '../components/ui';
+import { useEvent } from '../hooks/useEvents';
+import type { EventWithCount } from '@stage/shared';
 
 type TabId = 'summary' | 'participants' | 'mailings' | 'settings';
 
@@ -17,11 +17,20 @@ const tabs: { id: TabId; label: string }[] = [
 export function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<TabId>('summary');
-
   const eventId = Number(id);
-  const event = getEventById(eventId);
 
-  if (!event) {
+  const { data: event, isLoading, error } = useEvent(eventId);
+
+  if (isLoading) {
+    return (
+      <>
+        <Topbar title="Laddar..." />
+        <EventDetailSkeleton />
+      </>
+    );
+  }
+
+  if (error || !event) {
     return (
       <>
         <Topbar title="Event" />
@@ -29,8 +38,6 @@ export function EventDetail() {
       </>
     );
   }
-
-  const participants = getParticipantsByEventId(eventId);
 
   return (
     <>
@@ -65,7 +72,7 @@ export function EventDetail() {
           >
             {tab.label}
             {tab.id === 'participants' && (
-              <span style={styles.tabCount}>{participants.length}</span>
+              <span style={styles.tabCount}>{event.participant_count}</span>
             )}
           </button>
         ))}
@@ -73,8 +80,8 @@ export function EventDetail() {
 
       {/* Tab content */}
       <div style={styles.content} role="tabpanel">
-        {activeTab === 'summary' && <SummaryTab event={event} participantCount={participants.length} />}
-        {activeTab === 'participants' && <ParticipantsTab participants={participants} />}
+        {activeTab === 'summary' && <SummaryTab event={event} />}
+        {activeTab === 'participants' && <ParticipantsTab eventId={eventId} participantCount={event.participant_count} />}
         {activeTab === 'mailings' && <MailingsTab />}
         {activeTab === 'settings' && <SettingsTab />}
       </div>
@@ -83,7 +90,7 @@ export function EventDetail() {
 }
 
 /* ---- Tab: Sammanfattning ---- */
-function SummaryTab({ event, participantCount }: { event: ReturnType<typeof getEventById> & {}; participantCount: number }) {
+function SummaryTab({ event }: { event: EventWithCount }) {
   const statusBadge = getStatusBadge(event.status);
 
   return (
@@ -92,7 +99,7 @@ function SummaryTab({ event, participantCount }: { event: ReturnType<typeof getE
       <div style={styles.statsRow}>
         <StatCard
           label="Deltagare"
-          value={participantCount}
+          value={event.participant_count}
           total={event.max_participants ?? undefined}
           color="var(--color-burgundy)"
         />
@@ -161,8 +168,9 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 }
 
 /* ---- Tab: Deltagare ---- */
-function ParticipantsTab({ participants }: { participants: Participant[] }) {
-  if (participants.length === 0) {
+function ParticipantsTab({ eventId: _eventId, participantCount }: { eventId: number; participantCount: number }) {
+  // Participants API will be added in a future session
+  if (participantCount === 0) {
     return (
       <div style={styles.emptyTab}>
         <PeopleEmptyIcon />
@@ -174,29 +182,10 @@ function ParticipantsTab({ participants }: { participants: Participant[] }) {
   }
 
   return (
-    <div>
-      <div style={styles.tableHeader}>
-        <span style={{ ...styles.tableHeaderCell, flex: 2 }}>Namn</span>
-        <span style={{ ...styles.tableHeaderCell, flex: 2 }}>Email</span>
-        <span style={{ ...styles.tableHeaderCell, flex: 1 }}>Företag</span>
-        <span style={{ ...styles.tableHeaderCell, flex: 1 }}>Kategori</span>
-        <span style={{ ...styles.tableHeaderCell, flex: 1 }}>Status</span>
-      </div>
-      {participants.map((p) => (
-        <div key={p.id} style={styles.tableRow}>
-          <span style={{ ...styles.tableCell, flex: 2, fontWeight: 500 }}>{p.name}</span>
-          <span style={{ ...styles.tableCell, flex: 2, color: 'var(--color-text-muted)' }}>{p.email}</span>
-          <span style={{ ...styles.tableCell, flex: 1 }}>{p.company || '–'}</span>
-          <span style={{ ...styles.tableCell, flex: 1 }}>
-            <Badge variant="muted">{getCategoryLabel(p.category)}</Badge>
-          </span>
-          <span style={{ ...styles.tableCell, flex: 1 }}>
-            <Badge variant={getParticipantStatusVariant(p.status)}>
-              {getParticipantStatusLabel(p.status)}
-            </Badge>
-          </span>
-        </div>
-      ))}
+    <div style={styles.emptyTab}>
+      <PeopleEmptyIcon />
+      <h3 style={styles.emptyTitle}>{participantCount} deltagare</h3>
+      <p style={styles.emptyText}>Deltagarhantering implementeras i kommande session.</p>
     </div>
   );
 }
@@ -255,33 +244,6 @@ function getTypeLabel(type: string) {
     networking: 'Networking', internal: 'Internt', other: 'Övrigt',
   };
   return map[type] || type;
-}
-
-function getCategoryLabel(cat: string) {
-  const map: Record<string, string> = {
-    internal: 'Intern', public_sector: 'Offentlig', private_sector: 'Privat',
-    partner: 'Partner', other: 'Övrigt',
-  };
-  return map[cat] || cat;
-}
-
-function getParticipantStatusLabel(status: string) {
-  const map: Record<string, string> = {
-    invited: 'Inbjuden', attending: 'Deltar', declined: 'Avböjd',
-    waitlisted: 'Väntelista', cancelled: 'Avbokad',
-  };
-  return map[status] || status;
-}
-
-function getParticipantStatusVariant(status: string): 'default' | 'success' | 'warning' | 'danger' | 'muted' {
-  switch (status) {
-    case 'attending': return 'success';
-    case 'invited': return 'default';
-    case 'waitlisted': return 'warning';
-    case 'declined': return 'danger';
-    case 'cancelled': return 'danger';
-    default: return 'muted';
-  }
 }
 
 function formatDate(dateStr: string): string {
@@ -427,28 +389,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   detailValue: {
     fontSize: 'var(--font-size-base)',
-    color: 'var(--color-text-primary)',
-  },
-  tableHeader: {
-    display: 'flex',
-    padding: '8px 16px',
-    borderBottom: '1px solid var(--color-border)',
-  },
-  tableHeaderCell: {
-    fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-medium)' as unknown as number,
-    color: 'var(--color-text-muted)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  },
-  tableRow: {
-    display: 'flex',
-    padding: '12px 16px',
-    borderBottom: '1px solid var(--color-border)',
-    alignItems: 'center',
-  },
-  tableCell: {
-    fontSize: 'var(--font-size-sm)',
     color: 'var(--color-text-primary)',
   },
   emptyTab: {
