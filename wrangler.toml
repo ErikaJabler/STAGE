@@ -1,0 +1,23 @@
+name = "stage"
+main = "backend/src/index.ts"
+compatibility_date = "2025-02-14"
+compatibility_flags = ["nodejs_compat"]
+
+# Frontend served as static assets
+[assets]
+directory = "./frontend/dist"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "stage_db_v2"
+database_id = "placeholder-replace-after-creation"
+
+# R2 Bucket (session 2)
+# [[r2_buckets]]
+# binding = "IMAGES"
+# bucket_name = "stage-images"
+
+# Cron Triggers (session 7)
+# [triggers]
+# crons = ["*/5 * * * *"]

@@ -1,0 +1,28 @@
+{
+  "name": "stage",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "npm run build -w frontend",
+    "build:backend": "npm run build -w backend",
+    "typecheck": "tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate:local": "wrangler d1 execute stage_db_v2 --local --file",
+    "db:migrate:remote": "wrangler d1 execute stage_db_v2 --remote --file"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
+    "@cloudflare/workers-types": "^4.20250214.0",
+    "typescript": "^5.7.3",
+    "vitest": "~3.0.0",
+    "wrangler": "^4.0.0"
+  }
+}
