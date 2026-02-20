@@ -115,7 +115,8 @@
 - Participant hard-delete (inte soft-delete som events) — deltagare kan faktiskt tas bort
 - cancellation_token genereras automatiskt med crypto.randomUUID()
 - Frontend Vite build: 323KB JS, 4.1KB CSS (gzipped: 97KB JS, 1.4KB CSS)
-- Deploy-redo: Session 3 klara, alla krav för första deploy uppfyllda
+- **Deployad till https://mikwik.se/stage/** — Worker med route `mikwik.se/stage/*`, D1 `stage_db_v2` i WEUR
+- Worker ASSETS-binding med path rewriting: `/stage/*` → `/` för frontend, SPA-fallback till index.html
 
 ---
 
@@ -138,6 +139,7 @@
 | 13 | Återanvändbar EventForm | Samma komponent för skapa + redigera, initialData-prop styr läge | 3 |
 | 14 | Participant hard-delete | Deltagare raderas fysiskt (inte soft-delete), enklare modell | 3 |
 | 15 | Nested participants-route | Monteras som `/api/events/:eventId/participants` i Hono | 3 |
+| 16 | Worker med ASSETS-binding + path rewriting | Möjliggör deploy under `/stage/`-prefix på Pages-domän | 3 |
 
 ---
 
@@ -145,22 +147,36 @@
 
 | # | Problem | Status | Session |
 |---|---------|--------|---------|
-| 1 | D1 database_id i wrangler.toml är placeholder | Skapa med `wrangler d1 create` | 0 |
+| 1 | ~~D1 database_id i wrangler.toml är placeholder~~ | Löst — `1e935a1e-4a24-44f4-b83d-c70235b982d9` | 3 |
 | 2 | ~~Consid Sans fontfiler saknas~~ | Löst — konverterat OTF → woff2/woff, ligger i public/fonts/ | 2 |
 
 ---
 
-## Deploy-plan
+## Deploy
+
+**Live URL:** https://mikwik.se/stage/
 
 | Milstolpe | Krav | Status |
 |---|---|---|
-| Första deploy till `mikwik.se/stage` | Session 3 klar (skapa/redigera event + deltagarhantering) | Redo |
+| Första deploy till `mikwik.se/stage` | Session 3 klar (skapa/redigera event + deltagarhantering) | **DONE** ✅ |
 
-**Deploy-steg (efter session 3):**
-1. `wrangler d1 create stage_db_v2` → uppdatera `database_id` i wrangler.toml
-2. `npm run db:migrate:remote -- migrations/0001_events_participants.sql`
-3. `npm run build && wrangler deploy`
-4. Konfigurera custom domain/route i Cloudflare → `mikwik.se/stage`
+### Deploy-konfiguration
+- **Worker:** `stage` (Cloudflare Workers)
+- **Route:** `mikwik.se/stage/*` (zone: mikwik.se)
+- **D1-databas:** `stage_db_v2` (`1e935a1e-4a24-44f4-b83d-c70235b982d9`, region WEUR)
+- **ASSETS-binding:** Worker hanterar path rewriting `/stage/*` → `/` för frontend-filer
+- **Base path:** Vite `base: '/stage/'`, React Router `basename="/stage"`, API under `/stage/api/*`
+
+### Deploy-steg (vid omdeploy)
+```bash
+npm run build && npx wrangler deploy
+```
+
+### Första deploy (utförd 2026-02-20)
+1. `npx wrangler d1 create stage_db_v2` → databas skapad ✅
+2. `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0001_events_participants.sql` → migration körd ✅
+3. `npm run build && npx wrangler deploy` → Worker deployad med route `mikwik.se/stage/*` ✅
+4. Verifierad: health, events CRUD, participants CRUD, frontend, fonts — allt OK ✅
 
 ---
 
@@ -168,4 +184,4 @@
 
 | Migration | Fil | Tabeller | Lokal | Remote |
 |-----------|-----|----------|-------|--------|
-| 0001 | events_participants.sql | events, participants | ❌ | ❌ |
+| 0001 | events_participants.sql | events, participants | ❌ | ✅ |
