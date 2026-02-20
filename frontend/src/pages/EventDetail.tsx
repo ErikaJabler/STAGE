@@ -4,9 +4,10 @@ import { Topbar } from '../components/layout';
 import { Badge, Button, Input, Modal, EventDetailSkeleton, useToast } from '../components/ui';
 import { useEvent } from '../hooks/useEvents';
 import { useParticipants, useCreateParticipant, useDeleteParticipant } from '../hooks/useParticipants';
-import type { EventWithCount, Participant } from '@stage/shared';
+import { useMailings, useCreateMailing, useSendMailing } from '../hooks/useMailings';
+import type { EventWithCount, Participant, Mailing } from '@stage/shared';
 import { PARTICIPANT_CATEGORY, PARTICIPANT_STATUS } from '@stage/shared';
-import type { CreateParticipantPayload } from '../api/client';
+import type { CreateParticipantPayload, CreateMailingPayload } from '../api/client';
 
 type TabId = 'summary' | 'participants' | 'mailings' | 'settings';
 
@@ -87,7 +88,7 @@ export function EventDetail() {
       <div style={styles.content} role="tabpanel">
         {activeTab === 'summary' && <SummaryTab event={event} />}
         {activeTab === 'participants' && <ParticipantsTab eventId={eventId} participantCount={event.participant_count} />}
-        {activeTab === 'mailings' && <MailingsTab />}
+        {activeTab === 'mailings' && <MailingsTab eventId={eventId} />}
         {activeTab === 'settings' && <SettingsTab />}
       </div>
     </>
@@ -439,14 +440,354 @@ function TrashIcon() {
 }
 
 /* ---- Tab: Utskick ---- */
-function MailingsTab() {
+function MailingsTab({ eventId }: { eventId: number }) {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [previewMailing, setPreviewMailing] = useState<Mailing | null>(null);
+  const { data: mailings, isLoading } = useMailings(eventId);
+  const sendMailing = useSendMailing(eventId);
+  const { toast } = useToast();
+
+  function handleSend(mailing: Mailing) {
+    sendMailing.mutate(mailing.id, {
+      onSuccess: (result) => {
+        toast(`Utskickat till ${result.sent} mottagare`, 'success');
+        setPreviewMailing(null);
+      },
+      onError: () => {
+        toast('Kunde inte skicka utskicket', 'error');
+      },
+    });
+  }
+
+  if (isLoading) {
+    return (
+      <div style={styles.emptyTab}>
+        <p style={styles.emptyText}>Laddar utskick...</p>
+      </div>
+    );
+  }
+
+  if (!mailings || mailings.length === 0) {
+    return (
+      <>
+        <div style={styles.emptyTab}>
+          <MailEmptyIcon />
+          <h3 style={styles.emptyTitle}>Inga utskick ännu</h3>
+          <p style={styles.emptyText}>Skapa mailutskick för att nå dina deltagare.</p>
+          <Button variant="primary" size="sm" onClick={() => setShowCreateModal(true)}>
+            + Nytt utskick
+          </Button>
+        </div>
+        <CreateMailingModal
+          eventId={eventId}
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+        />
+      </>
+    );
+  }
+
   return (
-    <div style={styles.emptyTab}>
-      <MailEmptyIcon />
-      <h3 style={styles.emptyTitle}>Inga utskick ännu</h3>
-      <p style={styles.emptyText}>Skapa mailutskick för att nå dina deltagare.</p>
-      <Button variant="primary" size="sm">+ Nytt utskick</Button>
+    <div>
+      <div style={styles.participantsHeader}>
+        <span style={styles.participantsCount}>{mailings.length} utskick</span>
+        <Button variant="primary" size="sm" onClick={() => setShowCreateModal(true)}>
+          + Nytt utskick
+        </Button>
+      </div>
+
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Ämne</th>
+              <th style={styles.th}>Mottagare</th>
+              <th style={styles.th}>Status</th>
+              <th style={styles.th}>Skapad</th>
+              <th style={{ ...styles.th, width: '120px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {mailings.map((m) => (
+              <tr key={m.id} style={styles.tr}>
+                <td style={styles.td}>
+                  <span style={styles.participantName}>{m.subject}</span>
+                </td>
+                <td style={styles.td}>
+                  <span style={styles.categoryTag}>{getFilterLabel(m.recipient_filter)}</span>
+                </td>
+                <td style={styles.td}>
+                  <Badge variant={m.status === 'sent' ? 'success' : 'muted'}>
+                    {m.status === 'sent' ? 'Skickat' : 'Utkast'}
+                  </Badge>
+                </td>
+                <td style={styles.td}>
+                  <span style={styles.categoryTag}>{formatDateTime(m.created_at)}</span>
+                </td>
+                <td style={styles.td}>
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => setPreviewMailing(m)}
+                      style={styles.actionBtn}
+                      title="Förhandsgranska"
+                    >
+                      <EyeIcon />
+                    </button>
+                    {m.status === 'draft' && (
+                      <button
+                        onClick={() => handleSend(m)}
+                        style={{ ...styles.actionBtn, color: 'var(--color-accent)' }}
+                        title="Skicka"
+                        disabled={sendMailing.isPending}
+                      >
+                        <SendIcon />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <CreateMailingModal
+        eventId={eventId}
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
+
+      {/* Preview modal */}
+      <Modal
+        open={!!previewMailing}
+        onClose={() => setPreviewMailing(null)}
+        title={previewMailing?.subject ?? 'Förhandsgranskning'}
+        footer={
+          <>
+            <Button variant="secondary" size="md" onClick={() => setPreviewMailing(null)}>
+              Stäng
+            </Button>
+            {previewMailing?.status === 'draft' && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => previewMailing && handleSend(previewMailing)}
+                loading={sendMailing.isPending}
+              >
+                Skicka utskick
+              </Button>
+            )}
+          </>
+        }
+      >
+        {previewMailing && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div>
+              <span style={styles.detailLabel}>Mottagare</span>
+              <span style={styles.detailValue}>{getFilterLabel(previewMailing.recipient_filter)}</span>
+            </div>
+            <div>
+              <span style={styles.detailLabel}>Status</span>
+              <Badge variant={previewMailing.status === 'sent' ? 'success' : 'muted'}>
+                {previewMailing.status === 'sent' ? 'Skickat' : 'Utkast'}
+              </Badge>
+              {previewMailing.sent_at && (
+                <span style={{ ...styles.categoryTag, marginLeft: '8px' }}>
+                  {formatDateTime(previewMailing.sent_at)}
+                </span>
+              )}
+            </div>
+            <div>
+              <span style={styles.detailLabel}>Meddelande</span>
+              <div style={{
+                padding: '12px',
+                backgroundColor: 'var(--color-bg-primary)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 'var(--font-size-base)',
+                lineHeight: 'var(--line-height-relaxed)',
+                color: 'var(--color-text-primary)',
+                whiteSpace: 'pre-wrap',
+              }}>
+                {previewMailing.body}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
+  );
+}
+
+/* ---- CreateMailingModal ---- */
+function CreateMailingModal({ eventId, open, onClose }: {
+  eventId: number;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const createMailing = useCreateMailing(eventId);
+  const [form, setForm] = useState({
+    subject: '',
+    body: '',
+    recipient_filter: 'all',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function updateField(field: string, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  }
+
+  function validate() {
+    const errs: Record<string, string> = {};
+    if (!form.subject.trim()) errs.subject = 'Ämne krävs';
+    if (!form.body.trim()) errs.body = 'Meddelande krävs';
+    return errs;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+
+    const payload: CreateMailingPayload = {
+      subject: form.subject.trim(),
+      body: form.body.trim(),
+      recipient_filter: form.recipient_filter,
+    };
+
+    createMailing.mutate(payload, {
+      onSuccess: () => {
+        toast('Utskick skapat', 'success');
+        setForm({ subject: '', body: '', recipient_filter: 'all' });
+        setErrors({});
+        onClose();
+      },
+      onError: () => {
+        toast('Kunde inte skapa utskicket', 'error');
+      },
+    });
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Nytt utskick"
+      footer={
+        <>
+          <Button variant="secondary" size="md" onClick={onClose}>
+            Avbryt
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSubmit as unknown as () => void}
+            loading={createMailing.isPending}
+          >
+            Skapa utkast
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={styles.modalSelectLabel}>Mottagare</label>
+          <select
+            value={form.recipient_filter}
+            onChange={(e) => updateField('recipient_filter', e.target.value)}
+            style={styles.modalSelect}
+          >
+            <option value="all">Alla deltagare</option>
+            <optgroup label="Per status">
+              <option value="invited">Inbjudna</option>
+              <option value="attending">Deltar</option>
+              <option value="declined">Avböjda</option>
+              <option value="waitlisted">Väntelista</option>
+            </optgroup>
+            <optgroup label="Per kategori">
+              <option value="internal">Interna</option>
+              <option value="public_sector">Offentlig sektor</option>
+              <option value="private_sector">Privat sektor</option>
+              <option value="partner">Partners</option>
+              <option value="other">Övriga</option>
+            </optgroup>
+          </select>
+        </div>
+        <Input
+          label="Ämne"
+          value={form.subject}
+          onChange={(e) => updateField('subject', e.target.value)}
+          error={errors.subject}
+          placeholder="Välkommen till eventet!"
+          required
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={styles.modalSelectLabel}>Meddelande</label>
+          <textarea
+            value={form.body}
+            onChange={(e) => updateField('body', e.target.value)}
+            placeholder="Skriv ditt meddelande här..."
+            rows={6}
+            style={{
+              ...styles.modalSelect,
+              height: 'auto',
+              padding: '10px 12px',
+              resize: 'vertical' as const,
+              lineHeight: 'var(--line-height-normal)',
+            }}
+          />
+          {errors.body && (
+            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>
+              {errors.body}
+            </span>
+          )}
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/* ---- Mailing helpers ---- */
+function getFilterLabel(filter: string): string {
+  const map: Record<string, string> = {
+    all: 'Alla', invited: 'Inbjudna', attending: 'Deltar',
+    declined: 'Avböjda', waitlisted: 'Väntelista', cancelled: 'Avbokade',
+    internal: 'Interna', public_sector: 'Offentlig sektor',
+    private_sector: 'Privat sektor', partner: 'Partners', other: 'Övriga',
+  };
+  return map[filter] || filter;
+}
+
+function formatDateTime(isoStr: string): string {
+  const d = new Date(isoStr);
+  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }) +
+    ' ' + d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+}
+
+function EyeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M1 7s2.5-4 6-4 6 4 6 4-2.5 4-6 4-6-4-6-4z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M12.5 1.5L6 8M12.5 1.5l-4 11-2.5-5.5L1.5 5.5l11-4z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -734,6 +1075,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'inherit',
     width: '100%',
     outline: 'none',
+    cursor: 'pointer',
+  },
+  actionBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    borderRadius: 'var(--radius-md)',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
     cursor: 'pointer',
   },
 };

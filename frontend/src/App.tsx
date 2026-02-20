@@ -7,6 +7,7 @@ import { Overview } from './pages/Overview';
 import { EventDetail } from './pages/EventDetail';
 import { CreateEvent } from './pages/CreateEvent';
 import { EditEvent } from './pages/EditEvent';
+import { RsvpPage } from './pages/RsvpPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ export default function App() {
         <ErrorBoundary>
           <BrowserRouter basename="/stage">
             <Routes>
+              <Route path="/rsvp/:token" element={<RsvpPage />} />
               <Route element={<Layout />}>
                 <Route path="/" element={<Overview />} />
                 <Route path="/events/new" element={<CreateEvent />} />

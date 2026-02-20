@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import type { Env } from "./bindings";
 import events from "./routes/events";
 import participants from "./routes/participants";
+import mailings from "./routes/mailings";
+import rsvp from "./routes/rsvp";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -13,6 +15,8 @@ app.get("/stage/api/health", (c) => {
 
 app.route("/stage/api/events", events);
 app.route("/stage/api/events/:eventId/participants", participants);
+app.route("/stage/api/events/:eventId/mailings", mailings);
+app.route("/stage/api/rsvp", rsvp);
 
 /* ---- Bare /stage → redirect to /stage/ ---- */
 app.get("/stage", (c) => c.redirect("/stage/"));

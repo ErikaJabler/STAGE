@@ -23,9 +23,11 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
                     └──────────────────────────┘
 ```
 
+Integrationer:
+- **Resend** — Email (session 4, abstraktionslager med ConsoleEmailProvider som fallback)
+
 Framtida integrationer (ej implementerade ännu):
 - **R2** — Bildlagring (session 2)
-- **Resend** — Email (session 6)
 - **Cron Triggers** — Schemalagda mail (session 7)
 
 ## Repostruktur
@@ -56,6 +58,12 @@ Framtida integrationer (ej implementerade ännu):
 | POST | `/api/events/:id/participants` | Lägg till deltagare | 3 |
 | PUT | `/api/events/:id/participants/:pid` | Uppdatera deltagare | 3 |
 | DELETE | `/api/events/:id/participants/:pid` | Ta bort deltagare | 3 |
+| GET | `/api/events/:id/mailings` | Lista utskick för event | 4 |
+| POST | `/api/events/:id/mailings` | Skapa nytt utskick | 4 |
+| POST | `/api/events/:id/mailings/:mid/send` | Skicka utskick | 4 |
+| GET | `/api/rsvp/:token` | Hämta deltagarinfo + eventinfo (publik) | 4 |
+| POST | `/api/rsvp/:token/respond` | Svara attending/declined (publik) | 4 |
+| POST | `/api/rsvp/:token/cancel` | Avboka deltagande (publik) | 4 |
 
 ## Databasschema
 
@@ -105,6 +113,18 @@ Framtida integrationer (ej implementerade ännu):
 | created_at | TEXT NOT NULL | Skapades |
 | updated_at | TEXT NOT NULL | Senast ändrad |
 
+### mailings (migration 0002)
+| Kolumn | Typ | Beskrivning |
+|---|---|---|
+| id | INTEGER PK | Auto-increment |
+| event_id | INTEGER FK | Referens till events |
+| subject | TEXT NOT NULL | Ämnesrad |
+| body | TEXT NOT NULL | Brödtext |
+| recipient_filter | TEXT NOT NULL | all/invited/attending/etc. |
+| status | TEXT NOT NULL | draft/sent |
+| sent_at | TEXT | Tidpunkt för utskick |
+| created_at | TEXT NOT NULL | Skapades |
+
 ## Deploy-flöde
 1. `npm run build` — bygger frontend (Vite) + backend (esbuild)
 2. `wrangler deploy` — deployer Worker med Assets
@@ -123,6 +143,7 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 | Variabel | Beskrivning | Källa |
 |---|---|---|
 | `DB` | D1-databas binding | wrangler.toml |
+| `RESEND_API_KEY` | API-nyckel för Resend (valfri) | wrangler secret |
 
 ## Testning
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers

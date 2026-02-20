@@ -1,4 +1,4 @@
-import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility } from "./constants";
+import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility, MailingStatus } from "./constants";
 
 export interface Event {
   id: number;
@@ -46,4 +46,15 @@ export interface Participant {
 
 export interface EventWithCount extends Event {
   participant_count: number;
+}
+
+export interface Mailing {
+  id: number;
+  event_id: number;
+  subject: string;
+  body: string;
+  recipient_filter: string;
+  status: MailingStatus;
+  sent_at: string | null;
+  created_at: string;
 }

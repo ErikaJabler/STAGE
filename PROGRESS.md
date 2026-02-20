@@ -120,6 +120,32 @@
 
 ---
 
+## Session 4: Mailutskick + RSVP
+**Datum:** 2026-02-20
+**Status:** DONE
+
+### Deliverables
+- [x] Migration 0002: mailings-tabell (id, event_id, subject, body, recipient_filter, status, sent_at, created_at)
+- [x] Shared types: Mailing interface + MAILING_STATUS konstanter
+- [x] Backend: Email-abstraktionslager med Resend-provider + ConsoleEmailProvider (fallback)
+- [x] Backend: Mailing routes — POST /api/events/:id/mailings (skapa), GET /api/events/:id/mailings (lista), POST /api/events/:id/mailings/:mid/send (skicka)
+- [x] Backend: RSVP routes (publika, token-baserade) — GET /api/rsvp/:token, POST /api/rsvp/:token/respond, POST /api/rsvp/:token/cancel
+- [x] Backend: DB-queries för mailings CRUD + RSVP (token-baserad lookup, statusuppdatering, mottagarfilter)
+- [x] Frontend: MailingsTab i EventDetail — utskickslista, "Nytt utskick"-modal (mottagarfilter, ämne, brödtext), förhandsgranskning, skicka-knapp, status per utskick
+- [x] Frontend: Publik RSVP-sida (/rsvp/:token) — eventinfo, Jag kommer/Jag kan inte-knappar, bekräftelsesida, avbokningslänk
+- [x] Frontend: API-klient (mailingsApi, rsvpApi) + TanStack Query hooks (useMailings, useCreateMailing, useSendMailing)
+- [x] 7 nya tester (mailing create, mailing list, mailing validation, RSVP respond, RSVP cancel, RSVP get info, RSVP invalid token) — totalt 21, alla passerar
+- [x] SAD.md uppdaterad med 6 nya endpoints + mailings-tabell + RESEND_API_KEY
+
+### Anteckningar
+- RESEND_API_KEY är valfri — utan den loggas mail till console (ConsoleEmailProvider)
+- RSVP-sidan renderas utanför Layout (ingen sidebar/topbar) — egen route /rsvp/:token
+- Mottagarfilter stödjer: alla, per status (invited/attending/declined/waitlisted/cancelled), per kategori (internal/public_sector/private_sector/partner/other)
+- Utskick har status draft → sent (irreversibel efter skickning)
+- Frontend build: 339KB JS, 4.2KB CSS (gzipped: 100KB JS, 1.4KB CSS)
+
+---
+
 ## Arkitekturbeslut
 
 | # | Beslut | Motivering | Session |
@@ -140,6 +166,10 @@
 | 14 | Participant hard-delete | Deltagare raderas fysiskt (inte soft-delete), enklare modell | 3 |
 | 15 | Nested participants-route | Monteras som `/api/events/:eventId/participants` i Hono | 3 |
 | 16 | Worker med ASSETS-binding + path rewriting | Möjliggör deploy under `/stage/`-prefix på Pages-domän | 3 |
+| 17 | Email-abstraktionslager (interface + provider) | Resend nu, O365 senare, ConsoleEmailProvider för dev/test | 4 |
+| 18 | RSVP via cancellation_token | Publika routes, inga credentials, deltagare identifieras via UUID | 4 |
+| 19 | RSVP-sida utanför Layout | Ren publik sida utan sidebar/topbar, egen route i React Router | 4 |
+| 20 | Mailings med recipient_filter | Filtrera mottagare per status eller kategori vid skapande/sändning | 4 |
 
 ---
 
@@ -185,3 +215,4 @@ npm run build && npx wrangler deploy
 | Migration | Fil | Tabeller | Lokal | Remote |
 |-----------|-----|----------|-------|--------|
 | 0001 | events_participants.sql | events, participants | ❌ | ✅ |
+| 0002 | mailings.sql | mailings | ❌ | ✅ |

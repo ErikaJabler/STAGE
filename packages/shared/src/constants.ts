@@ -45,3 +45,10 @@ export const VISIBILITY = {
 } as const;
 
 export type Visibility = (typeof VISIBILITY)[keyof typeof VISIBILITY];
+
+export const MAILING_STATUS = {
+  DRAFT: "draft",
+  SENT: "sent",
+} as const;
+
+export type MailingStatus = (typeof MAILING_STATUS)[keyof typeof MAILING_STATUS];

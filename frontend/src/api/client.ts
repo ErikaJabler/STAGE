@@ -1,4 +1,4 @@
-import type { Event, EventWithCount, Participant } from "@stage/shared";
+import type { Event, EventWithCount, Participant, Mailing } from "@stage/shared";
 
 const BASE_URL = "/stage/api";
 
@@ -141,5 +141,76 @@ export interface UpdateParticipantPayload {
   queue_position?: number | null;
   response_deadline?: string | null;
 }
+
+/** Mailing API */
+export const mailingsApi = {
+  list: (eventId: number) =>
+    request<Mailing[]>(`/events/${eventId}/mailings`),
+
+  create: (eventId: number, data: CreateMailingPayload) =>
+    request<Mailing>(`/events/${eventId}/mailings`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  send: (eventId: number, mailingId: number) =>
+    request<SendMailingResult>(`/events/${eventId}/mailings/${mailingId}/send`, {
+      method: "POST",
+    }),
+};
+
+export interface CreateMailingPayload {
+  subject: string;
+  body: string;
+  recipient_filter?: string;
+}
+
+export interface SendMailingResult {
+  mailing: Mailing;
+  sent: number;
+  failed: number;
+  total: number;
+}
+
+/** RSVP API (public, token-based) */
+export interface RsvpInfo {
+  participant: {
+    name: string;
+    email: string;
+    status: string;
+    company: string | null;
+  };
+  event: {
+    name: string;
+    emoji: string | null;
+    date: string;
+    time: string;
+    end_time: string | null;
+    location: string;
+    description: string | null;
+  };
+}
+
+export interface RsvpResponse {
+  ok: boolean;
+  status: string;
+  name: string;
+}
+
+export const rsvpApi = {
+  get: (token: string) =>
+    request<RsvpInfo>(`/rsvp/${token}`),
+
+  respond: (token: string, status: "attending" | "declined") =>
+    request<RsvpResponse>(`/rsvp/${token}/respond`, {
+      method: "POST",
+      body: JSON.stringify({ status }),
+    }),
+
+  cancel: (token: string) =>
+    request<RsvpResponse>(`/rsvp/${token}/cancel`, {
+      method: "POST",
+    }),
+};
 
 export { ApiError };
