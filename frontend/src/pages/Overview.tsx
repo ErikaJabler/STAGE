@@ -13,9 +13,11 @@ export function Overview() {
         title="Översikt"
         subtitle={events ? `${events.length} event` : undefined}
         actions={
-          <Button variant="primary" size="md">
-            + Nytt event
-          </Button>
+          <Link to="/events/new" style={{ textDecoration: 'none' }}>
+            <Button variant="primary" size="md">
+              + Nytt event
+            </Button>
+          </Link>
         }
       />
       <div style={styles.content}>
@@ -82,7 +84,9 @@ function EmptyState() {
       </div>
       <h3 style={styles.emptyTitle}>Inga event ännu</h3>
       <p style={styles.emptyText}>Skapa ditt första event för att komma igång.</p>
-      <Button variant="primary">+ Nytt event</Button>
+      <Link to="/events/new" style={{ textDecoration: 'none' }}>
+        <Button variant="primary">+ Nytt event</Button>
+      </Link>
     </div>
   );
 }

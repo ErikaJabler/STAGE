@@ -88,6 +88,37 @@
 
 ---
 
+## Session 3: Skapa-event-formulär + deltagarhantering
+**Datum:** 2026-02-20
+**Status:** DONE
+
+### Deliverables
+- [x] EventForm-komponent — återanvändbar för både skapa och redigera (alla event-fält i sektioner)
+- [x] CreateEvent-sida (`/events/new`) med formulärvalidering, toast-notis, redirect till eventdetalj
+- [x] EditEvent-sida (`/events/:id/edit`) med förpopulerat formulär, toast-notis, redirect
+- [x] Backend: Participant CRUD-queries i `backend/src/db/queries.ts` (listParticipants, getParticipantById, createParticipant, updateParticipant, deleteParticipant)
+- [x] Backend: Participant routes i `backend/src/routes/participants.ts` (GET/POST/PUT/DELETE `/api/events/:id/participants`)
+- [x] Backend: Input-validering för deltagare (name, email, category, status)
+- [x] Frontend: Participants API-klient i `frontend/src/api/client.ts` (participantsApi)
+- [x] Frontend: TanStack Query hooks i `frontend/src/hooks/useParticipants.ts` (useParticipants, useCreateParticipant, useUpdateParticipant, useDeleteParticipant)
+- [x] Frontend: ParticipantsTab i EventDetail — riktig deltagartabell med namn, email, företag, kategori, status, ta bort-knapp
+- [x] Frontend: AddParticipantModal med formulär (namn, email, företag, kategori)
+- [x] Router: Nya routes `/events/new`, `/events/:id/edit`
+- [x] Redigera-knapp i EventDetail nu länkad till `/events/:id/edit`
+- [x] "Nytt event"-knapp i Overview nu länkad till `/events/new`
+- [x] SAD.md uppdaterad med 4 nya API-endpoints
+- [x] 4 nya tester (participants CRUD) — totalt 14 tester, alla passerar
+
+### Anteckningar
+- Ingen ny migration krävdes — befintligt schema (0001) stödjer participant CRUD
+- EventForm validerar: required fields, datumformat (YYYY-MM-DD), tidsformat (HH:MM), email-format, max_participants >= 1
+- Participant hard-delete (inte soft-delete som events) — deltagare kan faktiskt tas bort
+- cancellation_token genereras automatiskt med crypto.randomUUID()
+- Frontend Vite build: 323KB JS, 4.1KB CSS (gzipped: 97KB JS, 1.4KB CSS)
+- Deploy-redo: Session 3 klara, alla krav för första deploy uppfyllda
+
+---
+
 ## Arkitekturbeslut
 
 | # | Beslut | Motivering | Session |
@@ -104,6 +135,9 @@
 | 10 | Self-contained API-tester | Varje test skapar sin egen data, ej beroende mellan describe-block | 2 |
 | 11 | Dynamisk partial update (PUT) | Bygger SET-klausul från inskickade fält, ej full replace | 2 |
 | 12 | Slug auto-generering | Genereras från eventnamn med svensk teckenhantering | 2 |
+| 13 | Återanvändbar EventForm | Samma komponent för skapa + redigera, initialData-prop styr läge | 3 |
+| 14 | Participant hard-delete | Deltagare raderas fysiskt (inte soft-delete), enklare modell | 3 |
+| 15 | Nested participants-route | Monteras som `/api/events/:eventId/participants` i Hono | 3 |
 
 ---
 
@@ -120,7 +154,7 @@
 
 | Milstolpe | Krav | Status |
 |---|---|---|
-| Första deploy till `mikwik.se/stage` | Session 3 klar (skapa/redigera event + deltagarhantering) | Väntar |
+| Första deploy till `mikwik.se/stage` | Session 3 klar (skapa/redigera event + deltagarhantering) | Redo |
 
 **Deploy-steg (efter session 3):**
 1. `wrangler d1 create stage_db_v2` → uppdatera `database_id` i wrangler.toml

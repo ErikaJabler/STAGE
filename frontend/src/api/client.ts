@@ -1,4 +1,4 @@
-import type { Event, EventWithCount } from "@stage/shared";
+import type { Event, EventWithCount, Participant } from "@stage/shared";
 
 const BASE_URL = "/api";
 
@@ -98,6 +98,48 @@ export interface UpdateEventPayload {
   sender_mailbox?: string | null;
   gdpr_consent_text?: string | null;
   image_url?: string | null;
+}
+
+/** Participant API */
+export const participantsApi = {
+  list: (eventId: number) =>
+    request<Participant[]>(`/events/${eventId}/participants`),
+
+  create: (eventId: number, data: CreateParticipantPayload) =>
+    request<Participant>(`/events/${eventId}/participants`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  update: (eventId: number, id: number, data: UpdateParticipantPayload) =>
+    request<Participant>(`/events/${eventId}/participants/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  delete: (eventId: number, id: number) =>
+    request<{ ok: boolean }>(`/events/${eventId}/participants/${id}`, {
+      method: "DELETE",
+    }),
+};
+
+export interface CreateParticipantPayload {
+  name: string;
+  email: string;
+  company?: string | null;
+  category?: string;
+  status?: string;
+  response_deadline?: string | null;
+}
+
+export interface UpdateParticipantPayload {
+  name?: string;
+  email?: string;
+  company?: string | null;
+  category?: string;
+  status?: string;
+  queue_position?: number | null;
+  response_deadline?: string | null;
 }
 
 export { ApiError };

@@ -5,6 +5,8 @@ import { ToastProvider } from './components/ui';
 import { ErrorBoundary } from './components/ui';
 import { Overview } from './pages/Overview';
 import { EventDetail } from './pages/EventDetail';
+import { CreateEvent } from './pages/CreateEvent';
+import { EditEvent } from './pages/EditEvent';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,7 +26,9 @@ export default function App() {
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<Overview />} />
+                <Route path="/events/new" element={<CreateEvent />} />
                 <Route path="/events/:id" element={<EventDetail />} />
+                <Route path="/events/:id/edit" element={<EditEvent />} />
               </Route>
             </Routes>
           </BrowserRouter>

@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Topbar } from '../components/layout';
-import { Badge, Button, EventDetailSkeleton } from '../components/ui';
+import { Badge, Button, Input, Modal, EventDetailSkeleton, useToast } from '../components/ui';
 import { useEvent } from '../hooks/useEvents';
-import type { EventWithCount } from '@stage/shared';
+import { useParticipants, useCreateParticipant, useDeleteParticipant } from '../hooks/useParticipants';
+import type { EventWithCount, Participant } from '@stage/shared';
+import { PARTICIPANT_CATEGORY, PARTICIPANT_STATUS } from '@stage/shared';
+import type { CreateParticipantPayload } from '../api/client';
 
 type TabId = 'summary' | 'participants' | 'mailings' | 'settings';
 
@@ -50,9 +53,11 @@ export function EventDetail() {
                 <BackIcon /> Tillbaka
               </Button>
             </Link>
-            <Button variant="primary" size="sm">
-              Redigera
-            </Button>
+            <Link to={`/events/${eventId}/edit`} style={{ textDecoration: 'none' }}>
+              <Button variant="primary" size="sm">
+                Redigera
+              </Button>
+            </Link>
           </div>
         }
       />
@@ -168,25 +173,268 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 }
 
 /* ---- Tab: Deltagare ---- */
-function ParticipantsTab({ eventId: _eventId, participantCount }: { eventId: number; participantCount: number }) {
-  // Participants API will be added in a future session
-  if (participantCount === 0) {
+function ParticipantsTab({ eventId }: { eventId: number; participantCount: number }) {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const { data: participants, isLoading } = useParticipants(eventId);
+  const { toast } = useToast();
+  const deleteParticipant = useDeleteParticipant(eventId);
+
+  function handleDelete(p: Participant) {
+    if (!confirm(`Ta bort ${p.name}?`)) return;
+    deleteParticipant.mutate(p.id, {
+      onSuccess: () => toast(`${p.name} togs bort`, 'success'),
+      onError: () => toast('Kunde inte ta bort deltagaren', 'error'),
+    });
+  }
+
+  if (isLoading) {
     return (
       <div style={styles.emptyTab}>
-        <PeopleEmptyIcon />
-        <h3 style={styles.emptyTitle}>Inga deltagare ännu</h3>
-        <p style={styles.emptyText}>Lägg till deltagare eller skicka inbjudningar.</p>
-        <Button variant="primary" size="sm">+ Lägg till deltagare</Button>
+        <p style={styles.emptyText}>Laddar deltagare...</p>
       </div>
     );
   }
 
+  if (!participants || participants.length === 0) {
+    return (
+      <>
+        <div style={styles.emptyTab}>
+          <PeopleEmptyIcon />
+          <h3 style={styles.emptyTitle}>Inga deltagare ännu</h3>
+          <p style={styles.emptyText}>Lägg till deltagare eller skicka inbjudningar.</p>
+          <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+            + Lägg till deltagare
+          </Button>
+        </div>
+        <AddParticipantModal
+          eventId={eventId}
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+        />
+      </>
+    );
+  }
+
   return (
-    <div style={styles.emptyTab}>
-      <PeopleEmptyIcon />
-      <h3 style={styles.emptyTitle}>{participantCount} deltagare</h3>
-      <p style={styles.emptyText}>Deltagarhantering implementeras i kommande session.</p>
+    <div>
+      <div style={styles.participantsHeader}>
+        <span style={styles.participantsCount}>{participants.length} deltagare</span>
+        <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+          + Lägg till
+        </Button>
+      </div>
+
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Namn</th>
+              <th style={styles.th}>E-post</th>
+              <th style={styles.th}>Företag</th>
+              <th style={styles.th}>Kategori</th>
+              <th style={styles.th}>Status</th>
+              <th style={{ ...styles.th, width: '60px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {participants.map((p) => (
+              <tr key={p.id} style={styles.tr}>
+                <td style={styles.td}>
+                  <span style={styles.participantName}>{p.name}</span>
+                </td>
+                <td style={styles.td}>{p.email}</td>
+                <td style={styles.td}>{p.company || '—'}</td>
+                <td style={styles.td}>
+                  <span style={styles.categoryTag}>{getCategoryLabel(p.category)}</span>
+                </td>
+                <td style={styles.td}>
+                  <Badge variant={getParticipantStatusVariant(p.status)}>
+                    {getParticipantStatusLabel(p.status)}
+                  </Badge>
+                </td>
+                <td style={styles.td}>
+                  <button
+                    onClick={() => handleDelete(p)}
+                    style={styles.deleteBtn}
+                    title="Ta bort"
+                  >
+                    <TrashIcon />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <AddParticipantModal
+        eventId={eventId}
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+      />
     </div>
+  );
+}
+
+/* ---- AddParticipantModal ---- */
+function AddParticipantModal({ eventId, open, onClose }: {
+  eventId: number;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const createParticipant = useCreateParticipant(eventId);
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    company: '',
+    category: 'other',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function updateField(field: string, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  }
+
+  function validate() {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = 'Namn krävs';
+    if (!form.email.trim()) errs.email = 'E-post krävs';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = 'Ogiltig e-postadress';
+    return errs;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+
+    const payload: CreateParticipantPayload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      company: form.company.trim() || null,
+      category: form.category,
+    };
+
+    createParticipant.mutate(payload, {
+      onSuccess: (p) => {
+        toast(`${p.name} lades till`, 'success');
+        setForm({ name: '', email: '', company: '', category: 'other' });
+        setErrors({});
+        onClose();
+      },
+      onError: () => {
+        toast('Kunde inte lägga till deltagaren', 'error');
+      },
+    });
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Lägg till deltagare"
+      footer={
+        <>
+          <Button variant="secondary" size="md" onClick={onClose}>
+            Avbryt
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSubmit as unknown as () => void}
+            loading={createParticipant.isPending}
+          >
+            Lägg till
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <Input
+          label="Namn"
+          value={form.name}
+          onChange={(e) => updateField('name', e.target.value)}
+          error={errors.name}
+          placeholder="Anna Svensson"
+          required
+        />
+        <Input
+          label="E-post"
+          type="email"
+          value={form.email}
+          onChange={(e) => updateField('email', e.target.value)}
+          error={errors.email}
+          placeholder="anna@consid.se"
+          required
+        />
+        <Input
+          label="Företag"
+          value={form.company}
+          onChange={(e) => updateField('company', e.target.value)}
+          placeholder="Consid AB"
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={styles.modalSelectLabel}>Kategori</label>
+          <select
+            value={form.category}
+            onChange={(e) => updateField('category', e.target.value)}
+            style={styles.modalSelect}
+          >
+            {Object.values(PARTICIPANT_CATEGORY).map((c) => (
+              <option key={c} value={c}>{getCategoryLabel(c)}</option>
+            ))}
+          </select>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/* ---- Participant helpers ---- */
+function getCategoryLabel(category: string): string {
+  const map: Record<string, string> = {
+    internal: 'Intern', public_sector: 'Offentlig sektor',
+    private_sector: 'Privat sektor', partner: 'Partner', other: 'Övrig',
+  };
+  return map[category] || category;
+}
+
+function getParticipantStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    invited: 'Inbjuden', attending: 'Deltar', declined: 'Avböjd',
+    waitlisted: 'Väntelista', cancelled: 'Avbokad',
+  };
+  return map[status] || status;
+}
+
+function getParticipantStatusVariant(status: string) {
+  switch (status) {
+    case 'attending': return 'success' as const;
+    case 'declined': return 'danger' as const;
+    case 'cancelled': return 'danger' as const;
+    case 'waitlisted': return 'warning' as const;
+    default: return 'muted' as const;
+  }
+}
+
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M2 3.5h10M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M11 3.5l-.5 8a1.5 1.5 0 01-1.5 1.5H5A1.5 1.5 0 013.5 11.5L3 3.5"
+        stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -409,5 +657,83 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 'var(--font-size-base)',
     color: 'var(--color-text-muted)',
     marginBottom: '8px',
+  },
+  participantsHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+  },
+  participantsCount: {
+    fontSize: 'var(--font-size-md)',
+    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
+    color: 'var(--color-text-primary)',
+  },
+  tableWrapper: {
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: 'var(--radius-lg)',
+    border: '1px solid var(--color-border)',
+    overflow: 'hidden',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+    fontSize: 'var(--font-size-sm)',
+  },
+  th: {
+    textAlign: 'left' as const,
+    padding: '10px 16px',
+    fontSize: 'var(--font-size-xs)',
+    fontWeight: 'var(--font-weight-medium)' as unknown as number,
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    borderBottom: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-primary)',
+  },
+  tr: {
+    borderBottom: '1px solid var(--color-border)',
+  },
+  td: {
+    padding: '10px 16px',
+    color: 'var(--color-text-primary)',
+    verticalAlign: 'middle' as const,
+  },
+  participantName: {
+    fontWeight: 'var(--font-weight-medium)' as unknown as number,
+  },
+  categoryTag: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-secondary)',
+  },
+  deleteBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    borderRadius: 'var(--radius-md)',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+  },
+  modalSelectLabel: {
+    fontSize: 'var(--font-size-sm)',
+    fontWeight: 'var(--font-weight-medium)' as unknown as number,
+    color: 'var(--color-text-secondary)',
+  },
+  modalSelect: {
+    height: '36px',
+    padding: '0 12px',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border-strong)',
+    backgroundColor: 'var(--color-white)',
+    fontSize: 'var(--font-size-base)',
+    color: 'var(--color-text-primary)',
+    fontFamily: 'inherit',
+    width: '100%',
+    outline: 'none',
+    cursor: 'pointer',
   },
 };

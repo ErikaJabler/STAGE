@@ -52,6 +52,10 @@ Framtida integrationer (ej implementerade ännu):
 | POST | `/api/events` | Skapa nytt event | 2 |
 | PUT | `/api/events/:id` | Uppdatera event (partiell) | 2 |
 | DELETE | `/api/events/:id` | Soft-delete event | 2 |
+| GET | `/api/events/:id/participants` | Lista deltagare för event | 3 |
+| POST | `/api/events/:id/participants` | Lägg till deltagare | 3 |
+| PUT | `/api/events/:id/participants/:pid` | Uppdatera deltagare | 3 |
+| DELETE | `/api/events/:id/participants/:pid` | Ta bort deltagare | 3 |
 
 ## Databasschema
 
