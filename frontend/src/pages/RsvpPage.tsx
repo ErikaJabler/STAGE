@@ -15,10 +15,10 @@ export function RsvpPage() {
 
   useEffect(() => {
     if (!token) return;
-    rsvpApi.get(token).then((data) => {
+    rsvpApi.get(token).then((data: RsvpInfo) => {
       setInfo(data);
       setState('loaded');
-    }).catch(() => {
+    }).catch((_err: unknown) => {
       setState('error');
       setErrorMsg('Länken är ogiltig eller har utgått.');
     });
@@ -32,7 +32,7 @@ export function RsvpPage() {
       setResponseName(result.name);
       setResponseStatus(result.status);
       setState('responded');
-    } catch {
+    } catch (_err: unknown) {
       setErrorMsg('Något gick fel. Försök igen.');
     } finally {
       setSubmitting(false);
@@ -47,7 +47,7 @@ export function RsvpPage() {
       setResponseName(result.name);
       setResponseStatus(result.status);
       setState('cancelled');
-    } catch {
+    } catch (_err: unknown) {
       setErrorMsg('Något gick fel. Försök igen.');
     } finally {
       setSubmitting(false);
