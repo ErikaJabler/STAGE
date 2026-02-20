@@ -20,7 +20,7 @@ async function request(
   path: string,
   body?: unknown
 ): Promise<Response> {
-  const req = new Request(`http://localhost${path}`, {
+  const req = new Request(`http://localhost/stage${path}`, {
     method,
     headers: body ? { "Content-Type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined,

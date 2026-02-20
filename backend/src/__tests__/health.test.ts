@@ -2,9 +2,9 @@ import { env, createExecutionContext, waitOnExecutionContext } from "cloudflare:
 import { describe, it, expect } from "vitest";
 import app from "../index";
 
-describe("GET /api/health", () => {
+describe("GET /stage/api/health", () => {
   it("returns 200 with status ok", async () => {
-    const req = new Request("http://localhost/api/health");
+    const req = new Request("http://localhost/stage/api/health");
     const ctx = createExecutionContext();
     const res = await app.fetch(req, env, ctx);
     await waitOnExecutionContext(ctx);

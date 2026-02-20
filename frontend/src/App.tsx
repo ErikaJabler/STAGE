@@ -22,7 +22,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <ErrorBoundary>
-          <BrowserRouter>
+          <BrowserRouter basename="/stage">
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<Overview />} />

@@ -3,15 +3,21 @@ main = "backend/src/index.ts"
 compatibility_date = "2025-02-14"
 compatibility_flags = ["nodejs_compat"]
 
-# Frontend served as static assets
+# Frontend served as static assets — binding gives us programmatic control
 [assets]
 directory = "./frontend/dist"
+binding = "ASSETS"
 
 # D1 Database
 [[d1_databases]]
 binding = "DB"
 database_name = "stage_db_v2"
-database_id = "placeholder-replace-after-creation"
+database_id = "1e935a1e-4a24-44f4-b83d-c70235b982d9"
+
+# Route: serve on mikwik.se/stage/*
+[[routes]]
+pattern = "mikwik.se/stage/*"
+zone_name = "mikwik.se"
 
 # R2 Bucket (session 2)
 # [[r2_buckets]]

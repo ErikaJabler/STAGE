@@ -1,6 +1,6 @@
 import type { Event, EventWithCount, Participant } from "@stage/shared";
 
-const BASE_URL = "/api";
+const BASE_URL = "/stage/api";
 
 class ApiError extends Error {
   constructor(
