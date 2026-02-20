@@ -31,8 +31,8 @@ app.all("/stage/*", async (c) => {
     new Request(url.toString(), c.req.raw)
   );
 
-  // If asset found, serve it
-  if (assetResponse.status !== 404) {
+  // If asset found, serve it (only accept 2xx responses)
+  if (assetResponse.ok) {
     return assetResponse;
   }
 
