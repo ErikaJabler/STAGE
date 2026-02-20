@@ -143,6 +143,8 @@
 - Mottagarfilter stödjer: alla, per status (invited/attending/declined/waitlisted/cancelled), per kategori (internal/public_sector/private_sector/partner/other)
 - Utskick har status draft → sent (irreversibel efter skickning)
 - Frontend build: 339KB JS, 4.2KB CSS (gzipped: 100KB JS, 1.4KB CSS)
+- **SPA-fallback fix:** `not_found_handling = "single-page-application"` i wrangler.toml krävdes för att direktlänkar till SPA-routes (t.ex. /rsvp/:token, /events/:id) ska fungera — utan denna returnerade Cloudflare Assets 307-redirect
+- **RSVP testad live:** https://mikwik.se/stage/rsvp/fc3907c1-8cfb-40a4-8e18-fb4f887419fd
 
 ---
 

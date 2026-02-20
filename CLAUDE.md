@@ -11,7 +11,7 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 | Databas | Cloudflare D1 (SQLite) |
 | Frontend | React + TypeScript + Vite |
 | Server state | TanStack Query (från session 1) |
-| Email | Resend via abstraktionslager (från session 6) |
+| Email | Resend via abstraktionslager (från session 4) |
 | Bildlagring | Cloudflare R2 (från session 2) |
 | Auth | Interface-baserad token (från session 10) |
 | Test | Vitest + @cloudflare/vitest-pool-workers |
