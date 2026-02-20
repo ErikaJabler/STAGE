@@ -116,6 +116,20 @@
 
 ---
 
+## Deploy-plan
+
+| Milstolpe | Krav | Status |
+|---|---|---|
+| Första deploy till `mikwik.se/stage` | Session 3 klar (skapa/redigera event + deltagarhantering) | Väntar |
+
+**Deploy-steg (efter session 3):**
+1. `wrangler d1 create stage_db_v2` → uppdatera `database_id` i wrangler.toml
+2. `npm run db:migrate:remote -- migrations/0001_events_participants.sql`
+3. `npm run build && wrangler deploy`
+4. Konfigurera custom domain/route i Cloudflare → `mikwik.se/stage`
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |

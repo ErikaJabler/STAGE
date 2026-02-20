@@ -109,7 +109,7 @@ Framtida integrationer (ej implementerade ännu):
 
 **Miljöer:**
 - Lokal: `wrangler dev` → `http://localhost:8787`
-- Staging: `stage.mikwik.se` (session 13)
+- Staging: `mikwik.se/stage` (efter session 3)
 - Produktion: `event.consid.se` (framtida)
 
 ## Autentisering
