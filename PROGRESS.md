@@ -112,7 +112,7 @@
 | # | Problem | Status | Session |
 |---|---------|--------|---------|
 | 1 | D1 database_id i wrangler.toml är placeholder | Skapa med `wrangler d1 create` | 0 |
-| 2 | Consid Sans fontfiler saknas i public/fonts/ | Lägg till .woff2/.woff-filer för Regular, Medium, Semibold | 1 |
+| 2 | ~~Consid Sans fontfiler saknas~~ | Löst — konverterat OTF → woff2/woff, ligger i public/fonts/ | 2 |
 
 ---
 
