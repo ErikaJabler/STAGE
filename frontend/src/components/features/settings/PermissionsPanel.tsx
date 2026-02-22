@@ -113,6 +113,7 @@ export function PermissionsPanel({ eventId }: Props) {
               onChange={(e) => setRole(e.target.value)}
               style={sharedStyles.modalSelect}
             >
+              <option value="owner">Ägare</option>
               <option value="editor">Redigerare</option>
               <option value="viewer">Läsare</option>
             </select>
@@ -156,6 +157,7 @@ export function PermissionsPanel({ eventId }: Props) {
                         onChange={(e) => handleRoleChange(perm, e.target.value)}
                         style={styles.roleSelect}
                       >
+                        <option value="owner">Ägare</option>
                         <option value="editor">Redigerare</option>
                         <option value="viewer">Läsare</option>
                       </select>
