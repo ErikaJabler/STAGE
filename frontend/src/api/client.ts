@@ -170,6 +170,7 @@ export interface SendMailingResult {
   sent: number;
   failed: number;
   total: number;
+  errors?: string[];
 }
 
 /** RSVP API (public, token-based) */

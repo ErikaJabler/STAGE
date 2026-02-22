@@ -212,6 +212,33 @@ npm run build && npx wrangler deploy
 
 ---
 
+## Session 5: Riktig mailsändning via Resend + HTML-mail med RSVP-länk
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] Resend-domän (mikwik.se) verifierad med DKIM, SPF (MX + TXT)
+- [x] RESEND_API_KEY sparad som Cloudflare Worker secret
+- [x] HTML-mailtemplate med Consid-branding (burgundy header, beige bakgrund, raspberry CTA-knapp)
+- [x] Per-mottagare RSVP-länk injiceras automatiskt i varje mail (`https://mikwik.se/stage/rsvp/:token`)
+- [x] Template-variabler: `{{name}}` (mottagarens namn), `{{rsvp_link}}` (personlig svarslänk)
+- [x] RSVP-länk auto-appendas om `{{rsvp_link}}` inte finns i brödtexten
+- [x] Eventinfo (namn, datum, tid, plats) visas i HTML-mailets footer
+- [x] ResendProvider skickar både `text` (plaintext fallback) och `html`
+- [x] Frontend: Hjälptext under meddelande-textarea om `{{name}}` och `{{rsvp_link}}`
+- [x] Frontend: Toast visar antal misslyckade om det finns failures
+- [x] Hela flödet verifierat live: skapa utskick → skicka → mail anländer → klicka RSVP → status "attending"
+
+### Anteckningar
+- Resend-domän verifierad i eu-west-1 (Ireland)
+- `from`-adress: `Stage <noreply@mikwik.se>`
+- `buildEmailHtml()` i `backend/src/services/email.ts` — table-baserad HTML för mailklient-kompatibilitet
+- Consid-färger hårdkodade i HTML-mallen (CSS-variabler fungerar inte i mailklienter)
+- Ingen ny migration behövdes
+- Befintliga 21 tester passerar fortfarande
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |

@@ -9,7 +9,7 @@ import {
   getEventById,
   type CreateMailingInput,
 } from "../db/queries";
-import { createEmailProvider } from "../services/email";
+import { createEmailProvider, buildEmailHtml } from "../services/email";
 
 const mailings = new Hono<{ Bindings: Env }>();
 
@@ -90,21 +90,59 @@ mailings.post("/:mid/send", async (c) => {
     return c.json({ error: "Inga mottagare matchar filtret" }, 400);
   }
 
-  // Send emails
+  // Get event details for email template
+  const event = (await getEventById(c.env.DB, eventId))!;
+
+  // Send emails with per-recipient RSVP link
   const emailProvider = createEmailProvider(c.env.RESEND_API_KEY);
   let sent = 0;
   let failed = 0;
+  const errors: string[] = [];
 
   for (const recipient of recipients) {
+    const rsvpUrl = `https://mikwik.se/stage/rsvp/${recipient.cancellation_token}`;
+
+    // Replace {{rsvp_link}} placeholder in body, or auto-append
+    let personalizedBody = mailing.body;
+    if (personalizedBody.includes("{{rsvp_link}}")) {
+      personalizedBody = personalizedBody.replace(
+        /\{\{rsvp_link\}\}/g,
+        rsvpUrl
+      );
+    } else {
+      personalizedBody += `\n\nSvara på inbjudan: ${rsvpUrl}`;
+    }
+
+    // Replace {{name}} placeholder
+    personalizedBody = personalizedBody.replace(
+      /\{\{name\}\}/g,
+      recipient.name
+    );
+
+    // Build HTML version
+    const html = buildEmailHtml({
+      body: personalizedBody,
+      recipientName: recipient.name,
+      eventName: event.name,
+      eventDate: event.date,
+      eventTime: event.time,
+      eventLocation: event.location,
+      rsvpUrl,
+    });
+
     const result = await emailProvider.send({
       to: recipient.email,
       subject: mailing.subject,
-      body: mailing.body,
+      body: personalizedBody,
+      html,
     });
     if (result.success) {
       sent++;
     } else {
       failed++;
+      if (result.error) {
+        errors.push(`${recipient.email}: ${result.error}`);
+      }
     }
   }
 
@@ -116,6 +154,7 @@ mailings.post("/:mid/send", async (c) => {
     sent,
     failed,
     total: recipients.length,
+    ...(errors.length > 0 ? { errors } : {}),
   });
 });
 

@@ -450,7 +450,11 @@ function MailingsTab({ eventId }: { eventId: number }) {
   function handleSend(mailing: Mailing) {
     sendMailing.mutate(mailing.id, {
       onSuccess: (result) => {
-        toast(`Utskickat till ${result.sent} mottagare`, 'success');
+        if (result.failed > 0) {
+          toast(`Skickat till ${result.sent}/${result.total} (${result.failed} misslyckades)`, 'error');
+        } else {
+          toast(`Utskickat till ${result.sent} mottagare`, 'success');
+        }
         setPreviewMailing(null);
       },
       onError: () => {
@@ -736,7 +740,7 @@ function CreateMailingModal({ eventId, open, onClose }: {
           <textarea
             value={form.body}
             onChange={(e) => updateField('body', e.target.value)}
-            placeholder="Skriv ditt meddelande här..."
+            placeholder="Hej {{name}},&#10;&#10;Välkommen till eventet! Svara gärna via länken nedan.&#10;&#10;{{rsvp_link}}"
             rows={6}
             style={{
               ...styles.modalSelect,
@@ -751,6 +755,9 @@ function CreateMailingModal({ eventId, open, onClose }: {
               {errors.body}
             </span>
           )}
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
+            Variabler: <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{name}}'}</code> = mottagarens namn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{rsvp_link}}'}</code> = personlig svarslänk. RSVP-länk läggs till automatiskt om den inte finns i meddelandet.
+          </span>
         </div>
       </form>
     </Modal>
