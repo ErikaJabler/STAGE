@@ -21,8 +21,7 @@ const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
 ];
 
 export function ParticipantsTab({ eventId }: { eventId: number; participantCount: number }) {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
+  const [activeModal, setActiveModal] = useState<'add' | 'import' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const { data: participants, isLoading } = useParticipants(eventId);
@@ -90,16 +89,16 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
           <h3 style={sharedStyles.emptyTitle}>Inga deltagare ännu</h3>
           <p style={sharedStyles.emptyText}>Lägg till deltagare eller importera från CSV.</p>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+            <Button variant="primary" size="sm" onClick={() => setActiveModal('add')}>
               + Lägg till deltagare
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setShowImportModal(true)}>
+            <Button variant="secondary" size="sm" onClick={() => setActiveModal('import')}>
               <UploadIcon /> Importera CSV
             </Button>
           </div>
         </div>
-        <AddParticipantModal eventId={eventId} open={showAddModal} onClose={() => setShowAddModal(false)} />
-        <ImportCSVModal eventId={eventId} open={showImportModal} onClose={() => setShowImportModal(false)} />
+        <AddParticipantModal eventId={eventId} open={activeModal === 'add'} onClose={() => setActiveModal(null)} />
+        <ImportCSVModal eventId={eventId} open={activeModal === 'import'} onClose={() => setActiveModal(null)} />
       </>
     );
   }
@@ -112,10 +111,10 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
           <Button variant="ghost" size="sm" onClick={handleExportCSV}>
             <DownloadIcon /> Exportera CSV
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => setShowImportModal(true)}>
+          <Button variant="secondary" size="sm" onClick={() => setActiveModal('import')}>
             <UploadIcon /> Importera CSV
           </Button>
-          <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+          <Button variant="primary" size="sm" onClick={() => setActiveModal('add')}>
             + Lägg till
           </Button>
         </div>
@@ -236,8 +235,8 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
         <WaitlistPanel eventId={eventId} participants={participants} />
       )}
 
-      <AddParticipantModal eventId={eventId} open={showAddModal} onClose={() => setShowAddModal(false)} />
-      <ImportCSVModal eventId={eventId} open={showImportModal} onClose={() => setShowImportModal(false)} />
+      <AddParticipantModal eventId={eventId} open={activeModal === 'add'} onClose={() => setActiveModal(null)} />
+      <ImportCSVModal eventId={eventId} open={activeModal === 'import'} onClose={() => setActiveModal(null)} />
     </div>
   );
 }
