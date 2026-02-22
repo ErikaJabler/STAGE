@@ -24,11 +24,11 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 ```
 
 Integrationer:
-- **Resend** — Email (session 4, abstraktionslager med ConsoleEmailProvider som fallback)
+- **Resend** — Email via Resend API (session 4–5). Domän `mikwik.se` verifierad (DKIM + SPF). HTML-mail med Consid-branding. Avsändare: `Stage <noreply@mikwik.se>`. ConsoleEmailProvider som fallback utan API-nyckel.
 
 Framtida integrationer (ej implementerade ännu):
-- **R2** — Bildlagring (session 2)
-- **Cron Triggers** — Schemalagda mail (session 7)
+- **R2** — Bildlagring
+- **Cron Triggers** — Schemalagda mail
 
 ## Repostruktur
 
@@ -143,7 +143,28 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 | Variabel | Beskrivning | Källa |
 |---|---|---|
 | `DB` | D1-databas binding | wrangler.toml |
-| `RESEND_API_KEY` | API-nyckel för Resend (valfri) | wrangler secret |
+| `RESEND_API_KEY` | API-nyckel för Resend (konfigurerad session 5) | wrangler secret |
+
+## Emailtjänst (session 4–5)
+
+| Komponent | Fil | Beskrivning |
+|---|---|---|
+| EmailProvider interface | `backend/src/services/email.ts` | Abstrakt provider med `send()` |
+| ResendProvider | `backend/src/services/email.ts` | Skickar via Resend API (text + HTML) |
+| ConsoleEmailProvider | `backend/src/services/email.ts` | Loggar till console (dev/test fallback) |
+| `buildEmailHtml()` | `backend/src/services/email.ts` | Consid-branded HTML-mall (table-baserad) |
+| `createEmailProvider()` | `backend/src/services/email.ts` | Factory — Resend om API-nyckel finns, annars Console |
+
+**Emailflöde vid utskick:**
+1. Hämtar mottagare baserat på `recipient_filter`
+2. Per mottagare: ersätter `{{name}}` och `{{rsvp_link}}` (auto-append om ej i body)
+3. Genererar HTML med `buildEmailHtml()` (burgundy header, RSVP-knapp, eventinfo)
+4. Skickar via Resend (text + html) från `Stage <noreply@mikwik.se>`
+
+**DNS-konfiguration (mikwik.se):**
+- DKIM: TXT `resend._domainkey` — verifierad
+- SPF: MX `send` + TXT `send` — verifierad
+- DMARC: TXT `_dmarc` — `v=DMARC1; p=none;`
 
 ## Testning
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
