@@ -174,6 +174,10 @@
 | 20 | Mailings med recipient_filter | Filtrera mottagare per status eller kategori vid skapande/sändning | 4 |
 | 21 | CSV-import med auto-header-detection | Parser identifierar kolumner från header-rad (sv/en), fallback till positionell | 6 |
 | 22 | Frontendbaserade mailmallar | Mallar definierade i frontend, ej backend — enkelt, ingen migration, redigerbart | 6 |
+| 23 | Auto-waitlist vid kapacitetsgräns | shouldWaitlist() kontrollerar attending >= max_participants + overbooking_limit | 7 |
+| 24 | Auto-promote vid ledig plats | promoteFromWaitlist() vid delete, statusändring och RSVP-cancel | 7 |
+| 25 | Klientsida deltagarfiltrering | Sök + statusfilter i frontend — all data redan hämtad, inga extra API-anrop | 7 |
+| 26 | Dubbel ICS-generering | Backend-endpoint för email, klientsida för RSVP — redundans ger bättre UX | 7 |
 
 ---
 
@@ -268,6 +272,42 @@ npm run build && npx wrangler deploy
 - CSV-parser hanterar citerade fält (dubbla citattecken)
 - Mallarna är hårdkodade i frontend (inga backend-ändringar behövdes) — i Consid-profil med formella men varma texter
 - Frontend Vite build: 348KB JS, 4.2KB CSS (gzipped: 102KB JS, 1.4KB CSS)
+
+---
+
+## Session 7: Väntlistelogik + Deltagarfiltrering + ICS-kalender
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] Backend: Waitlist-queries (`getAttendingCount`, `getNextWaitlisted`, `getMaxQueuePosition`, `promoteFromWaitlist`, `shouldWaitlist`) i `db/queries.ts`
+- [x] Backend: Auto-waitlist vid POST /participants (sätter status "waitlisted" + queue_position om fullt)
+- [x] Backend: Auto-waitlist vid CSV-import (räknar kapacitet löpande per rad)
+- [x] Backend: Auto-promote vid PUT /participants/:id (status attending → annat → promote)
+- [x] Backend: Auto-promote vid DELETE /participants/:id (om attending → promote)
+- [x] Backend: Auto-promote vid POST /rsvp/:token/cancel (om attending → promote)
+- [x] Backend: Kapacitetskontroll i POST /rsvp/:token/respond (waitlista om fullt)
+- [x] Backend: PUT /participants/:id/reorder — omsortering av väntlistekö med positionsshift
+- [x] Backend: GET /events/:id/calendar.ics — ICS-fil med VTIMEZONE Europe/Stockholm
+- [x] Backend: ICS-kalenderlänk i email-HTML (via `buildEmailHtml()` + mailings send-logik)
+- [x] Frontend: Sökfält i ParticipantsTab (filtrerar namn, email, företag, case-insensitive)
+- [x] Frontend: Statusfilter-chips (Alla, Deltar, Inbjudna, Väntelista, Avböjda, Avbokade) med antal
+- [x] Frontend: Kö-kolumn i deltagartabellen (visas bara om det finns waitlisted)
+- [x] Frontend: Flytta upp/ner-knappar för väntlistade deltagare
+- [x] Frontend: "Lägg till i kalender"-knapp på RSVP-bekräftelsesidan (klientsidesgenererad ICS)
+- [x] Frontend: Kalenderknapp visas även för redan-attending deltagare
+- [x] Frontend: API-klient `participantsApi.reorder()` + `useReorderParticipant()` hook
+- [x] 4 nya tester (auto-waitlist, promote vid delete, promote vid statusändring, ICS endpoint) — totalt 27 tester
+- [x] SAD.md uppdaterad med 2 nya endpoints
+- [x] TESTPLAN.md uppdaterad med 11 nya testfall
+
+### Anteckningar
+- Ingen ny migration krävdes — befintligt schema har `queue_position` + `waitlisted` i participants
+- Väntlistelogik tar hänsyn till `max_participants + overbooking_limit`
+- ICS-generering finns på två ställen: backend (GET endpoint) och frontend (klientsida på RSVP-sidan)
+- VTIMEZONE-blocket i ICS inkluderar både CET (vinter) och CEST (sommar)
+- Sök + statusfilter kombineras med AND-logik, all filtrering klientsida
+- Frontend Vite build: 355KB JS, 4.2KB CSS (gzipped: ~104KB JS, 1.4KB CSS)
 
 ---
 

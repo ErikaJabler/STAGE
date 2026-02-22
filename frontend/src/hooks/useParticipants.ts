@@ -66,6 +66,19 @@ export function useDeleteParticipant(eventId: number) {
   });
 }
 
+/** Reorder a waitlisted participant */
+export function useReorderParticipant(eventId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, queuePosition }: { id: number; queuePosition: number }) =>
+      participantsApi.reorder(eventId, id, queuePosition),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
+    },
+  });
+}
+
 /** Import participants from CSV */
 export function useImportParticipants(eventId: number) {
   const queryClient = useQueryClient();

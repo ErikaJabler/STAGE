@@ -122,6 +122,12 @@ export const participantsApi = {
       method: "DELETE",
     }),
 
+  reorder: (eventId: number, id: number, queuePosition: number) =>
+    request<Participant>(`/events/${eventId}/participants/${id}/reorder`, {
+      method: "PUT",
+      body: JSON.stringify({ queue_position: queuePosition }),
+    }),
+
   import: async (eventId: number, file: File): Promise<ImportParticipantsResult> => {
     const formData = new FormData();
     formData.append("file", file);

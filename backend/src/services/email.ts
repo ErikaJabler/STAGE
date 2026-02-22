@@ -85,6 +85,7 @@ export function buildEmailHtml(opts: {
   eventTime?: string;
   eventLocation?: string;
   rsvpUrl?: string;
+  calendarUrl?: string;
 }): string {
   const escapedBody = escapeHtml(opts.body).replace(/\n/g, "<br>");
 
@@ -102,6 +103,18 @@ export function buildEmailHtml(opts: {
               </td>
             </tr>
           </table>
+        </td>
+      </tr>`
+    : "";
+
+  const calendarBlock = opts.calendarUrl
+    ? `
+      <tr>
+        <td style="padding: 12px 32px 0; text-align: center;">
+          <a href="${escapeHtml(opts.calendarUrl)}" target="_blank"
+             style="font-family: 'Consid Sans', system-ui, sans-serif; font-size: 13px; color: #701131; text-decoration: underline;">
+            L&auml;gg till i kalender
+          </a>
         </td>
       </tr>`
     : "";
@@ -154,6 +167,8 @@ export function buildEmailHtml(opts: {
           </tr>
           <!-- RSVP button -->
           ${rsvpBlock}
+          <!-- Calendar link -->
+          ${calendarBlock}
           <!-- Event info -->
           ${eventInfoBlock}
           <!-- Footer -->

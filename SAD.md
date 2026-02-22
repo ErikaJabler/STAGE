@@ -59,6 +59,8 @@ Framtida integrationer (ej implementerade ännu):
 | PUT | `/api/events/:id/participants/:pid` | Uppdatera deltagare | 3 |
 | DELETE | `/api/events/:id/participants/:pid` | Ta bort deltagare | 3 |
 | POST | `/api/events/:id/participants/import` | CSV-import av deltagare | 6 |
+| PUT | `/api/events/:id/participants/:pid/reorder` | Omordna väntlisteposition | 7 |
+| GET | `/api/events/:id/calendar.ics` | Ladda ner ICS-kalenderfil | 7 |
 | GET | `/api/events/:id/mailings` | Lista utskick för event | 4 |
 | POST | `/api/events/:id/mailings` | Skapa nytt utskick | 4 |
 | POST | `/api/events/:id/mailings/:mid/send` | Skicka utskick | 4 |

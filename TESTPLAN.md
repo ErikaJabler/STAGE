@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 23 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP)
-**Status:** ☑ Testad (session 6)
+**Förväntat resultat:** 27 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP, waitlist/ICS)
+**Status:** ☑ Testad (session 7)
 
 ---
 
@@ -279,3 +279,84 @@
 1. Kör `npm run test`
 **Förväntat resultat:** 2 CSV-import-tester passerar (import med headers + dubbletter/validering)
 **Status:** ☑ Testad (session 6, 23 tester totalt)
+
+---
+
+## Session 7: Väntlistelogik + Deltagarfiltrering + ICS-kalender
+
+### TC-7.1: Auto-waitlist vid full kapacitet
+**Steg:**
+1. Skapa event med max_participants=2
+2. Lägg till 2 deltagare med status "attending"
+3. Lägg till en tredje deltagare med status "attending"
+**Förväntat resultat:** Tredje deltagaren får automatiskt status "Väntelista" och queue_position=1
+**Status:** ☐ Ej testad
+
+### TC-7.2: Auto-promote vid borttagning
+**Steg:**
+1. Med event från TC-7.1 (2 attending + 1 waitlisted)
+2. Ta bort en av de attending deltagarna
+**Förväntat resultat:** Waitlisted-deltagaren uppgraderas automatiskt till "Deltar", queue_position nollställs
+**Status:** ☐ Ej testad
+
+### TC-7.3: Auto-promote vid statusändring
+**Steg:**
+1. Skapa event med max_participants=1, lägg till 1 attending + 1 waitlisted
+2. Ändra attending-deltagarens status till "Avböjd"
+**Förväntat resultat:** Waitlisted-deltagaren uppgraderas automatiskt till "Deltar"
+**Status:** ☐ Ej testad
+
+### TC-7.4: RSVP kapacitetskontroll
+**Steg:**
+1. Skapa event med max_participants=1, lägg till 1 attending
+2. Öppna RSVP-sida för en invited deltagare → klicka "Jag kommer"
+**Förväntat resultat:** Deltagaren placeras på väntelista (status "waitlisted"), inte "attending"
+**Status:** ☐ Ej testad
+
+### TC-7.5: RSVP avbokning → auto-promote
+**Steg:**
+1. Skapa event med max_participants=1, 1 attending + 1 waitlisted
+2. Öppna RSVP-sida för attending-deltagaren → "Avboka min plats"
+**Förväntat resultat:** Attending avbokas, waitlisted uppgraderas till attending
+**Status:** ☐ Ej testad
+
+### TC-7.6: Omsortera väntelista
+**Steg:**
+1. Skapa event med max_participants=1, lägg till 3 deltagare med status attending (2 hamnar i kö)
+2. Klicka "Flytta upp" på deltagare #2 i kön
+**Förväntat resultat:** Deltagare #2 byter plats med #1, köpositioner uppdateras
+**Status:** ☐ Ej testad
+
+### TC-7.7: Sök deltagare
+**Steg:**
+1. Öppna event med flera deltagare → Deltagare-tab
+2. Skriv ett namn i sökfältet
+**Förväntat resultat:** Tabellen filtreras i realtid, visar bara deltagare vars namn, email eller företag matchar
+**Status:** ☐ Ej testad
+
+### TC-7.8: Statusfilter
+**Steg:**
+1. Öppna event med deltagare i olika status → Deltagare-tab
+2. Klicka på "Deltar"-chippen
+**Förväntat resultat:** Bara deltagare med status "attending" visas, aktiv chip highlightas i burgundy
+**Status:** ☐ Ej testad
+
+### TC-7.9: Kombinerat sök + statusfilter
+**Steg:**
+1. Välj statusfilter "Deltar"
+2. Skriv ett namn i sökfältet
+**Förväntat resultat:** Bara deltagare som matchar BÅDE status OCH sökterm visas (AND-logik)
+**Status:** ☐ Ej testad
+
+### TC-7.10: ICS-kalenderfil via backend
+**Steg:**
+1. Öppna `https://mikwik.se/stage/api/events/<id>/calendar.ics`
+**Förväntat resultat:** Laddar ner .ics-fil, öppnas korrekt i kalenderapp med rätt datum, tid, plats, titel
+**Status:** ☐ Ej testad
+
+### TC-7.11: "Lägg till i kalender"-knapp på RSVP
+**Steg:**
+1. Öppna RSVP-sida → svara "Jag kommer"
+2. Klicka "Lägg till i kalender"
+**Förväntat resultat:** .ics-fil laddas ner med korrekt eventdata, öppnas i kalenderapp
+**Status:** ☐ Ej testad

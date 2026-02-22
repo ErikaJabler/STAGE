@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Topbar } from '../components/layout';
 import { Badge, Button, Input, Modal, EventDetailSkeleton, useToast } from '../components/ui';
 import { useEvent } from '../hooks/useEvents';
-import { useParticipants, useCreateParticipant, useDeleteParticipant, useImportParticipants } from '../hooks/useParticipants';
+import { useParticipants, useCreateParticipant, useDeleteParticipant, useImportParticipants, useReorderParticipant } from '../hooks/useParticipants';
 import { useMailings, useCreateMailing, useSendMailing } from '../hooks/useMailings';
 import type { EventWithCount, Participant, Mailing } from '@stage/shared';
 import { PARTICIPANT_CATEGORY, PARTICIPANT_STATUS } from '@stage/shared';
@@ -174,12 +174,26 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 }
 
 /* ---- Tab: Deltagare ---- */
+type StatusFilter = 'all' | 'attending' | 'invited' | 'waitlisted' | 'declined' | 'cancelled';
+
+const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
+  { id: 'all', label: 'Alla' },
+  { id: 'attending', label: 'Deltar' },
+  { id: 'invited', label: 'Inbjudna' },
+  { id: 'waitlisted', label: 'Väntelista' },
+  { id: 'declined', label: 'Avböjda' },
+  { id: 'cancelled', label: 'Avbokade' },
+];
+
 function ParticipantsTab({ eventId }: { eventId: number; participantCount: number }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const { data: participants, isLoading } = useParticipants(eventId);
   const { toast } = useToast();
   const deleteParticipant = useDeleteParticipant(eventId);
+  const reorderParticipant = useReorderParticipant(eventId);
 
   function handleDelete(p: Participant) {
     if (!confirm(`Ta bort ${p.name}?`)) return;
@@ -188,6 +202,42 @@ function ParticipantsTab({ eventId }: { eventId: number; participantCount: numbe
       onError: () => toast('Kunde inte ta bort deltagaren', 'error'),
     });
   }
+
+  function handleReorder(p: Participant, direction: 'up' | 'down') {
+    if (!p.queue_position) return;
+    const newPos = direction === 'up' ? p.queue_position - 1 : p.queue_position + 1;
+    if (newPos < 1) return;
+    reorderParticipant.mutate(
+      { id: p.id, queuePosition: newPos },
+      {
+        onError: () => toast('Kunde inte ändra köplats', 'error'),
+      }
+    );
+  }
+
+  // Client-side filtering
+  const filteredParticipants = (participants ?? []).filter((p) => {
+    // Status filter
+    if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.email.toLowerCase().includes(q) ||
+        (p.company?.toLowerCase().includes(q) ?? false)
+      );
+    }
+    return true;
+  });
+
+  // Count per status
+  const statusCounts = (participants ?? []).reduce<Record<string, number>>((acc, p) => {
+    acc[p.status] = (acc[p.status] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const hasWaitlisted = (statusCounts['waitlisted'] ?? 0) > 0;
 
   if (isLoading) {
     return (
@@ -241,6 +291,49 @@ function ParticipantsTab({ eventId }: { eventId: number; participantCount: numbe
         </div>
       </div>
 
+      {/* Search + Status filter */}
+      <div style={styles.filterBar}>
+        <div style={styles.searchWrapper}>
+          <SearchIcon />
+          <input
+            type="text"
+            placeholder="Sök namn, e-post, företag..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={styles.searchInput}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={styles.searchClear}
+              title="Rensa sökning"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        <div style={styles.statusFilterRow}>
+          {STATUS_FILTERS.map((f) => {
+            const count = f.id === 'all'
+              ? participants.length
+              : statusCounts[f.id] ?? 0;
+            const isActive = statusFilter === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setStatusFilter(f.id)}
+                style={{
+                  ...styles.filterChip,
+                  ...(isActive ? styles.filterChipActive : {}),
+                }}
+              >
+                {f.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div style={styles.tableWrapper}>
         <table style={styles.table}>
           <thead>
@@ -250,36 +343,74 @@ function ParticipantsTab({ eventId }: { eventId: number; participantCount: numbe
               <th style={styles.th}>Företag</th>
               <th style={styles.th}>Kategori</th>
               <th style={styles.th}>Status</th>
+              {hasWaitlisted && <th style={{ ...styles.th, width: '80px' }}>Kö</th>}
               <th style={{ ...styles.th, width: '60px' }}></th>
             </tr>
           </thead>
           <tbody>
-            {participants.map((p) => (
-              <tr key={p.id} style={styles.tr}>
-                <td style={styles.td}>
-                  <span style={styles.participantName}>{p.name}</span>
-                </td>
-                <td style={styles.td}>{p.email}</td>
-                <td style={styles.td}>{p.company || '—'}</td>
-                <td style={styles.td}>
-                  <span style={styles.categoryTag}>{getCategoryLabel(p.category)}</span>
-                </td>
-                <td style={styles.td}>
-                  <Badge variant={getParticipantStatusVariant(p.status)}>
-                    {getParticipantStatusLabel(p.status)}
-                  </Badge>
-                </td>
-                <td style={styles.td}>
-                  <button
-                    onClick={() => handleDelete(p)}
-                    style={styles.deleteBtn}
-                    title="Ta bort"
-                  >
-                    <TrashIcon />
-                  </button>
+            {filteredParticipants.length === 0 ? (
+              <tr>
+                <td colSpan={hasWaitlisted ? 7 : 6} style={{ ...styles.td, textAlign: 'center', color: 'var(--color-text-muted)', padding: '24px 16px' }}>
+                  Inga deltagare matchar filtret
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredParticipants.map((p) => (
+                <tr key={p.id} style={styles.tr}>
+                  <td style={styles.td}>
+                    <span style={styles.participantName}>{p.name}</span>
+                  </td>
+                  <td style={styles.td}>{p.email}</td>
+                  <td style={styles.td}>{p.company || '—'}</td>
+                  <td style={styles.td}>
+                    <span style={styles.categoryTag}>{getCategoryLabel(p.category)}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <Badge variant={getParticipantStatusVariant(p.status)}>
+                      {getParticipantStatusLabel(p.status)}
+                    </Badge>
+                  </td>
+                  {hasWaitlisted && (
+                    <td style={styles.td}>
+                      {p.status === 'waitlisted' && p.queue_position ? (
+                        <div style={styles.queueCell}>
+                          <span style={styles.queuePosition}>#{p.queue_position}</span>
+                          <div style={styles.reorderBtns}>
+                            <button
+                              onClick={() => handleReorder(p, 'up')}
+                              style={styles.reorderBtn}
+                              title="Flytta upp"
+                              disabled={p.queue_position <= 1 || reorderParticipant.isPending}
+                            >
+                              <ChevronUpIcon />
+                            </button>
+                            <button
+                              onClick={() => handleReorder(p, 'down')}
+                              style={styles.reorderBtn}
+                              title="Flytta ner"
+                              disabled={reorderParticipant.isPending}
+                            >
+                              <ChevronDownIcon />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-muted)' }}>—</span>
+                      )}
+                    </td>
+                  )}
+                  <td style={styles.td}>
+                    <button
+                      onClick={() => handleDelete(p)}
+                      style={styles.deleteBtn}
+                      title="Ta bort"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -643,6 +774,31 @@ function TrashIcon() {
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M2 3.5h10M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M11 3.5l-.5 8a1.5 1.5 0 01-1.5 1.5H5A1.5 1.5 0 013.5 11.5L3 3.5"
         stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M3 7.5L6 4.5L9 7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -1474,5 +1630,98 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: 'transparent',
     color: 'var(--color-text-muted)',
     cursor: 'pointer',
+  },
+  filterBar: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+    marginBottom: '16px',
+  },
+  searchWrapper: {
+    position: 'relative' as const,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '0 12px',
+    height: '36px',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border-strong)',
+    backgroundColor: 'var(--color-white)',
+    color: 'var(--color-text-muted)',
+  },
+  searchInput: {
+    flex: 1,
+    border: 'none',
+    outline: 'none',
+    fontSize: 'var(--font-size-sm)',
+    fontFamily: 'inherit',
+    color: 'var(--color-text-primary)',
+    backgroundColor: 'transparent',
+  },
+  searchClear: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '20px',
+    height: '20px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontFamily: 'inherit',
+    lineHeight: 1,
+    padding: 0,
+  },
+  statusFilterRow: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap' as const,
+  },
+  filterChip: {
+    padding: '4px 10px',
+    borderRadius: 'var(--radius-full)',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-card)',
+    fontSize: 'var(--font-size-xs)',
+    fontFamily: 'inherit',
+    color: 'var(--color-text-secondary)',
+    cursor: 'pointer',
+    transition: 'all var(--transition-fast)',
+    fontWeight: 'var(--font-weight-medium)' as unknown as number,
+  },
+  filterChipActive: {
+    backgroundColor: 'var(--color-burgundy)',
+    color: 'var(--color-white)',
+    borderColor: 'var(--color-burgundy)',
+  },
+  queueCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  queuePosition: {
+    fontSize: 'var(--font-size-xs)',
+    fontWeight: 600,
+    color: 'var(--color-text-secondary)',
+    minWidth: '24px',
+  },
+  reorderBtns: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1px',
+  },
+  reorderBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '18px',
+    height: '14px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+    padding: 0,
+    borderRadius: '2px',
   },
 };

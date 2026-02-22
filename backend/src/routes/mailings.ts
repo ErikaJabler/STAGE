@@ -119,7 +119,8 @@ mailings.post("/:mid/send", async (c) => {
       recipient.name
     );
 
-    // Build HTML version
+    // Build HTML version with calendar link
+    const calendarUrl = `https://mikwik.se/stage/api/events/${eventId}/calendar.ics`;
     const html = buildEmailHtml({
       body: personalizedBody,
       recipientName: recipient.name,
@@ -128,6 +129,7 @@ mailings.post("/:mid/send", async (c) => {
       eventTime: event.time,
       eventLocation: event.location,
       rsvpUrl,
+      calendarUrl,
     });
 
     const result = await emailProvider.send({

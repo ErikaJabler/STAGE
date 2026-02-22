@@ -8,6 +8,10 @@ import {
   updateParticipant,
   deleteParticipant,
   getEventById,
+  shouldWaitlist,
+  getMaxQueuePosition,
+  promoteFromWaitlist,
+  getAttendingCount,
   type CreateParticipantInput,
   type UpdateParticipantInput,
 } from "../db/queries";
@@ -52,6 +56,20 @@ participants.post("/", async (c) => {
 
   if (errors.length > 0) {
     return c.json({ error: "Valideringsfel", details: errors }, 400);
+  }
+
+  // Auto-waitlist: if status would be "attending" and event is at capacity
+  if (!body.status || body.status === "attending") {
+    const needsWaitlist = await shouldWaitlist(c.env.DB, eventId);
+    if (needsWaitlist) {
+      const maxPos = await getMaxQueuePosition(c.env.DB, eventId);
+      body.status = "waitlisted";
+      // Create with queue_position — we'll set it after creation
+      const participant = await createParticipant(c.env.DB, eventId, body);
+      await updateParticipant(c.env.DB, participant.id, { queue_position: maxPos + 1 });
+      const updated = await getParticipantById(c.env.DB, participant.id);
+      return c.json(updated!, 201);
+    }
   }
 
   const participant = await createParticipant(c.env.DB, eventId, body);
@@ -133,10 +151,34 @@ participants.post("/import", async (c) => {
     });
   }
 
-  // Bulk insert valid rows
+  // Check capacity for auto-waitlist during bulk import
+  const event = await getEventById(c.env.DB, eventId);
+  let currentAttending = await getAttendingCount(c.env.DB, eventId);
+  let maxQueuePos = await getMaxQueuePosition(c.env.DB, eventId);
+  const capacity = event && event.max_participants !== null
+    ? event.max_participants + (event.overbooking_limit ?? 0)
+    : null;
+
+  // Insert rows one by one, applying waitlist logic per row
   let created = 0;
-  if (validRows.length > 0) {
-    created = await bulkCreateParticipants(c.env.DB, eventId, validRows);
+  for (const input of validRows) {
+    const status = input.status ?? "invited";
+    // Only auto-waitlist if the row would be "attending" and we're at capacity
+    if (status === "attending" && capacity !== null && currentAttending >= capacity) {
+      input.status = "waitlisted";
+    }
+
+    const participant = await createParticipant(c.env.DB, eventId, input);
+
+    if (input.status === "waitlisted" && status === "attending") {
+      // Was auto-waitlisted — set queue position
+      maxQueuePos++;
+      await updateParticipant(c.env.DB, participant.id, { queue_position: maxQueuePos });
+    } else if (participant.status === "attending") {
+      currentAttending++;
+    }
+
+    created++;
   }
 
   return c.json({
@@ -149,7 +191,7 @@ participants.post("/import", async (c) => {
 
 /** PUT /api/events/:eventId/participants/:id — Update a participant */
 participants.put("/:id", async (c) => {
-  const { error, status } = await validateEvent(
+  const { error, status, eventId } = await validateEvent(
     c.env.DB,
     c.req.param("eventId") as string
   );
@@ -167,17 +209,28 @@ participants.put("/:id", async (c) => {
     return c.json({ error: "Valideringsfel", details: errors }, 400);
   }
 
+  // Check if participant was attending before the update
+  const before = await getParticipantById(c.env.DB, id);
+  if (!before) {
+    return c.json({ error: "Deltagare hittades inte" }, 404);
+  }
+
   const participant = await updateParticipant(c.env.DB, id, body);
   if (!participant) {
     return c.json({ error: "Deltagare hittades inte" }, 404);
   }
 
+  // If status changed from "attending" to something else, promote next from waitlist
+  if (before.status === "attending" && body.status && body.status !== "attending") {
+    await promoteFromWaitlist(c.env.DB, eventId);
+  }
+
   return c.json(participant);
 });
 
-/** DELETE /api/events/:eventId/participants/:id — Remove a participant */
-participants.delete("/:id", async (c) => {
-  const { error, status } = await validateEvent(
+/** PUT /api/events/:eventId/participants/:id/reorder — Update queue position */
+participants.put("/:id/reorder", async (c) => {
+  const { error, status, eventId } = await validateEvent(
     c.env.DB,
     c.req.param("eventId") as string
   );
@@ -188,9 +241,76 @@ participants.delete("/:id", async (c) => {
     return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
   }
 
+  const body = await c.req.json<{ queue_position: number }>();
+  if (!Number.isFinite(body.queue_position) || body.queue_position < 1) {
+    return c.json({ error: "queue_position måste vara ett positivt heltal" }, 400);
+  }
+
+  const participant = await getParticipantById(c.env.DB, id);
+  if (!participant || participant.event_id !== eventId) {
+    return c.json({ error: "Deltagare hittades inte" }, 404);
+  }
+
+  if (participant.status !== "waitlisted") {
+    return c.json({ error: "Bara väntlistade deltagare kan omordnas" }, 400);
+  }
+
+  const oldPos = participant.queue_position ?? 0;
+  const newPos = body.queue_position;
+
+  if (oldPos === newPos) {
+    return c.json(participant);
+  }
+
+  // Shift other waitlisted participants to make room
+  const now = new Date().toISOString();
+  if (newPos < oldPos) {
+    // Moving up: shift positions down for those in [newPos, oldPos)
+    await c.env.DB
+      .prepare(
+        "UPDATE participants SET queue_position = queue_position + 1, updated_at = ? WHERE event_id = ? AND status = 'waitlisted' AND queue_position >= ? AND queue_position < ? AND id != ?"
+      )
+      .bind(now, eventId, newPos, oldPos, id)
+      .run();
+  } else {
+    // Moving down: shift positions up for those in (oldPos, newPos]
+    await c.env.DB
+      .prepare(
+        "UPDATE participants SET queue_position = queue_position - 1, updated_at = ? WHERE event_id = ? AND status = 'waitlisted' AND queue_position > ? AND queue_position <= ? AND id != ?"
+      )
+      .bind(now, eventId, oldPos, newPos, id)
+      .run();
+  }
+
+  const updated = await updateParticipant(c.env.DB, id, { queue_position: newPos });
+  return c.json(updated);
+});
+
+/** DELETE /api/events/:eventId/participants/:id — Remove a participant */
+participants.delete("/:id", async (c) => {
+  const { error, status, eventId } = await validateEvent(
+    c.env.DB,
+    c.req.param("eventId") as string
+  );
+  if (error) return c.json({ error }, status);
+
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id) || id < 1) {
+    return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
+  }
+
+  // Check if participant was attending before deletion
+  const before = await getParticipantById(c.env.DB, id);
+  const wasAttending = before?.status === "attending";
+
   const deleted = await deleteParticipant(c.env.DB, id);
   if (!deleted) {
     return c.json({ error: "Deltagare hittades inte" }, 404);
+  }
+
+  // If the deleted participant was attending, promote next from waitlist
+  if (wasAttending) {
+    await promoteFromWaitlist(c.env.DB, eventId);
   }
 
   return c.json({ ok: true });
