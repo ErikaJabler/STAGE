@@ -304,6 +304,45 @@ export async function createParticipant(
   return participant!;
 }
 
+/** Bulk create participants (for CSV import) */
+export async function bulkCreateParticipants(
+  db: D1Database,
+  eventId: number,
+  inputs: CreateParticipantInput[]
+): Promise<number> {
+  const now = new Date().toISOString();
+  let created = 0;
+
+  // D1 doesn't support batch inserts with variable bindings well,
+  // so we insert one-by-one within a reasonable limit
+  for (const input of inputs) {
+    const cancellationToken = crypto.randomUUID();
+    await db
+      .prepare(
+        `INSERT INTO participants (
+          event_id, name, email, company, category, status,
+          response_deadline, cancellation_token, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(
+        eventId,
+        input.name,
+        input.email,
+        input.company ?? null,
+        input.category ?? "other",
+        input.status ?? "invited",
+        input.response_deadline ?? null,
+        cancellationToken,
+        now,
+        now
+      )
+      .run();
+    created++;
+  }
+
+  return created;
+}
+
 /** Update an existing participant (partial update) */
 export async function updateParticipant(
   db: D1Database,

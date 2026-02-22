@@ -172,6 +172,8 @@
 | 18 | RSVP via cancellation_token | Publika routes, inga credentials, deltagare identifieras via UUID | 4 |
 | 19 | RSVP-sida utanför Layout | Ren publik sida utan sidebar/topbar, egen route i React Router | 4 |
 | 20 | Mailings med recipient_filter | Filtrera mottagare per status eller kategori vid skapande/sändning | 4 |
+| 21 | CSV-import med auto-header-detection | Parser identifierar kolumner från header-rad (sv/en), fallback till positionell | 6 |
+| 22 | Frontendbaserade mailmallar | Mallar definierade i frontend, ej backend — enkelt, ingen migration, redigerbart | 6 |
 
 ---
 
@@ -236,6 +238,36 @@ npm run build && npx wrangler deploy
 - Consid-färger hårdkodade i HTML-mallen (CSS-variabler fungerar inte i mailklienter)
 - Ingen ny migration behövdes
 - Befintliga 21 tester passerar fortfarande
+
+---
+
+## Session 6: CSV-import av deltagare + fördefinierade mailmallar
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] Backend: POST /api/events/:id/participants/import — tar emot CSV-fil via multipart form-data
+- [x] CSV-parser med stöd för `,` och `;` som separator, header-autodetektering (namn/email/företag/kategori på svenska och engelska)
+- [x] Validering per rad: email-format, dubbletter (inom CSV + mot befintliga deltagare), felrapport med rad-nummer
+- [x] Fallback till positionell parsning om ingen header-rad identifieras
+- [x] `bulkCreateParticipants()` i db/queries.ts för effektiv batch-insättning
+- [x] Frontend: ImportCSVModal med filuppladdning, förhandsgranskning (5 första rader), import-knapp
+- [x] Frontend: Importresultat-vy med antal importerade/hoppade + detaljerade felmeddelanden per rad
+- [x] "Importera CSV"-knapp i ParticipantsTab (både tom-state och lista-vy)
+- [x] Frontend: API-klient `participantsApi.import()` + TanStack Query hook `useImportParticipants()`
+- [x] 3 fördefinierade mailmallar: "Save the date", "Officiell inbjudan", "Påminnelse"
+- [x] Varje mall har förpopulerad subject + body med `{{name}}` och `{{rsvp_link}}` variabler
+- [x] Mall-väljare i CreateMailingModal — 3 klickbara kort med namn + beskrivning
+- [x] Välja mall fyller i ämne + brödtext, användaren kan redigera fritt
+- [x] 2 nya tester (CSV-import med headers + duplikat/valideringsfel) — totalt 23, alla passerar
+- [x] SAD.md uppdaterad med ny endpoint
+
+### Anteckningar
+- Ingen ny migration krävdes — befintligt schema stödjer import
+- CSV-parser stödjer vanliga svenska kolumnnamn (namn, e-post, företag, kategori) + engelska (name, email, company, category)
+- CSV-parser hanterar citerade fält (dubbla citattecken)
+- Mallarna är hårdkodade i frontend (inga backend-ändringar behövdes) — i Consid-profil med formella men varma texter
+- Frontend Vite build: 348KB JS, 4.2KB CSS (gzipped: 102KB JS, 1.4KB CSS)
 
 ---
 

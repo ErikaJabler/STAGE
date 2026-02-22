@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Topbar } from '../components/layout';
 import { Badge, Button, Input, Modal, EventDetailSkeleton, useToast } from '../components/ui';
 import { useEvent } from '../hooks/useEvents';
-import { useParticipants, useCreateParticipant, useDeleteParticipant } from '../hooks/useParticipants';
+import { useParticipants, useCreateParticipant, useDeleteParticipant, useImportParticipants } from '../hooks/useParticipants';
 import { useMailings, useCreateMailing, useSendMailing } from '../hooks/useMailings';
 import type { EventWithCount, Participant, Mailing } from '@stage/shared';
 import { PARTICIPANT_CATEGORY, PARTICIPANT_STATUS } from '@stage/shared';
@@ -176,6 +176,7 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 /* ---- Tab: Deltagare ---- */
 function ParticipantsTab({ eventId }: { eventId: number; participantCount: number }) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const { data: participants, isLoading } = useParticipants(eventId);
   const { toast } = useToast();
   const deleteParticipant = useDeleteParticipant(eventId);
@@ -202,15 +203,25 @@ function ParticipantsTab({ eventId }: { eventId: number; participantCount: numbe
         <div style={styles.emptyTab}>
           <PeopleEmptyIcon />
           <h3 style={styles.emptyTitle}>Inga deltagare ännu</h3>
-          <p style={styles.emptyText}>Lägg till deltagare eller skicka inbjudningar.</p>
-          <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-            + Lägg till deltagare
-          </Button>
+          <p style={styles.emptyText}>Lägg till deltagare eller importera från CSV.</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+              + Lägg till deltagare
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImportModal(true)}>
+              <UploadIcon /> Importera CSV
+            </Button>
+          </div>
         </div>
         <AddParticipantModal
           eventId={eventId}
           open={showAddModal}
           onClose={() => setShowAddModal(false)}
+        />
+        <ImportCSVModal
+          eventId={eventId}
+          open={showImportModal}
+          onClose={() => setShowImportModal(false)}
         />
       </>
     );
@@ -220,9 +231,14 @@ function ParticipantsTab({ eventId }: { eventId: number; participantCount: numbe
     <div>
       <div style={styles.participantsHeader}>
         <span style={styles.participantsCount}>{participants.length} deltagare</span>
-        <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-          + Lägg till
-        </Button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button variant="secondary" size="sm" onClick={() => setShowImportModal(true)}>
+            <UploadIcon /> Importera CSV
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+            + Lägg till
+          </Button>
+        </div>
       </div>
 
       <div style={styles.tableWrapper}>
@@ -272,6 +288,11 @@ function ParticipantsTab({ eventId }: { eventId: number; participantCount: numbe
         eventId={eventId}
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
+      />
+      <ImportCSVModal
+        eventId={eventId}
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
       />
     </div>
   );
@@ -400,6 +421,193 @@ function AddParticipantModal({ eventId, open, onClose }: {
         </div>
       </form>
     </Modal>
+  );
+}
+
+/* ---- ImportCSVModal ---- */
+function ImportCSVModal({ eventId, open, onClose }: {
+  eventId: number;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const importParticipants = useImportParticipants(eventId);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string[][] | null>(null);
+  const [result, setResult] = useState<import('../api/client').ImportParticipantsResult | null>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+    setResult(null);
+    if (f) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string;
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        const rows = lines.slice(0, 6).map((line) => {
+          // Simple CSV split for preview (handle both , and ;)
+          const sep = line.includes(';') && !line.includes(',') ? ';' : ',';
+          return line.split(sep).map((c) => c.replace(/^"|"$/g, '').trim());
+        });
+        setPreview(rows);
+      };
+      reader.readAsText(f);
+    } else {
+      setPreview(null);
+    }
+  }
+
+  function handleImport() {
+    if (!file) return;
+    importParticipants.mutate(file, {
+      onSuccess: (r) => {
+        setResult(r);
+        if (r.imported > 0) {
+          toast(`${r.imported} deltagare importerade`, 'success');
+        }
+        if (r.skipped > 0) {
+          toast(`${r.skipped} rader hoppades över`, 'info');
+        }
+      },
+      onError: () => {
+        toast('Import misslyckades', 'error');
+      },
+    });
+  }
+
+  function handleClose() {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    onClose();
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title="Importera deltagare från CSV"
+      footer={
+        result ? (
+          <Button variant="primary" size="md" onClick={handleClose}>
+            Stäng
+          </Button>
+        ) : (
+          <>
+            <Button variant="secondary" size="md" onClick={handleClose}>
+              Avbryt
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleImport}
+              loading={importParticipants.isPending}
+              disabled={!file}
+            >
+              Importera
+            </Button>
+          </>
+        )
+      }
+    >
+      {result ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={styles.importResultCard}>
+            <div style={styles.importResultRow}>
+              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>{result.imported}</span>
+              <span> importerade</span>
+            </div>
+            {result.skipped > 0 && (
+              <div style={styles.importResultRow}>
+                <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>{result.skipped}</span>
+                <span> hoppades &ouml;ver</span>
+              </div>
+            )}
+            <div style={styles.importResultRow}>
+              <span style={{ color: 'var(--color-text-muted)' }}>{result.total}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}> rader totalt</span>
+            </div>
+          </div>
+          {result.errors.length > 0 && (
+            <div>
+              <span style={styles.detailLabel}>Detaljer</span>
+              <div style={styles.importErrorList}>
+                {result.errors.slice(0, 20).map((err, i) => (
+                  <div key={i} style={styles.importErrorItem}>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>Rad {err.row}:</span>{' '}
+                    {err.reason}
+                  </div>
+                ))}
+                {result.errors.length > 20 && (
+                  <div style={{ ...styles.importErrorItem, color: 'var(--color-text-muted)' }}>
+                    ...och {result.errors.length - 20} till
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label
+              style={styles.fileUploadLabel}
+            >
+              <UploadIcon />
+              <span>{file ? file.name : 'Välj CSV-fil...'}</span>
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
+            <strong>Format:</strong> CSV med kolumner namn, email, företag, kategori.{' '}
+            Header-rad identifieras automatiskt. Stöder <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>,</code> och <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>;</code> som separator.
+            Duplicerade e-postadresser hoppas över.
+          </div>
+
+          {preview && preview.length > 0 && (
+            <div>
+              <span style={styles.detailLabel}>Förhandsgranskning</span>
+              <div style={{ ...styles.tableWrapper, maxHeight: '200px', overflow: 'auto' }}>
+                <table style={styles.table}>
+                  <tbody>
+                    {preview.map((row, i) => (
+                      <tr key={i} style={{
+                        ...styles.tr,
+                        ...(i === 0 ? { backgroundColor: 'var(--color-bg-primary)', fontWeight: 600 } : {}),
+                      }}>
+                        {row.map((cell, j) => (
+                          <td key={j} style={{ ...styles.td, fontSize: 'var(--font-size-xs)' }}>{cell || '—'}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {preview.length >= 6 && (
+                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
+                  Visar de 5 första raderna...
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginRight: '4px' }}>
+      <path d="M7 10V2M7 2L4 5M7 2l3 3M2 12h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -622,6 +830,62 @@ function MailingsTab({ eventId }: { eventId: number }) {
   );
 }
 
+/* ---- Mail templates ---- */
+const MAIL_TEMPLATES = [
+  {
+    id: 'save-the-date',
+    name: 'Save the date',
+    description: 'Tidigt meddelande för att boka datum',
+    subject: 'Save the date!',
+    body: `Hej {{name}},
+
+Vi vill ge dig en tidig heads-up! Vi planerar ett event som vi gärna vill att du deltar i.
+
+Mer information och en formell inbjudan kommer inom kort. Under tiden, boka gärna datumet i din kalender.
+
+Vi återkommer snart med fler detaljer!
+
+Med vänlig hälsning,
+Consid`,
+  },
+  {
+    id: 'official-invitation',
+    name: 'Officiell inbjudan',
+    description: 'Formell inbjudan med RSVP-länk',
+    subject: 'Inbjudan: Du är välkommen!',
+    body: `Hej {{name}},
+
+Du är varmt välkommen att delta i vårt kommande event!
+
+Vi har ett spännande program planerat och hoppas att du kan vara med. Svara gärna på inbjudan via länken nedan så snart du kan.
+
+{{rsvp_link}}
+
+Har du frågor? Tveka inte att höra av dig.
+
+Varmt välkommen!
+Consid`,
+  },
+  {
+    id: 'reminder',
+    name: 'Påminnelse',
+    description: 'Påminnelse till de som inte svarat',
+    subject: 'Påminnelse: Har du svarat på inbjudan?',
+    body: `Hej {{name}},
+
+Vi vill påminna dig om vårt kommande event! Vi har ännu inte fått ditt svar och hoppas att du fortfarande kan delta.
+
+Svara gärna via länken nedan:
+
+{{rsvp_link}}
+
+Glöm inte att platsen kan vara begränsad, så svara gärna så snart du kan.
+
+Vi hoppas vi ses!
+Consid`,
+  },
+] as const;
+
 /* ---- CreateMailingModal ---- */
 function CreateMailingModal({ eventId, open, onClose }: {
   eventId: number;
@@ -630,6 +894,7 @@ function CreateMailingModal({ eventId, open, onClose }: {
 }) {
   const { toast } = useToast();
   const createMailing = useCreateMailing(eventId);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [form, setForm] = useState({
     subject: '',
     body: '',
@@ -645,6 +910,24 @@ function CreateMailingModal({ eventId, open, onClose }: {
         delete next[field];
         return next;
       });
+    }
+  }
+
+  function handleTemplateSelect(templateId: string) {
+    if (selectedTemplate === templateId) {
+      // Deselect
+      setSelectedTemplate(null);
+      return;
+    }
+    const template = MAIL_TEMPLATES.find((t) => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(templateId);
+      setForm((prev) => ({
+        ...prev,
+        subject: template.subject,
+        body: template.body,
+      }));
+      setErrors({});
     }
   }
 
@@ -672,6 +955,7 @@ function CreateMailingModal({ eventId, open, onClose }: {
     createMailing.mutate(payload, {
       onSuccess: () => {
         toast('Utskick skapat', 'success');
+        setSelectedTemplate(null);
         setForm({ subject: '', body: '', recipient_filter: 'all' });
         setErrors({});
         onClose();
@@ -704,6 +988,27 @@ function CreateMailingModal({ eventId, open, onClose }: {
       }
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* Template selector */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={styles.modalSelectLabel}>Välj mall</label>
+          <div style={styles.templateGrid}>
+            {MAIL_TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleTemplateSelect(t.id)}
+                style={{
+                  ...styles.templateCard,
+                  ...(selectedTemplate === t.id ? styles.templateCardActive : {}),
+                }}
+              >
+                <span style={styles.templateName}>{t.name}</span>
+                <span style={styles.templateDesc}>{t.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={styles.modalSelectLabel}>Mottagare</label>
           <select
@@ -741,7 +1046,7 @@ function CreateMailingModal({ eventId, open, onClose }: {
             value={form.body}
             onChange={(e) => updateField('body', e.target.value)}
             placeholder="Hej {{name}},&#10;&#10;Välkommen till eventet! Svara gärna via länken nedan.&#10;&#10;{{rsvp_link}}"
-            rows={6}
+            rows={8}
             style={{
               ...styles.modalSelect,
               height: 'auto',
@@ -1083,6 +1388,80 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     outline: 'none',
     cursor: 'pointer',
+  },
+  importResultCard: {
+    backgroundColor: 'var(--color-bg-primary)',
+    borderRadius: 'var(--radius-md)',
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+    fontSize: 'var(--font-size-base)',
+  },
+  importResultRow: {
+    display: 'flex',
+    gap: '4px',
+    alignItems: 'baseline',
+  },
+  importErrorList: {
+    backgroundColor: 'var(--color-bg-primary)',
+    borderRadius: 'var(--radius-md)',
+    padding: '12px',
+    maxHeight: '160px',
+    overflow: 'auto',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '4px',
+  },
+  importErrorItem: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-secondary)',
+    lineHeight: '1.4',
+  },
+  templateGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '8px',
+  },
+  templateCard: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '2px',
+    padding: '10px 12px',
+    borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-card)',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    transition: 'border-color var(--transition-fast), background-color var(--transition-fast)',
+    fontFamily: 'inherit',
+  },
+  templateCardActive: {
+    borderColor: 'var(--color-burgundy)',
+    backgroundColor: 'rgba(112, 17, 49, 0.04)',
+  },
+  templateName: {
+    fontSize: 'var(--font-size-sm)',
+    fontWeight: 600,
+    color: 'var(--color-text-primary)',
+  },
+  templateDesc: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-muted)',
+    lineHeight: '1.3',
+  },
+  fileUploadLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 16px',
+    borderRadius: 'var(--radius-md)',
+    border: '2px dashed var(--color-border-strong)',
+    cursor: 'pointer',
+    fontSize: 'var(--font-size-sm)',
+    color: 'var(--color-text-secondary)',
+    transition: 'border-color var(--transition-fast)',
+    justifyContent: 'center',
   },
   actionBtn: {
     display: 'flex',

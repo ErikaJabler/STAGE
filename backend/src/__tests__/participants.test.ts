@@ -132,4 +132,78 @@ describe("Participants CRUD API", () => {
     const list = (await listRes.json()) as { id: number }[];
     expect(list.find((p) => p.id === created.id)).toBeUndefined();
   });
+
+  it("POST /api/events/:id/participants/import imports CSV with headers", async () => {
+    const eventId = await createTestEvent();
+
+    const csv = `namn,email,företag,kategori
+Anna Import,anna-import-${Date.now()}@test.se,Consid,intern
+Erik Import,erik-import-${Date.now()}@test.se,IKEA,partner
+Lisa Import,lisa-import-${Date.now()}@test.se,,`;
+
+    const formData = new FormData();
+    formData.append("file", new File([csv], "test.csv", { type: "text/csv" }));
+
+    const req = new Request(`http://localhost/stage/api/events/${eventId}/participants/import`, {
+      method: "POST",
+      body: formData,
+    });
+    const ctx = createExecutionContext();
+    const res = await app.fetch(req, env, ctx);
+    await waitOnExecutionContext(ctx);
+
+    expect(res.status).toBe(200);
+    const result = (await res.json()) as {
+      imported: number;
+      skipped: number;
+      total: number;
+      errors: { row: number; reason: string }[];
+    };
+    expect(result.imported).toBe(3);
+    expect(result.skipped).toBe(0);
+
+    // Verify participants exist
+    const listRes = await request("GET", `/api/events/${eventId}/participants`);
+    const participants = (await listRes.json()) as { name: string; email: string }[];
+    expect(participants.length).toBe(3);
+  });
+
+  it("POST /api/events/:id/participants/import skips duplicates and invalid emails", async () => {
+    const eventId = await createTestEvent();
+
+    const ts = Date.now();
+    // Add existing participant
+    await request("POST", `/api/events/${eventId}/participants`, {
+      name: "Existing",
+      email: `existing-${ts}@test.se`,
+    });
+
+    const csv = `name,email,company
+Valid New,valid-${ts}@test.se,Test
+Existing,existing-${ts}@test.se,Test
+Bad Email,not-an-email,Test
+No Email,,Test
+Duplicate,valid-${ts}@test.se,Test`;
+
+    const formData = new FormData();
+    formData.append("file", new File([csv], "test.csv", { type: "text/csv" }));
+
+    const req = new Request(`http://localhost/stage/api/events/${eventId}/participants/import`, {
+      method: "POST",
+      body: formData,
+    });
+    const ctx = createExecutionContext();
+    const res = await app.fetch(req, env, ctx);
+    await waitOnExecutionContext(ctx);
+
+    expect(res.status).toBe(200);
+    const result = (await res.json()) as {
+      imported: number;
+      skipped: number;
+      errors: { row: number; reason: string }[];
+    };
+    expect(result.imported).toBe(1);
+    expect(result.skipped).toBe(4);
+    expect(result.errors.length).toBe(4);
+  });
 });

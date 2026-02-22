@@ -121,7 +121,28 @@ export const participantsApi = {
     request<{ ok: boolean }>(`/events/${eventId}/participants/${id}`, {
       method: "DELETE",
     }),
+
+  import: async (eventId: number, file: File): Promise<ImportParticipantsResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${BASE_URL}/events/${eventId}/participants/import`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, (body as { details?: string[] }).details);
+    }
+    return res.json() as Promise<ImportParticipantsResult>;
+  },
 };
+
+export interface ImportParticipantsResult {
+  imported: number;
+  skipped: number;
+  total: number;
+  errors: { row: number; reason: string }[];
+}
 
 export interface CreateParticipantPayload {
   name: string;

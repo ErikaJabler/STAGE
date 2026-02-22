@@ -7,6 +7,7 @@ import {
   participantsApi,
   type CreateParticipantPayload,
   type UpdateParticipantPayload,
+  type ImportParticipantsResult,
 } from "../api/client";
 
 const PARTICIPANTS_KEY = (eventId: number) =>
@@ -57,6 +58,20 @@ export function useDeleteParticipant(eventId: number) {
 
   return useMutation({
     mutationFn: (id: number) => participantsApi.delete(eventId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
+      queryClient.invalidateQueries({ queryKey: ["events", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
+
+/** Import participants from CSV */
+export function useImportParticipants(eventId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => participantsApi.import(eventId, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
       queryClient.invalidateQueries({ queryKey: ["events", eventId] });

@@ -4,6 +4,7 @@ import {
   listParticipants,
   getParticipantById,
   createParticipant,
+  bulkCreateParticipants,
   updateParticipant,
   deleteParticipant,
   getEventById,
@@ -55,6 +56,95 @@ participants.post("/", async (c) => {
 
   const participant = await createParticipant(c.env.DB, eventId, body);
   return c.json(participant, 201);
+});
+
+/** POST /api/events/:eventId/participants/import — Bulk import from CSV */
+participants.post("/import", async (c) => {
+  const { error, status, eventId } = await validateEvent(
+    c.env.DB,
+    c.req.param("eventId") as string
+  );
+  if (error) return c.json({ error }, status);
+
+  const body = await c.req.parseBody();
+  const file = body["file"];
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ error: "CSV-fil krävs (form field 'file')" }, 400);
+  }
+
+  const csvText = await file.text();
+  const { rows, parseErrors } = parseCSV(csvText);
+
+  if (rows.length === 0 && parseErrors.length === 0) {
+    return c.json({ error: "CSV-filen är tom" }, 400);
+  }
+
+  // Get existing participants to check for duplicate emails
+  const existing = await listParticipants(c.env.DB, eventId);
+  const existingEmails = new Set(existing.map((p) => p.email.toLowerCase()));
+
+  const validRows: CreateParticipantInput[] = [];
+  const skipped: { row: number; reason: string }[] = [];
+  const seenEmails = new Set<string>();
+
+  for (const { data, rowNumber } of rows) {
+    // Validate required fields
+    if (!data.name?.trim()) {
+      skipped.push({ row: rowNumber, reason: "Namn saknas" });
+      continue;
+    }
+    if (!data.email?.trim()) {
+      skipped.push({ row: rowNumber, reason: "E-post saknas" });
+      continue;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      skipped.push({ row: rowNumber, reason: `Ogiltig e-post: ${data.email}` });
+      continue;
+    }
+
+    const emailLower = data.email.toLowerCase();
+
+    // Check duplicate in this CSV
+    if (seenEmails.has(emailLower)) {
+      skipped.push({ row: rowNumber, reason: `Dubblett i CSV: ${data.email}` });
+      continue;
+    }
+
+    // Check duplicate against existing participants
+    if (existingEmails.has(emailLower)) {
+      skipped.push({ row: rowNumber, reason: `Finns redan: ${data.email}` });
+      continue;
+    }
+
+    seenEmails.add(emailLower);
+
+    // Validate category if provided
+    const validCategories = ["internal", "public_sector", "private_sector", "partner", "other"];
+    const category = data.category && validCategories.includes(data.category)
+      ? data.category
+      : "other";
+
+    validRows.push({
+      name: data.name.trim(),
+      email: data.email.trim(),
+      company: data.company?.trim() || null,
+      category,
+    });
+  }
+
+  // Bulk insert valid rows
+  let created = 0;
+  if (validRows.length > 0) {
+    created = await bulkCreateParticipants(c.env.DB, eventId, validRows);
+  }
+
+  return c.json({
+    imported: created,
+    skipped: skipped.length,
+    total: rows.length + parseErrors.length,
+    errors: [...parseErrors.map((e) => ({ row: e.row, reason: e.reason })), ...skipped],
+  });
 });
 
 /** PUT /api/events/:eventId/participants/:id — Update a participant */
@@ -163,6 +253,149 @@ function validateUpdateParticipant(body: UpdateParticipantInput): string[] {
   }
 
   return errors;
+}
+
+/* ---- CSV parsing ---- */
+
+interface CSVRow {
+  name: string;
+  email: string;
+  company?: string;
+  category?: string;
+}
+
+function parseCSV(text: string): {
+  rows: { data: CSVRow; rowNumber: number }[];
+  parseErrors: { row: number; reason: string }[];
+} {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim());
+  if (lines.length === 0) return { rows: [], parseErrors: [] };
+
+  // Parse header row — normalize to lowercase, trim whitespace
+  const headerLine = lines[0];
+  const headers = parseCSVLine(headerLine).map((h) =>
+    h.toLowerCase().trim().replace(/^["']|["']$/g, "")
+  );
+
+  // Map headers to our fields (support common aliases)
+  const nameIdx = headers.findIndex((h) =>
+    ["namn", "name", "förnamn", "fullname", "full name"].includes(h)
+  );
+  const emailIdx = headers.findIndex((h) =>
+    ["email", "e-post", "epost", "mail", "e-mail"].includes(h)
+  );
+  const companyIdx = headers.findIndex((h) =>
+    ["företag", "company", "firma", "organisation", "org"].includes(h)
+  );
+  const categoryIdx = headers.findIndex((h) =>
+    ["kategori", "category", "typ", "type"].includes(h)
+  );
+
+  if (nameIdx === -1 && emailIdx === -1) {
+    // No recognized headers — try positional: name, email, company, category
+    return parsePositional(lines);
+  }
+
+  const rows: { data: CSVRow; rowNumber: number }[] = [];
+  const parseErrors: { row: number; reason: string }[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const fields = parseCSVLine(lines[i]);
+    if (fields.every((f) => !f.trim())) continue; // skip empty rows
+
+    const row: CSVRow = {
+      name: nameIdx >= 0 ? (fields[nameIdx] || "").trim() : "",
+      email: emailIdx >= 0 ? (fields[emailIdx] || "").trim() : "",
+      company: companyIdx >= 0 ? (fields[companyIdx] || "").trim() : undefined,
+      category: categoryIdx >= 0 ? mapCategory((fields[categoryIdx] || "").trim()) : undefined,
+    };
+
+    rows.push({ data: row, rowNumber: i + 1 });
+  }
+
+  return { rows, parseErrors };
+}
+
+function parsePositional(lines: string[]): {
+  rows: { data: CSVRow; rowNumber: number }[];
+  parseErrors: { row: number; reason: string }[];
+} {
+  const rows: { data: CSVRow; rowNumber: number }[] = [];
+  const parseErrors: { row: number; reason: string }[] = [];
+
+  // First line might be data (no headers recognized)
+  for (let i = 0; i < lines.length; i++) {
+    const fields = parseCSVLine(lines[i]);
+    if (fields.every((f) => !f.trim())) continue;
+
+    // Need at least 2 fields (name, email)
+    if (fields.length < 2) {
+      parseErrors.push({ row: i + 1, reason: "Mindre än 2 kolumner" });
+      continue;
+    }
+
+    rows.push({
+      data: {
+        name: fields[0].trim(),
+        email: fields[1].trim(),
+        company: fields[2]?.trim() || undefined,
+        category: fields[3] ? mapCategory(fields[3].trim()) : undefined,
+      },
+      rowNumber: i + 1,
+    });
+  }
+
+  return { rows, parseErrors };
+}
+
+/** Parse a single CSV line, handling quoted fields */
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  const sep = line.includes(";") && !line.includes(",") ? ";" : ",";
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === sep) {
+        fields.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current);
+  return fields;
+}
+
+/** Map Swedish/English category names to our internal values */
+function mapCategory(value: string): string | undefined {
+  const lower = value.toLowerCase();
+  const map: Record<string, string> = {
+    intern: "internal",
+    internal: "internal",
+    "offentlig sektor": "public_sector",
+    public_sector: "public_sector",
+    "privat sektor": "private_sector",
+    private_sector: "private_sector",
+    partner: "partner",
+    övrig: "other",
+    other: "other",
+  };
+  return map[lower] || undefined;
 }
 
 export default participants;
