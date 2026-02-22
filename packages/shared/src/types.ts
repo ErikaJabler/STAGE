@@ -1,4 +1,4 @@
-import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility, MailingStatus } from "./constants";
+import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility, MailingStatus, Role } from "./constants";
 
 export interface Event {
   id: number;
@@ -57,4 +57,26 @@ export interface Mailing {
   status: MailingStatus;
   sent_at: string | null;
   created_at: string;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  token: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventPermission {
+  id: number;
+  user_id: number;
+  event_id: number;
+  role: Role;
+  created_at: string;
+}
+
+export interface EventPermissionWithUser extends EventPermission {
+  user_email: string;
+  user_name: string;
 }

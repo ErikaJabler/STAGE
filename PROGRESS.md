@@ -178,6 +178,10 @@
 | 24 | Auto-promote vid ledig plats | promoteFromWaitlist() vid delete, statusändring och RSVP-cancel | 7 |
 | 25 | Klientsida deltagarfiltrering | Sök + statusfilter i frontend — all data redan hämtad, inga extra API-anrop | 7 |
 | 26 | Dubbel ICS-generering | Backend-endpoint för email, klientsida för RSVP — redundans ger bättre UX | 7 |
+| 27 | Interface-baserad auth (AuthProvider) | Enkel token nu, Azure AD senare — byt implementation utan routeändringar | 10 |
+| 28 | X-Auth-Token header | Enkel header-baserad auth, klienten sätter header per request via localStorage | 10 |
+| 29 | Auto-owner vid event-skapande | POST /events sätter skaparen som owner automatiskt | 10 |
+| 30 | Roller per event (owner/editor/viewer) | Granulär åtkomstkontroll per event, ej global admin | 10 |
 
 ---
 
@@ -445,6 +449,49 @@ Inga avvikelser — alla leverabler uppfyllda.
 
 ---
 
+## Session 10: Behörighetssystem
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `migrations/0003_event_permissions.sql` — users + event_permissions tabeller
+- [x] `backend/src/middleware/auth.ts` — AuthProvider interface + tokenAuthProvider + authMiddleware (X-Auth-Token)
+- [x] `backend/src/services/permission.service.ts` — rollkontroll (canView/canEdit/isOwner), CRUD behörigheter, auto-owner
+- [x] `backend/src/db/user.queries.ts` — getUserByEmail, getUserByToken, createUser, getOrCreateUser
+- [x] `backend/src/db/permission.queries.ts` — getPermission, listPermissions, addPermission, removePermission
+- [x] `backend/src/routes/auth.ts` — POST /api/auth/login, GET /api/auth/me
+- [x] `backend/src/routes/permissions.ts` — GET/POST/DELETE /api/events/:id/permissions
+- [x] Alla befintliga endpoints skyddade med auth-middleware (events, participants, mailings, images)
+- [x] Health + RSVP + Auth förblir publika
+- [x] Rollbaserad åtkomstkontroll: owner (full), editor (redigera), viewer (läsa)
+- [x] Auto-owner: eventskapare blir automatiskt owner
+- [x] Event-lista filtrerad per användarbehörigheter (listEventsForUser)
+- [x] `frontend/src/pages/Login.tsx` — inloggningssida med Consid-branding
+- [x] `frontend/src/hooks/useAuth.tsx` — AuthProvider/Context, localStorage-persist, login/logout
+- [x] `frontend/src/hooks/usePermissions.ts` — usePermissions, useAddPermission, useRemovePermission
+- [x] `frontend/src/components/features/settings/PermissionsPanel.tsx` — behörighetshantering i Inställningar-tab
+- [x] Sidebar: användarinfo + utloggningsknapp
+- [x] Route guards: RequireAuth redirect till /login, GuestOnly redirect till /
+- [x] API-klient skickar X-Auth-Token i alla requests
+- [x] `packages/shared` — User, EventPermission, Role typer + loginSchema, addPermissionSchema
+- [x] 8 nya permission-tester + 2 nya auth-tester — totalt 61 tester, alla passerar
+- [x] Befintliga integrationstester uppdaterade med auth-setup
+- [x] SAD.md uppdaterad med nya endpoints, tabeller, auth-sektion, schemas
+- [x] TESTPLAN.md uppdaterad med 12 nya testfall + TC-0.4
+
+### Avvikelser från plan
+Inga avvikelser — alla leverabler uppfyllda.
+
+### Anteckningar
+- AuthProvider interface designat för framtida Azure AD swap — byt `tokenAuthProvider` mot ny implementation
+- Token lagras i localStorage och skickas som `X-Auth-Token` header
+- Login-endpointen gör get-or-create: returnerar befintlig token om email finns, skapar nytt konto annars
+- Inga CSS-moduler tillagda — inline styles konsekvent med befintlig kodbas
+- Inga nya npm dependencies
+- Migration 0003 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0003_event_permissions.sql`
+
+---
+
 ## Planerad: Migrering till Consid-ägd miljö
 
 **När:** Efter att alla utvecklingssessioner är klara
@@ -470,3 +517,4 @@ Ska inkludera:
 |-----------|-----|----------|-------|--------|
 | 0001 | events_participants.sql | events, participants | ❌ | ✅ |
 | 0002 | mailings.sql | mailings | ❌ | ✅ |
+| 0003 | event_permissions.sql | users, event_permissions | ❌ | ❌ |

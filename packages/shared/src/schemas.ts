@@ -115,3 +115,24 @@ export const rsvpRespondSchema = z.object({
 export const reorderSchema = z.object({
   queue_position: z.number().int().min(1, "queue_position måste vara ett positivt heltal"),
 });
+
+/* ---- Auth schemas ---- */
+
+const roles = ["owner", "editor", "viewer"] as const;
+
+export const loginSchema = z.object({
+  email: z.string().regex(emailPattern, "email måste vara en giltig emailadress"),
+  name: z.string().min(1, "name krävs"),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+
+export const addPermissionSchema = z.object({
+  email: z.string().regex(emailPattern, "email måste vara en giltig emailadress"),
+  name: z.string().min(1, "name krävs"),
+  role: z.enum(roles, {
+    errorMap: () => ({ message: "role måste vara 'owner', 'editor' eller 'viewer'" }),
+  }),
+});
+
+export type AddPermissionInput = z.infer<typeof addPermissionSchema>;

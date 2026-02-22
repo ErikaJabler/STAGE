@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import type { Env } from "../bindings";
+import type { Env, AuthVariables } from "../bindings";
 import { ImageService, ImageValidationError } from "../services/image.service";
 
-const images = new Hono<{ Bindings: Env }>();
+const images = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-/** POST /api/images — Upload an image to R2 */
+/** POST /api/images — Upload an image to R2 (authenticated) */
 images.post("/", async (c) => {
   if (!c.env.IMAGES) {
     return c.json({ error: "Bildlagring (R2) är inte konfigurerad" }, 503);

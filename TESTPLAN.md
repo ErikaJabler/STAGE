@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 52 tester gröna (health, events, participants inkl. CSV-import/export, mailings/RSVP, waitlist/ICS, event.service, participant.service inkl. Zod-schema-validering)
-**Status:** ☑ Testad (session 9)
+**Förväntat resultat:** 61 tester gröna (health, events inkl. auth, participants, mailings/RSVP, waitlist/ICS, event.service, participant.service, permission.service)
+**Status:** ☑ Testad (session 10)
 
 ---
 
@@ -481,3 +481,81 @@
 4. Klicka "+ Lägg till"
 **Förväntat resultat:** Bara en modal visas åt gången, aldrig staplade modaler
 **Status:** ☑ Testad (session 9 — bugfix)
+
+---
+
+## Session 10: Behörighetssystem
+
+### TC-10.1: Login-sida visas för oautentiserad användare
+**Steg:**
+1. Rensa localStorage (eller öppna inkognitofönster)
+2. Navigera till `https://mikwik.se/stage/`
+**Förväntat resultat:** Redirect till login-sida med namn- och e-postfält, Stage-logotyp, Consid-branding
+**Status:** ☐ Ej testad
+
+### TC-10.2: Login skapar konto och loggar in
+**Steg:**
+1. På login-sidan, fyll i namn och e-post → "Logga in"
+**Förväntat resultat:** Redirect till översiktssidan, sidebar visar användarnamn + e-post + utloggningsknapp
+**Status:** ☐ Ej testad
+
+### TC-10.3: Login med befintligt konto returnerar samma token
+**Steg:**
+1. Logga in med samma e-post som innan
+**Förväntat resultat:** Inloggning lyckas, ingen dubblett i users-tabellen
+**Status:** ☐ Ej testad
+
+### TC-10.4: Utloggning
+**Steg:**
+1. Klicka "Logga ut" i sidebar
+**Förväntat resultat:** Redirect till login-sida, localStorage rensad
+**Status:** ☐ Ej testad
+
+### TC-10.5: API returnerar 401 utan token
+**Steg:**
+1. `curl https://mikwik.se/stage/api/events`
+**Förväntat resultat:** 401 `{ "error": "Autentisering krävs" }`
+**Status:** ☑ Testad (automatiskt test)
+
+### TC-10.6: API returnerar 401 med ogiltig token
+**Steg:**
+1. `curl -H "X-Auth-Token: ogiltig" https://mikwik.se/stage/api/events`
+**Förväntat resultat:** 401 `{ "error": "Ogiltig token" }`
+**Status:** ☐ Ej testad
+
+### TC-10.7: Eventskapare blir automatiskt ägare
+**Steg:**
+1. Logga in → skapa nytt event
+2. Öppna eventet → Inställningar-tab
+**Förväntat resultat:** Behörighetslista visar dig som "Ägare"
+**Status:** ☐ Ej testad
+
+### TC-10.8: Ägare kan lägga till redigerare
+**Steg:**
+1. Som ägare: Inställningar-tab → "+ Lägg till" → fyll i namn, e-post, roll "Redigerare" → "Lägg till"
+**Förväntat resultat:** Redigeraren visas i listan med badge "Redigerare"
+**Status:** ☐ Ej testad
+
+### TC-10.9: Ägare kan ta bort behörighet
+**Steg:**
+1. Som ägare: klicka × på en redigerare/läsare i behörighetslistan
+**Förväntat resultat:** Behörigheten tas bort, personen syns inte längre
+**Status:** ☐ Ej testad
+
+### TC-10.10: Viewer kan se men inte redigera
+**Steg:**
+1. Logga in som viewer → navigera till eventet
+**Förväntat resultat:** Kan se sammanfattning, deltagare, utskick. Redigera-knapp och modifierande åtgärder returnerar 403.
+**Status:** ☐ Ej testad
+
+### TC-10.11: RSVP förblir publikt (ingen auth krävs)
+**Steg:**
+1. Öppna `/stage/rsvp/<token>` utan inloggning
+**Förväntat resultat:** RSVP-sida laddas och fungerar utan autentisering
+**Status:** ☑ Testad (automatiska tester)
+
+### TC-10.12: Permission-tester (automatiska)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** 8 permission.service.test passerar (setOwner, owner/editor/viewer rollkontroll, oautentiserad nekas, removePermission, listForEvent, roleUpgrade)
+**Status:** ☑ Testad (session 10, 61 tester totalt)

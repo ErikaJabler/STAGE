@@ -18,6 +18,24 @@ export async function listEvents(db: D1Database): Promise<EventWithCount[]> {
   return result.results;
 }
 
+/** List events where the user has a permission */
+export async function listEventsForUser(db: D1Database, userId: number): Promise<EventWithCount[]> {
+  const result = await db
+    .prepare(
+      `SELECT e.*, COUNT(p.id) AS participant_count
+       FROM events e
+       INNER JOIN event_permissions ep ON ep.event_id = e.id AND ep.user_id = ?
+       LEFT JOIN participants p ON p.event_id = e.id
+       WHERE e.deleted_at IS NULL
+       GROUP BY e.id
+       ORDER BY e.date ASC`
+    )
+    .bind(userId)
+    .all<EventWithCount>();
+
+  return result.results;
+}
+
 /** Get a single event by ID (non-deleted) */
 export async function getEventById(
   db: D1Database,

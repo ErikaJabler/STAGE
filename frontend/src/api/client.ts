@@ -1,6 +1,7 @@
 import type { Event, EventWithCount, Participant, Mailing } from "@stage/shared";
 
 const BASE_URL = "/stage/api";
+const TOKEN_KEY = 'stage_auth_token';
 
 class ApiError extends Error {
   constructor(
@@ -12,11 +13,20 @@ class ApiError extends Error {
   }
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    headers["X-Auth-Token"] = token;
+  }
+  return headers;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     ...options,
   });
 
@@ -131,8 +141,12 @@ export const participantsApi = {
   import: async (eventId: number, file: File): Promise<ImportParticipantsResult> => {
     const formData = new FormData();
     formData.append("file", file);
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) headers["X-Auth-Token"] = token;
     const res = await fetch(`${BASE_URL}/events/${eventId}/participants/import`, {
       method: "POST",
+      headers,
       body: formData,
     });
     if (!res.ok) {
@@ -199,6 +213,33 @@ export interface SendMailingResult {
   total: number;
   errors?: string[];
 }
+
+/** Permissions API */
+export interface PermissionEntry {
+  id: number;
+  user_id: number;
+  event_id: number;
+  role: string;
+  created_at: string;
+  user_email: string;
+  user_name: string;
+}
+
+export const permissionsApi = {
+  list: (eventId: number) =>
+    request<PermissionEntry[]>(`/events/${eventId}/permissions`),
+
+  add: (eventId: number, data: { email: string; name: string; role: string }) =>
+    request<{ id: number; user_id: number; event_id: number; role: string }>(`/events/${eventId}/permissions`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  remove: (eventId: number, userId: number) =>
+    request<{ ok: boolean }>(`/events/${eventId}/permissions/${userId}`, {
+      method: "DELETE",
+    }),
+};
 
 /** RSVP API (public, token-based) */
 export interface RsvpInfo {

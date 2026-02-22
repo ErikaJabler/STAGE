@@ -6,7 +6,8 @@ import { useEvent } from '../hooks/useEvents';
 import { SummaryTab } from '../components/features/events/SummaryTab';
 import { ParticipantsTab } from '../components/features/participants/ParticipantsTab';
 import { MailingsTab } from '../components/features/email/MailingsTab';
-import { BackIcon, SettingsEmptyIcon } from '../components/features/shared-icons';
+import { PermissionsPanel } from '../components/features/settings/PermissionsPanel';
+import { BackIcon } from '../components/features/shared-icons';
 
 type TabId = 'summary' | 'participants' | 'mailings' | 'settings';
 
@@ -88,19 +89,9 @@ export function EventDetail() {
         {activeTab === 'summary' && <SummaryTab event={event} />}
         {activeTab === 'participants' && <ParticipantsTab eventId={eventId} participantCount={event.participant_count} />}
         {activeTab === 'mailings' && <MailingsTab eventId={eventId} />}
-        {activeTab === 'settings' && <SettingsTab />}
+        {activeTab === 'settings' && <PermissionsPanel eventId={eventId} />}
       </div>
     </>
-  );
-}
-
-function SettingsTab() {
-  return (
-    <div style={styles.emptyTab}>
-      <SettingsEmptyIcon />
-      <h3 style={styles.emptyTitle}>Eventinställningar</h3>
-      <p style={styles.emptyText}>Inställningar blir tillgängliga i en kommande session.</p>
-    </div>
   );
 }
 

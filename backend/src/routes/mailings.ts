@@ -1,11 +1,12 @@
 import { Hono } from "hono";
-import type { Env } from "../bindings";
+import type { Env, AuthVariables } from "../bindings";
 import { createMailingSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
 import { getEventById } from "../db/queries";
 import { MailingService } from "../services/mailing.service";
+import { PermissionService } from "../services/permission.service";
 
-const mailings = new Hono<{ Bindings: Env }>();
+const mailings = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /** Validate eventId param and check event exists */
 async function validateEvent(db: D1Database, eventIdStr: string) {
@@ -20,19 +21,29 @@ async function validateEvent(db: D1Database, eventIdStr: string) {
   return { error: null, status: 200 as const, eventId };
 }
 
-/** GET /api/events/:eventId/mailings — List all mailings */
+/** GET /api/events/:eventId/mailings — List all mailings (viewer+) */
 mailings.get("/", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
   if (error) return c.json({ error }, status);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canView(c.env.DB, user.id, eventId))) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
 
   const results = await MailingService.list(c.env.DB, eventId);
   return c.json(results);
 });
 
-/** POST /api/events/:eventId/mailings — Create a new mailing */
+/** POST /api/events/:eventId/mailings — Create a new mailing (editor+) */
 mailings.post("/", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
   if (error) return c.json({ error }, status);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
 
   const body = await c.req.json();
   const input = parseBody(createMailingSchema, body);
@@ -41,10 +52,15 @@ mailings.post("/", async (c) => {
   return c.json(mailing, 201);
 });
 
-/** POST /api/events/:eventId/mailings/:mid/send — Send a mailing */
+/** POST /api/events/:eventId/mailings/:mid/send — Send a mailing (editor+) */
 mailings.post("/:mid/send", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
   if (error) return c.json({ error }, status);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
 
   const mid = Number(c.req.param("mid"));
   if (!Number.isFinite(mid) || mid < 1) {

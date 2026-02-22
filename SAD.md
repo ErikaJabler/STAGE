@@ -37,13 +37,16 @@ Framtida integrationer (ej implementerade ännu):
 | `backend/src/index.ts` | Hono app entry — alla routes monteras här |
 | `backend/src/bindings.ts` | Cloudflare Env-typer (D1, R2, secrets) |
 | `backend/src/routes/` | Tunna API-routes (parse → service → response) |
-| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp, image) |
+| `backend/src/routes/auth.ts` | Login-endpoint (POST /api/auth/login, GET /api/auth/me) |
+| `backend/src/routes/permissions.ts` | Behörighets-CRUD per event |
+| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp, image, permission) |
 | `backend/src/services/email/` | Email-abstraktionslager (interface, resend, console, factory, html-builder) |
 | `backend/src/services/__tests__/` | Service-enhetstester |
+| `backend/src/middleware/auth.ts` | Auth-middleware + AuthProvider interface + token-provider |
 | `backend/src/middleware/error-handler.ts` | Global error-handler (ZodError → 400, övriga → 500) |
 | `backend/src/utils/validation.ts` | `parseBody()` — Zod-wrapper för request-validering |
-| `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist) |
-| `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email) |
+| `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist, user, permission) |
+| `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email, settings) |
 | `frontend/src/` | React-app (Vite) |
 | `packages/shared/src/` | Delade typer, konstanter + Zod-schemas |
 | `migrations/` | Inkrementella D1 SQL-filer |
@@ -72,6 +75,11 @@ Framtida integrationer (ej implementerade ännu):
 | GET | `/api/events/:id/participants/export` | Exportera deltagare som CSV | 9 |
 | POST | `/api/images` | Ladda upp bild till R2 (multipart form-data) | 9 |
 | GET | `/api/images/:prefix/:filename` | Hämta bild från R2 | 9 |
+| POST | `/api/auth/login` | Logga in (email + name → token) | 10 |
+| GET | `/api/auth/me` | Hämta inloggad användare via token | 10 |
+| GET | `/api/events/:id/permissions` | Lista behörigheter för event (viewer+) | 10 |
+| POST | `/api/events/:id/permissions` | Lägg till/uppdatera behörighet (owner) | 10 |
+| DELETE | `/api/events/:id/permissions/:userId` | Ta bort behörighet (owner) | 10 |
 | GET | `/api/rsvp/:token` | Hämta deltagarinfo + eventinfo (publik) | 4 |
 | POST | `/api/rsvp/:token/respond` | Svara attending/declined (publik) | 4 |
 | POST | `/api/rsvp/:token/cancel` | Avboka deltagande (publik) | 4 |
@@ -136,6 +144,26 @@ Framtida integrationer (ej implementerade ännu):
 | sent_at | TEXT | Tidpunkt för utskick |
 | created_at | TEXT NOT NULL | Skapades |
 
+### users (migration 0003)
+| Kolumn | Typ | Beskrivning |
+|---|---|---|
+| id | INTEGER PK | Auto-increment |
+| email | TEXT NOT NULL UNIQUE | Användarens email |
+| name | TEXT NOT NULL | Användarens namn |
+| token | TEXT NOT NULL UNIQUE | Auth-token |
+| created_at | TEXT NOT NULL | Skapades |
+| updated_at | TEXT NOT NULL | Senast ändrad |
+
+### event_permissions (migration 0003)
+| Kolumn | Typ | Beskrivning |
+|---|---|---|
+| id | INTEGER PK | Auto-increment |
+| user_id | INTEGER FK | Referens till users |
+| event_id | INTEGER FK | Referens till events |
+| role | TEXT NOT NULL | owner/editor/viewer |
+| created_at | TEXT NOT NULL | Skapades |
+| UNIQUE(user_id, event_id) | | En roll per user per event |
+
 ## Deploy-flöde
 1. `npm run build` — bygger frontend (Vite) + backend (esbuild)
 2. `wrangler deploy` — deployer Worker med Assets
@@ -147,8 +175,23 @@ Framtida integrationer (ej implementerade ännu):
 - Staging: `mikwik.se/stage` (efter session 3)
 - Produktion: `event.consid.se` (framtida)
 
-## Autentisering
-Ej implementerad ännu (session 10). Interface-baserad design för framtida Azure AD.
+## Autentisering (session 10)
+
+**Modell:** Interface-baserad token-auth (`AuthProvider`). Enkel token-lookup i D1 nu, utbytbar mot Azure AD.
+
+| Komponent | Fil | Beskrivning |
+|---|---|---|
+| AuthProvider interface | `backend/src/middleware/auth.ts` | Abstrakt `resolveUser(token, db)` |
+| tokenAuthProvider | `backend/src/middleware/auth.ts` | D1-baserad token-lookup |
+| authMiddleware | `backend/src/middleware/auth.ts` | Hono middleware: `X-Auth-Token` → `c.var.user` |
+| PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll: canView, canEdit, isOwner |
+
+**Roller:** `owner` (full kontroll + hantera behörigheter), `editor` (redigera event/deltagare/utskick), `viewer` (enbart läsåtkomst).
+
+**Skyddade routes:** Alla `/api/events/*`, `/api/images/*` kräver auth.
+**Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`.
+
+**Auto-owner:** Vid skapande av event sätts skaparen automatiskt som owner.
 
 ## Miljövariabler och secrets
 | Variabel | Beskrivning | Källa |
@@ -177,6 +220,7 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 | MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk |
 | RsvpService | `backend/src/services/rsvp.service.ts` | RSVP-svar, avbokning, auto-waitlist vid kapacitet |
 | ImageService | `backend/src/services/image.service.ts` | Bilduppladdning till R2, validering (typ/storlek), servering |
+| PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter |
 
 **Emailflöde vid utskick:**
 1. Hämtar mottagare baserat på `recipient_filter`
@@ -202,6 +246,8 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 | `createMailingSchema` | Skapar utskick: required subject/body, enum recipient_filter |
 | `rsvpRespondSchema` | RSVP-svar: status = "attending" | "declined" |
 | `reorderSchema` | Omsortera väntelista: queue_position (positivt heltal) |
+| `loginSchema` | Inloggning: email + name |
+| `addPermissionSchema` | Lägg till behörighet: email + name + role (owner/editor/viewer) |
 
 **Flöde:** Route → `parseBody(schema, body)` → ZodError fångas av `errorHandler` → 400 med `{ error, details }`.
 

@@ -1,27 +1,38 @@
 import { Hono } from "hono";
-import type { Env } from "./bindings";
+import type { Env, AuthVariables } from "./bindings";
 import { errorHandler } from "./middleware/error-handler";
+import { authMiddleware } from "./middleware/auth";
 import events from "./routes/events";
 import participants from "./routes/participants";
 import mailings from "./routes/mailings";
 import rsvp from "./routes/rsvp";
 import images from "./routes/images";
+import auth from "./routes/auth";
+import permissions from "./routes/permissions";
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /* ---- Global error handler ---- */
 app.onError(errorHandler);
 
-/* ---- API routes (under /stage/api/) ---- */
+/* ---- Public routes (no auth) ---- */
 
 app.get("/stage/api/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.route("/stage/api/auth", auth);
+app.route("/stage/api/rsvp", rsvp);
+
+/* ---- Protected routes (auth required) ---- */
+
+app.use("/stage/api/events/*", authMiddleware);
+app.use("/stage/api/images/*", authMiddleware);
+
 app.route("/stage/api/events", events);
 app.route("/stage/api/events/:eventId/participants", participants);
 app.route("/stage/api/events/:eventId/mailings", mailings);
-app.route("/stage/api/rsvp", rsvp);
+app.route("/stage/api/events/:eventId/permissions", permissions);
 app.route("/stage/api/images", images);
 
 /* ---- Bare /stage → redirect to /stage/ ---- */

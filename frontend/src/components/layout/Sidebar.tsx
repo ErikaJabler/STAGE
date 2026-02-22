@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { ConsidLogo } from '../../assets/ConsidLogo';
+import { useAuth } from '../../hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Översikt', icon: OverviewIcon },
@@ -7,6 +8,7 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <aside style={styles.sidebar}>
@@ -37,7 +39,15 @@ export function Sidebar() {
       </nav>
 
       <div style={styles.footer}>
-        <div style={styles.footerText}>Stage v0.1</div>
+        {user && (
+          <div style={styles.userInfo}>
+            <div style={styles.userName}>{user.name}</div>
+            <div style={styles.userEmail}>{user.email}</div>
+          </div>
+        )}
+        <button onClick={logout} style={styles.logoutBtn}>
+          Logga ut
+        </button>
       </div>
     </aside>
   );
@@ -97,8 +107,29 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '16px 24px',
     borderTop: '1px solid rgba(255, 255, 255, 0.1)',
   },
-  footerText: {
+  userInfo: {
+    marginBottom: '10px',
+  },
+  userName: {
+    fontSize: 'var(--font-size-sm)',
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: 500,
+  },
+  userEmail: {
     fontSize: 'var(--font-size-xs)',
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: 'rgba(255, 255, 255, 0.5)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  },
+  logoutBtn: {
+    background: 'none',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'rgba(255, 255, 255, 0.6)',
+    padding: '6px 12px',
+    fontSize: 'var(--font-size-xs)',
+    cursor: 'pointer',
+    width: '100%',
   },
 };

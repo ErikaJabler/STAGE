@@ -52,3 +52,11 @@ export const MAILING_STATUS = {
 } as const;
 
 export type MailingStatus = (typeof MAILING_STATUS)[keyof typeof MAILING_STATUS];
+
+export const ROLE = {
+  OWNER: "owner",
+  EDITOR: "editor",
+  VIEWER: "viewer",
+} as const;
+
+export type Role = (typeof ROLE)[keyof typeof ROLE];

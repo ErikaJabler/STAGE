@@ -10,3 +10,5 @@ export * from "./event.queries";
 export * from "./participant.queries";
 export * from "./mailing.queries";
 export * from "./waitlist.queries";
+export * from "./user.queries";
+export * from "./permission.queries";
