@@ -702,4 +702,4 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0003 | event_permissions.sql | users, event_permissions | ✅ | ✅ |
 | 0004 | activities.sql | activities, email_queue | ✅ | ✅ |
 | 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |
-| 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ❌ |
+| 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
