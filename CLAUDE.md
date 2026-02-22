@@ -24,6 +24,10 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 ├── PROGRESS.md            # Sessionsstatus
 ├── TESTPLAN.md            # Manuella testfall
 ├── SAD.md                 # Systemarkitekturdokument
+├── docs/                  # Referensmaterial
+│   ├── Consid brand guidelines_2025.pdf
+│   ├── PRD-Stage.md       # Product Requirements Document
+│   └── Skärmavbild*.png   # Prototyp-skärmdumpar
 ├── wrangler.toml          # Worker + D1 + Assets
 ├── vitest.config.ts       # Vitest med miniflare
 ├── migrations/            # Inkrementella D1-migrationer
