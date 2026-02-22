@@ -271,6 +271,25 @@ npm run build && npx wrangler deploy
 
 ---
 
+## Planerad: Migrering till Consid-ägd miljö
+
+**När:** Efter att alla utvecklingssessioner är klara
+**Vad:** En dedikerad session för att ta fram en komplett migreringsplan och checklista för att flytta Stage från mikwik.se till Consid-ägd infrastruktur (event.consid.se).
+
+Ska inkludera:
+- Checklista för DNS, domän, Cloudflare-konto (eller annan hosting)
+- Flytt från Resend → Consid MS 365 (Graph API med delade brevlådor)
+- Avsändardomän, SPF/DKIM/DMARC för consid.se
+- D1-databas och secrets i Consids konto
+- SSL/TLS-certifikat
+- Azure AD/Entra ID-autentisering
+- GDPR-krav (DPIA, PuB-avtal med tredjeparter)
+- Vad som kan/bör göras av någon annan utan AI (IT-avdelning, DNS-admin, DPO, etc.)
+
+**Status:** EJ PÅBÖRJAD — planeras som avslutande session
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
