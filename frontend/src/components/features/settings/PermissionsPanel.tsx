@@ -52,6 +52,16 @@ export function PermissionsPanel({ eventId }: Props) {
     }
   };
 
+  const handleRoleChange = async (perm: { user_email: string; user_name: string; role: string }, newRole: string) => {
+    if (newRole === perm.role) return;
+    try {
+      await addPermission.mutateAsync({ email: perm.user_email, name: perm.user_name, role: newRole });
+      addToast(`Roll ändrad till ${ROLE_LABELS[newRole] || newRole}`, 'success');
+    } catch {
+      addToast('Kunde inte ändra roll', 'error');
+    }
+  };
+
   const handleRemove = async (userId: number, userName: string) => {
     if (!confirm(`Ta bort behörighet för ${userName}?`)) return;
 
@@ -140,9 +150,20 @@ export function PermissionsPanel({ eventId }: Props) {
                   </td>
                   <td style={sharedStyles.td}>{perm.user_email}</td>
                   <td style={sharedStyles.td}>
-                    <Badge variant={ROLE_VARIANTS[perm.role] || 'default'}>
-                      {ROLE_LABELS[perm.role] || perm.role}
-                    </Badge>
+                    {isOwner && perm.user_id !== user?.id ? (
+                      <select
+                        value={perm.role}
+                        onChange={(e) => handleRoleChange(perm, e.target.value)}
+                        style={styles.roleSelect}
+                      >
+                        <option value="editor">Redigerare</option>
+                        <option value="viewer">Läsare</option>
+                      </select>
+                    ) : (
+                      <Badge variant={ROLE_VARIANTS[perm.role] || 'default'}>
+                        {ROLE_LABELS[perm.role] || perm.role}
+                      </Badge>
+                    )}
                   </td>
                   {isOwner && (
                     <td style={sharedStyles.td}>
@@ -195,5 +216,15 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 'var(--font-size-xs)',
     color: 'var(--color-text-muted)',
     fontWeight: 400,
+  },
+  roleSelect: {
+    padding: '4px 8px',
+    fontSize: 'var(--font-size-sm)',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-primary)',
+    color: 'var(--color-text-primary)',
+    fontFamily: 'inherit',
+    cursor: 'pointer',
   },
 };
