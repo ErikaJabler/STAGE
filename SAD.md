@@ -226,8 +226,8 @@ Integrationer:
 
 **Roller:** `owner` (full kontroll + hantera behörigheter), `editor` (redigera event/deltagare/utskick), `viewer` (enbart läsåtkomst).
 
-**Skyddade routes:** Alla `/api/events/*`, `/api/images/*` kräver auth.
-**Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`.
+**Skyddade routes:** Alla `/api/events/*`, `POST /api/images` kräver auth.
+**Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`, `GET /api/images/*` (UUID-baserade nycklar, cache-headers).
 
 **Auto-owner:** Vid skapande av event sätts skaparen automatiskt som owner.
 

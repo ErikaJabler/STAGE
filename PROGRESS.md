@@ -682,6 +682,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - Planen nämner `TemplateSelector.tsx` som separat fil — mallväljare + redigeringsläge integrerades istället i `CreateMailingModal.tsx`
 - 7 blocktyper (rubrik tillagd utöver planens 5-7)
 
+### Bugfixar efter session
+- [x] **Drag-and-drop i asset manager:** `uploadFile` hanterade bara `ev.target.files` (klick) — lade till `ev.dataTransfer.files` (drag)
+- [x] **Bild visas inte + text ej redigerbar:** Bild-URL var relativ (fungerade ej i GrapeJS iframe). Fix: prepend `window.location.origin`. Registrerade custom cell-typ med `editable: true` för table cells.
+- [x] **GET /api/images krävde auth:** GrapeJS iframe har ingen auth-token. Fix: GET images publikt, POST kräver fortfarande auth.
+- [x] **"Spara mail"-knappen fungerade inte:** EmailEditor's container hade `position: absolute` som täckte topBar med ämnesfältet → ämnet alltid tomt → spara misslyckades tyst. Fix: ändrade container till `flex: 1`.
+
 ### Anteckningar
 - GrapeJS lazy-laddas (~500KB) — påverkar ej initial bundle
 - `juice` används för CSS-inlining vid export (email-kompatibilitet)
@@ -689,6 +695,7 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - Om `html_body` finns på ett mailing, används det direkt vid sändning (merge fields ersätts). Annars standard buildEmailHtml()-flödet.
 - editor_data (GrapeJS JSON) sparas för framtida återöppning i editorn
 - Nya npm dependencies: grapesjs, @grapesjs/react, juice
+- GET /api/images är publikt (UUID-baserade nycklar, cache-headers), POST kräver auth
 - Migration 0006 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0006_mailing_html_body.sql`
 
 ---
