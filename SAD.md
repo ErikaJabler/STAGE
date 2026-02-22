@@ -36,13 +36,16 @@ Framtida integrationer (ej implementerade ännu):
 |---|---|
 | `backend/src/index.ts` | Hono app entry — alla routes monteras här |
 | `backend/src/bindings.ts` | Cloudflare Env-typer (D1, R2, secrets) |
-| `backend/src/routes/` | API-routes per domän |
-| `backend/src/services/` | Affärslogik per domän |
-| `backend/src/middleware/` | Auth, CORS, error handler |
-| `backend/src/db/queries.ts` | Typsäkra D1-frågor |
+| `backend/src/routes/` | Tunna API-routes (parse → service → response) |
+| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp) |
+| `backend/src/services/email/` | Email-abstraktionslager (interface, resend, console, factory, html-builder) |
+| `backend/src/services/__tests__/` | Service-enhetstester |
+| `backend/src/middleware/` | Middleware (error-handler planerad session 8b) |
+| `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist) |
 | `frontend/src/` | React-app (Vite) |
 | `packages/shared/src/` | Delade typer + konstanter |
 | `migrations/` | Inkrementella D1 SQL-filer |
+| `docs/` | IMPLEMENTATION-PLAN.md, RECOVERY-PLAN.md, SESSION-GUIDE.md, PRD, brand guidelines |
 
 ## API-endpoints
 
@@ -148,15 +151,25 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 | `DB` | D1-databas binding | wrangler.toml |
 | `RESEND_API_KEY` | API-nyckel för Resend (konfigurerad session 5) | wrangler secret |
 
-## Emailtjänst (session 4–5)
+## Emailtjänst (session 4–5, refaktorerad session 8a)
 
 | Komponent | Fil | Beskrivning |
 |---|---|---|
-| EmailProvider interface | `backend/src/services/email.ts` | Abstrakt provider med `send()` |
-| ResendProvider | `backend/src/services/email.ts` | Skickar via Resend API (text + HTML) |
-| ConsoleEmailProvider | `backend/src/services/email.ts` | Loggar till console (dev/test fallback) |
-| `buildEmailHtml()` | `backend/src/services/email.ts` | Consid-branded HTML-mall (table-baserad) |
-| `createEmailProvider()` | `backend/src/services/email.ts` | Factory — Resend om API-nyckel finns, annars Console |
+| EmailProvider interface | `backend/src/services/email/email.interface.ts` | Abstrakt provider med `send()` |
+| ResendProvider | `backend/src/services/email/resend.adapter.ts` | Skickar via Resend API (text + HTML) |
+| ConsoleEmailProvider | `backend/src/services/email/console.adapter.ts` | Loggar till console (dev/test fallback) |
+| `buildEmailHtml()` | `backend/src/services/email/html-builder.ts` | Consid-branded HTML-mall (table-baserad) |
+| `createEmailProvider()` | `backend/src/services/email/factory.ts` | Factory — Resend om API-nyckel finns, annars Console |
+
+## Service-layer (session 8a)
+
+| Service | Fil | Beskrivning |
+|---|---|---|
+| EventService | `backend/src/services/event.service.ts` | Slug-generering, ICS-generering, event CRUD |
+| ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering |
+| WaitlistService | `backend/src/services/waitlist.service.ts` | shouldWaitlist, promoteNext, reorder |
+| MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk |
+| RsvpService | `backend/src/services/rsvp.service.ts` | RSVP-svar, avbokning, auto-waitlist vid kapacitet |
 
 **Emailflöde vid utskick:**
 1. Hämtar mottagare baserat på `recipient_filter`

@@ -311,6 +311,60 @@ npm run build && npx wrangler deploy
 
 ---
 
+## Session 8a: Backend-refaktorering + Processfixar
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `docs/IMPLEMENTATION-PLAN.md` — kopierad från `~/.claude/plans/bubbly-weaving-pizza.md`
+- [x] `docs/RECOVERY-PLAN.md` — rotorsaksanalys, avvikelser, sessionsordning
+- [x] `docs/SESSION-GUIDE.md` — kompakta guider per resterande session (8-18)
+- [x] Uppdaterad `CLAUDE.md` — plan-referens, arkitekturkrav, sessionsprotokoll, korrekt repostruktur
+- [x] Service-layer: `event.service.ts`, `participant.service.ts`, `waitlist.service.ts`, `mailing.service.ts`, `rsvp.service.ts`
+- [x] Email-uppdelning: `email.ts` (196 rader) → 5 filer under `services/email/` (interface, resend, console, factory, html-builder)
+- [x] Queries-uppdelning: `queries.ts` (654 rader) → 4 domänfiler (`event.queries.ts`, `participant.queries.ts`, `mailing.queries.ts`, `waitlist.queries.ts`)
+- [x] Tunna routes: events.ts 292→170, participants.ts 521→137, mailings.ts 196→74, rsvp.ts 143→79
+- [x] 24 nya service-tester (event.service.test.ts: 10, participant.service.test.ts: 14)
+- [x] Alla 51 tester passerar (27 befintliga + 24 nya)
+
+### Avvikelser från plan
+Session 8 delades i 8a + 8b pga kontextfönsterstorlek:
+- **8a (denna):** Processfixar + services + email-uppdelning + queries-uppdelning + tester
+- **8b (nästa):** Zod-validering + error-handler middleware + slutgiltig refaktorering av validering till centraliserad modul
+
+Validering finns kvar inline i routes (events.ts) — flyttas till Zod i session 8b.
+
+### Anteckningar
+- Barrel-filer (`db/queries.ts`, `services/email/index.ts`) bevarar alla befintliga importvägar — inga ändringar i övriga filer behövdes
+- participant.service.ts = 351 rader (inkl CSV-parsning + validering) — under 400-gränsen men kan delas ytterligare i framtiden
+- Inga nya migrationer behövdes
+- Inga frontend-ändringar
+
+---
+
+### Avvikelser från plan — Session 0-7 (retrospektiv)
+
+| # | Avvikelse | Fixad i |
+|---|-----------|---------|
+| 1 | Ingen service-layer (all logik i routes) | 8a ✅ |
+| 2 | Ingen Zod-validering | 8b |
+| 3 | Ingen error-handler middleware | 8b |
+| 4 | Tom middleware/ | 8b |
+| 5 | Ingen R2-integration | 9 |
+| 6 | Ingen dnd-kit för väntlista | 9 |
+| 7 | Email i en fil (196 rader) | 8a ✅ |
+| 8 | Ingen email-queue/Cron Trigger | 11 |
+| 9 | Frontend-mallar istf backend | 11 |
+| 10 | EventDetail.tsx = 1727 rader | 9 |
+| 11 | Tom features/ mapp | 9 |
+| 12 | queries.ts = 654 rader | 8a ✅ |
+| 13 | Duplicerad validering | 8b |
+| 14 | Inga enhetstester för services | 8a ✅ |
+| 15 | CLAUDE.md matchar inte verkligheten | 8a ✅ |
+| 16 | Saknar CSV-export endpoint | 9 |
+
+---
+
 ## Planerad: Migrering till Consid-ägd miljö
 
 **När:** Efter att alla utvecklingssessioner är klara

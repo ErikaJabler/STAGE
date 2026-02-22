@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 27 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP, waitlist/ICS)
-**Status:** ☑ Testad (session 7)
+**Förväntat resultat:** 51 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP, waitlist/ICS, event.service, participant.service)
+**Status:** ☑ Testad (session 8a)
 
 ---
 

@@ -3,6 +3,12 @@
 ## Vad är Stage?
 Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events, deltagare och mailutskick. Deltagare svarar via personliga RSVP-länkar. Allt i Consid Brand Guidelines.
 
+## Implementationsplan
+- Fullständig sessionsplan: `docs/IMPLEMENTATION-PLAN.md`
+- Återgångsplan (rotorsaksanalys + avvikelser): `docs/RECOVERY-PLAN.md`
+- Sessionguider: `docs/SESSION-GUIDE.md`
+- Aktuell session: se `PROGRESS.md`
+
 ## Tech-stack
 | Lager | Val |
 |---|---|
@@ -10,9 +16,10 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 | Backend | Hono (TypeScript) |
 | Databas | Cloudflare D1 (SQLite) |
 | Frontend | React + TypeScript + Vite |
-| Server state | TanStack Query (från session 1) |
-| Email | Resend via abstraktionslager (från session 4) |
-| Bildlagring | Cloudflare R2 (från session 2) |
+| Server state | TanStack Query |
+| Validering | Zod (delade schemas frontend ↔ backend) |
+| Email | Resend via abstraktionslager |
+| Bildlagring | Cloudflare R2 (från session 9) |
 | Auth | Interface-baserad token (från session 10) |
 | Test | Vitest + @cloudflare/vitest-pool-workers |
 | Deploy | Cloudflare Workers (React via Assets) |
@@ -20,32 +27,53 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 ## Repostruktur
 ```
 ~/stage/
-├── CLAUDE.md              # Denna fil — läs först
-├── PROGRESS.md            # Sessionsstatus
-├── TESTPLAN.md            # Manuella testfall
-├── SAD.md                 # Systemarkitekturdokument
-├── docs/                  # Referensmaterial
+├── CLAUDE.md                    # Denna fil — läs först
+├── PROGRESS.md                  # Sessionsstatus
+├── TESTPLAN.md                  # Manuella testfall
+├── SAD.md                       # Systemarkitekturdokument
+├── docs/
+│   ├── IMPLEMENTATION-PLAN.md   # Fullständig 20-sessions plan
+│   ├── RECOVERY-PLAN.md         # Rotorsaksanalys + avvikelser
+│   ├── SESSION-GUIDE.md         # Kompakt guide per session
 │   ├── Consid brand guidelines_2025.pdf
-│   ├── PRD-Stage.md       # Product Requirements Document
-│   └── Skärmavbild*.png   # Prototyp-skärmdumpar
-├── wrangler.toml          # Worker + D1 + Assets
-├── vitest.config.ts       # Vitest med miniflare
-├── migrations/            # Inkrementella D1-migrationer
-├── packages/shared/src/   # Delade typer (Event, Participant, enums)
-├── backend/src/           # Hono API
-│   ├── index.ts           # App entry
-│   ├── bindings.ts        # Cloudflare Env-typer
-│   ├── routes/            # API-routes
-│   ├── services/          # Affärslogik
-│   ├── middleware/         # auth, cors, error-handler
-│   └── db/queries.ts      # Typsäkra D1-frågor
-└── frontend/src/          # React-app
-    ├── App.tsx            # Root med routing
-    ├── api/client.ts      # Typad fetch-wrapper
-    ├── pages/             # Sidkomponenter
-    ├── components/        # UI + features
-    ├── hooks/             # TanStack Query hooks
-    └── styles/            # CSS-variabler, Consid-branding
+│   ├── PRD-Stage.md             # Product Requirements Document
+│   └── Skärmavbild*.png         # Prototyp-skärmdumpar
+├── wrangler.toml                # Worker + D1 + Assets
+├── vitest.config.ts             # Vitest med miniflare
+├── migrations/                  # Inkrementella D1-migrationer
+├── packages/shared/src/         # Delade typer + Zod-schemas
+│   ├── types.ts                 # Event, Participant, Mailing interfaces
+│   ├── constants.ts             # Status-enums, kategori-enums
+│   └── schemas.ts               # Zod-schemas (validering)
+├── backend/src/                 # Hono API
+│   ├── index.ts                 # App entry
+│   ├── bindings.ts              # Cloudflare Env-typer
+│   ├── routes/                  # Tunna routes (parse → service → response)
+│   ├── services/                # Affärslogik per domän
+│   │   ├── event.service.ts
+│   │   ├── participant.service.ts
+│   │   ├── waitlist.service.ts
+│   │   ├── __tests__/           # Service-tester
+│   │   └── email/               # Email-abstraktionslager
+│   │       ├── email.interface.ts
+│   │       ├── resend.adapter.ts
+│   │       ├── console.adapter.ts
+│   │       ├── factory.ts
+│   │       └── html-builder.ts
+│   ├── middleware/              # error-handler
+│   ├── db/                     # Typsäkra D1-frågor per domän
+│   │   ├── event.queries.ts
+│   │   ├── participant.queries.ts
+│   │   ├── mailing.queries.ts
+│   │   └── waitlist.queries.ts
+│   └── utils/                  # validation.ts
+└── frontend/src/               # React-app
+    ├── App.tsx                 # Root med routing
+    ├── api/client.ts           # Typad fetch-wrapper
+    ├── pages/                  # Sidkomponenter
+    ├── components/             # UI + features
+    ├── hooks/                  # TanStack Query hooks
+    └── styles/                 # CSS-variabler, Consid-branding
 ```
 
 ## Kommandon
@@ -58,18 +86,30 @@ npm run test:watch   # Vitest watch-läge
 npm run db:migrate:local -- migrations/0001_events_participants.sql
 ```
 
+## Sessionsstart — OBLIGATORISKT
+1. Läs CLAUDE.md (denna fil)
+2. Läs PROGRESS.md (vad som är gjort)
+3. Läs sessionguiden i `docs/SESSION-GUIDE.md` för aktuell session
+4. Läs de filer som sessionen ska ändra/utöka
+5. Bekräfta sessionens mål och filer med användaren INNAN kodning startar
+6. Gör BARA det som sessionen specificerar — inte mer
+
+## Arkitekturkrav
+- Affärslogik i `backend/src/services/`, ALDRIG i routes
+- Routes är tunna: parse request → anropa service → returnera response (max 200 rader per fil)
+- Validering via Zod i `packages/shared/src/schemas.ts` eller `backend/src/utils/validation.ts`
+- Inga filer över 400 rader — bryt upp
+- Varje ny service MÅSTE ha colocated tester i `__tests__/`
+
 ## API-mönster (Hono)
 ```typescript
-// backend/src/routes/events.ts
-import { Hono } from "hono";
-import type { Env } from "../bindings";
-
-const events = new Hono<{ Bindings: Env }>();
-events.get("/", async (c) => {
-  const result = await c.env.DB.prepare("SELECT * FROM events WHERE deleted_at IS NULL").all();
-  return c.json(result.results);
+// Routes är tunna — delegerar till services
+events.post("/", async (c) => {
+  const body = await c.req.json();
+  const input = parseCreateEvent(body); // Zod-validering
+  const event = await EventService.create(c.env.DB, input);
+  return c.json(event, 201);
 });
-export default events;
 ```
 
 ## Designsystem — Consid Brand Guidelines 2025
@@ -87,13 +127,17 @@ export default events;
 - **Inkrementella migrationer:** ny SQL-fil per session som behöver det
 - **Token-auth:** `cancellation_token` (UUID) för deltagaråtgärder
 - **Email-interface:** abstrakt provider → Resend nu, O365 senare
-- **Error handling:** ErrorBoundary + Toast (från session 1)
+- **Error handling:** ErrorBoundary + Toast + global error-handler middleware
 
 ## Sessionsavslut — OBLIGATORISKT
 Varje session MÅSTE avslutas med:
-1. **Git commit** av alla ändringar (med beskrivande commit-meddelande)
-2. **Uppdatera PROGRESS.md** — markera sessionen som DONE, lista deliverables
-3. **Ge användaren en kopierbar prompt** för att starta nästa session (som kan klistras in efter omstart av Claude)
+1. `npm run typecheck` + `npm run test` — inga fel
+2. Arkitekturverifiering: Kontrollera att arkitekturkraven ovan uppfylls
+3. Git commit av alla ändringar
+4. Uppdatera **PROGRESS.md** — markera session DONE, lista deliverables + avvikelser från plan
+5. Uppdatera **SAD.md** — nya endpoints, schemaändringar, integrationer
+6. Uppdatera **TESTPLAN.md** — testfall för nya features + uppdatera TC-0.4 testantal
+7. Ge användaren en kopierbar prompt för nästa session
 
 ## Vad INTE göra
 - Använd INTE egna färger — bara Consid-paletten
@@ -101,6 +145,7 @@ Varje session MÅSTE avslutas med:
 - Hårdkoda INTE färger — använd CSS-variabler
 - Skapa INTE nya migrationer utan att uppdatera SAD.md
 - Starta INTE nästa session automatiskt
+- Lägg INTE affärslogik i routes — använd services/
 
 ## Status
 Se `PROGRESS.md` för aktuell sessionsstatus.
