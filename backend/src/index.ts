@@ -31,7 +31,12 @@ app.route("/stage/api/rsvp", rsvp);
 /* ---- Protected routes (auth required) ---- */
 
 app.use("/stage/api/events/*", authMiddleware);
-app.use("/stage/api/images/*", authMiddleware);
+app.use("/stage/api/images/*", async (c, next) => {
+  // GET images is public (served with cache headers, UUID-based keys)
+  // POST upload requires auth
+  if (c.req.method === "GET") return next();
+  return authMiddleware(c, next);
+});
 app.use("/stage/api/search/*", authMiddleware);
 app.use("/stage/api/templates/*", authMiddleware);
 
