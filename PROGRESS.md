@@ -430,6 +430,10 @@ Inga avvikelser — sessionen följde planen exakt.
 ### Avvikelser från plan
 Inga avvikelser — alla leverabler uppfyllda.
 
+### Bugfixar efter session
+- [x] **Modal-staplingsbugg:** `<dialog>` med inline `display: flex` överskrev webbläsarens `display: none` för stängda dialoger → alla modaler synliga simultant. Fix: Modal returnerar `null` när `open={false}` (villkorlig rendering)
+- [x] **Dubbla modalstates:** ParticipantsTab hade separata `showAddModal`/`showImportModal` booleans → möjliggjorde att båda var `true` samtidigt. Fix: ersatt med `useState<'add' | 'import' | null>(null)`
+
 ### Anteckningar
 - R2-bucket `stage-images` behöver skapas med `wrangler r2 bucket create stage-images` innan deploy
 - IMAGES binding är optional (`R2Bucket?`) — images route returnerar 503 om bucket ej konfigurerad

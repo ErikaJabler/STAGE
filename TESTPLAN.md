@@ -472,3 +472,12 @@
 1. Kör `npm run test`
 **Förväntat resultat:** CSV-export-test passerar (header + data + Content-Type/Disposition)
 **Status:** ☑ Testad (session 9, 52 tester totalt)
+
+### TC-9.12: Modaler öppnas en åt gången
+**Steg:**
+1. Öppna event med deltagare → Deltagare-tab
+2. Klicka "Importera CSV"
+3. Stäng modalen
+4. Klicka "+ Lägg till"
+**Förväntat resultat:** Bara en modal visas åt gången, aldrig staplade modaler
+**Status:** ☑ Testad (session 9 — bugfix)

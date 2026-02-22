@@ -16,9 +16,9 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    if (open) {
+    if (open && !dialog.open) {
       dialog.showModal();
-    } else {
+    } else if (!open && dialog.open) {
       dialog.close();
     }
   }, [open]);
@@ -37,6 +37,8 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
       onClose();
     }
   };
+
+  if (!open) return null;
 
   return (
     <dialog
