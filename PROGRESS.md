@@ -660,6 +660,39 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ---
 
+## Session 14: GrapeJS mailredigerare
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `frontend/src/components/editor/EmailEditor.tsx` — GrapeJS-wrapper (lazy-loaded via React.lazy), helskärms-editor, R2-bilduppladdning, desktop/mobil preview, spara med juice CSS-inlining
+- [x] `frontend/src/components/editor/grapejs-email-preset.ts` — 7 email-blocktyper: text, rubrik, bild, CTA-knapp, avdelare, 2-kolumner, mellanrum. Alla med table-layout.
+- [x] `frontend/src/components/editor/grapejs-brand-config.ts` — Consid brand constraints: begränsad färgpalett (9 färger), Consid Sans typsnitt, CTA-stil (Raspberry Red), style manager med typografi/bakgrund/spacing
+- [x] `frontend/src/components/features/email/CreateMailingModal.tsx` — Ombyggd med val "Visuell editor" vs "Snabbredigering", mallväljare bibehållen, helskärms-editor-vy
+- [x] `migrations/0006_mailing_html_body.sql` — ALTER mailings: html_body TEXT, editor_data TEXT
+- [x] `packages/shared/src/types.ts` — Mailing-interface utökat med html_body, editor_data
+- [x] `packages/shared/src/schemas.ts` — createMailingSchema utökat med html_body, editor_data
+- [x] `backend/src/db/mailing.queries.ts` — INSERT stödjer html_body + editor_data
+- [x] `backend/src/services/mailing.service.ts` — send() och sendTest() hanterar html_body (använder direkt istf buildEmailHtml())
+- [x] `frontend/src/api/client.ts` — CreateMailingPayload utökat med html_body, editor_data
+- [x] 2 testfiler uppdaterade med nya MAILINGS_SQL (html_body + editor_data kolumner)
+- [x] Alla 86 tester passerar
+
+### Avvikelser från plan
+- Planen nämner `TemplateSelector.tsx` som separat fil — mallväljare + redigeringsläge integrerades istället i `CreateMailingModal.tsx`
+- 7 blocktyper (rubrik tillagd utöver planens 5-7)
+
+### Anteckningar
+- GrapeJS lazy-laddas (~500KB) — påverkar ej initial bundle
+- `juice` används för CSS-inlining vid export (email-kompatibilitet)
+- Befintligt formulärflöde bibehålls som "Snabbredigering" — bakåtkompatibelt
+- Om `html_body` finns på ett mailing, används det direkt vid sändning (merge fields ersätts). Annars standard buildEmailHtml()-flödet.
+- editor_data (GrapeJS JSON) sparas för framtida återöppning i editorn
+- Nya npm dependencies: grapesjs, @grapesjs/react, juice
+- Migration 0006 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0006_mailing_html_body.sql`
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
@@ -669,3 +702,4 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0003 | event_permissions.sql | users, event_permissions | ✅ | ✅ |
 | 0004 | activities.sql | activities, email_queue | ✅ | ✅ |
 | 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |
+| 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ❌ |

@@ -40,13 +40,15 @@ export async function createMailing(
 
   const result = await db
     .prepare(
-      `INSERT INTO mailings (event_id, subject, body, recipient_filter, status, created_at)
-       VALUES (?, ?, ?, ?, 'draft', ?)`
+      `INSERT INTO mailings (event_id, subject, body, html_body, editor_data, recipient_filter, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'draft', ?)`
     )
     .bind(
       eventId,
       input.subject,
       input.body,
+      input.html_body ?? null,
+      input.editor_data ?? null,
       input.recipient_filter ?? "all",
       now
     )

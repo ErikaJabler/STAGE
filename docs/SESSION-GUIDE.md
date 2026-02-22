@@ -45,9 +45,13 @@
 
 ---
 
-## Session 14-18: Fas 2
+## Session 14: GrapeJS mailredigerare ✅ DONE
+**Levererat:** GrapeJS WYSIWYG drag-and-drop editor för mail. 3 nya filer (EmailEditor, email-preset, brand-config). 7 email-block (text, rubrik, bild, CTA-knapp, avdelare, kolumner, mellanrum). Consid brand constraints (begränsad färgpalett, typsnitt, CTA-stil). R2-bilduppladdning. Desktop/mobil preview. Val "Visuell editor" vs "Snabbredigering". Migration 0006 (html_body + editor_data). juice CSS-inlining. 86 tester.
+
+---
+
+## Session 15-18: Fas 2 (resterande)
 Följer `docs/IMPLEMENTATION-PLAN.md` exakt:
-- **14:** GrapeJS mailredigerare
 - **15:** Eventwebbplats
 - **16:** GrapeJS webbplatsredigerare (valfri)
 - **17:** Systemadmin + brand-kontroll

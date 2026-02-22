@@ -34,7 +34,7 @@
 **Steg:**
 1. Kör `npm run test` i terminalen
 **Förväntat resultat:** 86 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, integration e2e)
-**Status:** ☑ Testad (session 13b)
+**Status:** ☑ Testad (session 14)
 
 ---
 
@@ -831,3 +831,74 @@
 - Klona event med deltagare → kopia har korrekt data, 0 deltagare
 - Klonat event har skaparen som owner
 **Status:** ☑ Testad (session 13b)
+
+---
+
+## Session 14: GrapeJS mailredigerare
+
+### TC-14.1: Valet "Visuell editor" vs "Snabbredigering"
+**Förutsättning:** Inloggad, på eventets Utskick-tab
+**Steg:**
+1. Klicka "+ Nytt utskick"
+2. Modalen visar mallväljare och två redigeringslägen
+3. Klicka "Visuell editor"
+**Förväntat resultat:** Helskärmseditor (GrapeJS) öppnas med Consid-brandad email-mall (burgundy header, beige bakgrund)
+**Status:** ☐ Ej testad
+
+### TC-14.2: Valet "Snabbredigering" (befintligt flöde)
+**Förutsättning:** Inloggad, på eventets Utskick-tab
+**Steg:**
+1. Klicka "+ Nytt utskick"
+2. Klicka "Snabbredigering"
+**Förväntat resultat:** Formulär med ämne, brödtext och mottagarfilter visas (samma som tidigare)
+**Status:** ☐ Ej testad
+
+### TC-14.3: GrapeJS — drag-and-drop block
+**Förutsättning:** Visuell editor öppen
+**Steg:**
+1. Dra "Text"-blocket från blockpanelen till canvas
+2. Dra "CTA-knapp" till canvas
+3. Dra "Bild" till canvas
+4. Dra "Avdelare" till canvas
+**Förväntat resultat:** Alla block placeras korrekt i canvas. CTA-knappen har Raspberry Red bakgrund, vit text.
+**Status:** ☐ Ej testad
+
+### TC-14.4: GrapeJS — begränsad färgpalett
+**Förutsättning:** Visuell editor öppen, textblock markerat
+**Steg:**
+1. Markera textblocket
+2. Öppna färgväljaren i style manager
+**Förväntat resultat:** Bara Consid-färger visas: #701131, #B5223F, #F49E88, #EFE6DD, #1C1C1C, #492A34, #A99B94, #EC6B6A, #FFFFFF
+**Status:** ☐ Ej testad
+
+### TC-14.5: GrapeJS — bilduppladdning till R2
+**Förutsättning:** Visuell editor öppen, bildblock tillagt
+**Steg:**
+1. Dubbelklicka på bildblocket
+2. Asset Manager öppnas
+3. Ladda upp en JPEG-bild (< 5 MB)
+**Förväntat resultat:** Bilden laddas upp till R2, visas i asset manager, infogas i blocket
+**Status:** ☐ Ej testad
+
+### TC-14.6: GrapeJS — preview desktop/mobil
+**Förutsättning:** Visuell editor öppen med innehåll
+**Steg:**
+1. Klicka mobil-ikonen i toolbar
+2. Klicka desktop-ikonen i toolbar
+**Förväntat resultat:** Canvas ändrar bredd till 375px (mobil) resp 100% (desktop)
+**Status:** ☐ Ej testad
+
+### TC-14.7: GrapeJS — spara mail
+**Förutsättning:** Visuell editor öppen med redigerat innehåll, ämne ifyllt
+**Steg:**
+1. Fyll i ämne i topbar
+2. Klicka "Spara mail"
+**Förväntat resultat:** Utskick skapas med html_body (inline-CSS via juice) + editor_data (GrapeJS JSON). Visas i utskickslistan.
+**Status:** ☐ Ej testad
+
+### TC-14.8: Mailings med html_body — korrekt sändning
+**Förutsättning:** Utskick skapat via visuell editor
+**Steg:**
+1. Skicka utskicket
+**Förväntat resultat:** Mailet skickas med den visuella editorns HTML (inte auto-genererad). Merge fields ({{name}}, {{rsvp_link}}) ersätts korrekt.
+**Status:** ☐ Ej testad

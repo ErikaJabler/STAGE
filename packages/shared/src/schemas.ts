@@ -103,6 +103,8 @@ export type UpdateParticipantInput = z.infer<typeof updateParticipantSchema>;
 export const createMailingSchema = z.object({
   subject: z.string().min(1, "subject krävs"),
   body: z.string().min(1, "body krävs"),
+  html_body: z.string().nullish(),
+  editor_data: z.string().nullish(),
   recipient_filter: z.enum(recipientFilters).optional(),
 });
 

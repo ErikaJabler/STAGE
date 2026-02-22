@@ -56,6 +56,8 @@ export interface Mailing {
   event_id: number;
   subject: string;
   body: string;
+  html_body: string | null;
+  editor_data: string | null;
   recipient_filter: string;
   status: MailingStatus;
   sent_at: string | null;

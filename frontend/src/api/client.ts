@@ -219,6 +219,8 @@ export const mailingsApi = {
 export interface CreateMailingPayload {
   subject: string;
   body: string;
+  html_body?: string | null;
+  editor_data?: string | null;
   recipient_filter?: string;
 }
 

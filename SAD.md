@@ -141,13 +141,15 @@ Integrationer:
 | created_at | TEXT NOT NULL | Skapades |
 | updated_at | TEXT NOT NULL | Senast ändrad |
 
-### mailings (migration 0002)
+### mailings (migration 0002 + 0006)
 | Kolumn | Typ | Beskrivning |
 |---|---|---|
 | id | INTEGER PK | Auto-increment |
 | event_id | INTEGER FK | Referens till events |
 | subject | TEXT NOT NULL | Ämnesrad |
-| body | TEXT NOT NULL | Brödtext |
+| body | TEXT NOT NULL | Brödtext (plaintext) |
+| html_body | TEXT | Custom HTML från GrapeJS editor (migration 0006) |
+| editor_data | TEXT | GrapeJS project JSON för återeditering (migration 0006) |
 | recipient_filter | TEXT NOT NULL | all/invited/attending/etc. |
 | status | TEXT NOT NULL | draft/sent |
 | sent_at | TEXT | Tidpunkt för utskick |
@@ -259,11 +261,12 @@ Integrationer:
 | PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter |
 | ActivityService | `backend/src/services/activity.service.ts` | Aktivitetsloggning per event (log, logMailingCreated, logParticipantAdded, etc.) |
 
-**Emailflöde vid utskick (session 11 — template-renderer + email-kö):**
+**Emailflöde vid utskick (session 11 — template-renderer + email-kö, utökat session 14 med GrapeJS):**
 1. Hämtar mottagare baserat på `recipient_filter`
 2. Per mottagare: bygger `MergeContext` med `buildMergeContext()` — ersätter `{{name}}`, `{{event}}`, `{{datum}}`, `{{tid}}`, `{{plats}}`, `{{rsvp_link}}`, `{{calendar_link}}`
-3. Renderar text + HTML med `renderEmail()` (auto-append RSVP-länk om ej i body)
-4. ≤5 mottagare: skickas direkt via Resend. >5 mottagare: köas i `email_queue` och processas av Cron Trigger (var 5:e min, 20 mail/batch)
+3. **Om `html_body` finns (GrapeJS):** Ersätter merge fields i html_body, använder som-is
+4. **Annars:** Renderar text + HTML med `renderEmail()` (auto-append RSVP-länk om ej i body)
+5. ≤5 mottagare: skickas direkt via Resend. >5 mottagare: köas i `email_queue` och processas av Cron Trigger (var 5:e min, 20 mail/batch)
 
 **Email-mallar (6 st, session 11):**
 | Mall | ID | Beskrivning |
@@ -279,6 +282,24 @@ Integrationer:
 - DKIM: TXT `resend._domainkey` — verifierad
 - SPF: MX `send` + TXT `send` — verifierad
 - DMARC: TXT `_dmarc` — `v=DMARC1; p=none;`
+
+## GrapeJS WYSIWYG Editor (session 14)
+
+**Paket:** `grapesjs` + `@grapesjs/react` + `juice` (CSS-inlining)
+
+| Fil | Beskrivning |
+|---|---|
+| `frontend/src/components/editor/EmailEditor.tsx` | GrapeJS-wrapper (lazy-loaded), toolbar med desktop/mobil preview, R2-upload |
+| `frontend/src/components/editor/grapejs-brand-config.ts` | Consid brand constraints: begränsad färgpalett (9 färger), typsnitt (Consid Sans), CTA-stil |
+| `frontend/src/components/editor/grapejs-email-preset.ts` | 7 email-block: text, rubrik, bild, CTA-knapp, avdelare, kolumner, mellanrum |
+
+**Brand-begränsningar:**
+- Färgväljare: bara #701131, #B5223F, #F49E88, #EFE6DD, #1C1C1C, #492A34, #A99B94, #EC6B6A, #FFFFFF
+- Typsnitt: bara Consid Sans (+ Arial/Helvetica fallbacks)
+- CTA-knapp: Raspberry Red #B5223F bakgrund, vit text (förinställt)
+- Bilduppladdning: max 5 MB, JPEG/PNG/WebP → R2
+
+**Flöde:** Användare väljer "Visuell editor" eller "Snabbredigering" → GrapeJS editor öppnas helskärm → dra-och-släpp block → spara → HTML inline-CSS via `juice` → sparas som `html_body` + `editor_data` i mailings.
 
 ## Validering (session 8b)
 
