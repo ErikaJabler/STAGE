@@ -6,7 +6,7 @@ import { useEvent } from '../hooks/useEvents';
 import { SummaryTab } from '../components/features/events/SummaryTab';
 import { ParticipantsTab } from '../components/features/participants/ParticipantsTab';
 import { MailingsTab } from '../components/features/email/MailingsTab';
-import { PermissionsPanel } from '../components/features/settings/PermissionsPanel';
+import { SettingsTab } from '../components/features/settings/SettingsTab';
 import { BackIcon } from '../components/features/shared-icons';
 
 type TabId = 'summary' | 'participants' | 'mailings' | 'settings';
@@ -48,18 +48,11 @@ export function EventDetail() {
       <Topbar
         title={`${event.emoji || ''} ${event.name}`}
         actions={
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Link to="/" style={{ textDecoration: 'none' }}>
-              <Button variant="ghost" size="sm">
-                <BackIcon /> Tillbaka
-              </Button>
-            </Link>
-            <Link to={`/events/${eventId}/edit`} style={{ textDecoration: 'none' }}>
-              <Button variant="primary" size="sm">
-                Redigera
-              </Button>
-            </Link>
-          </div>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Button variant="ghost" size="sm">
+              <BackIcon /> Tillbaka
+            </Button>
+          </Link>
         }
       />
 
@@ -89,7 +82,7 @@ export function EventDetail() {
         {activeTab === 'summary' && <SummaryTab event={event} />}
         {activeTab === 'participants' && <ParticipantsTab eventId={eventId} participantCount={event.participant_count} />}
         {activeTab === 'mailings' && <MailingsTab eventId={eventId} />}
-        {activeTab === 'settings' && <PermissionsPanel eventId={eventId} />}
+        {activeTab === 'settings' && <SettingsTab event={event} />}
       </div>
     </>
   );

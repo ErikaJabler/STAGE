@@ -186,6 +186,9 @@
 | 32 | Email-kö med Cron Trigger | ≤5 mottagare direkt, >5 via D1-kö + Cron (var 5 min, batch 20) — respekterar rate limits | 11 |
 | 33 | Aktivitetslogg per event | Alla mutationer loggas med typ, beskrivning, metadata — ger audit trail | 11 |
 | 34 | Sök filtrerat per behörighet | SQL LIKE-sök på events, resultat filtrerat per användarens permissions | 11 |
+| 35 | Inline eventinställningar | Redigering via SettingsTab istf separat /edit-sida — allt på ett ställe | 12 |
+| 36 | RSVP extra fält (dietary + plus_one) | Sparas vid RSVP-svar, valfria fält som inte påverkar existerande logik | 12 |
+| 37 | Avbokning med bekräftelsesteg | Separata states i RSVP (confirm-cancel → cancelled) förhindrar accidentell avbokning | 12 |
 
 ---
 
@@ -560,11 +563,47 @@ Ska inkludera:
 
 ---
 
+## Session 12: RSVP-förbättringar + Inställningar-tab
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `migrations/0005_participant_dietary_plusone.sql` — dietary_notes, plus_one_name, plus_one_email kolumner
+- [x] `packages/shared/src/types.ts` — Participant interface utökad med 3 nya fält
+- [x] `packages/shared/src/schemas.ts` — createParticipant, updateParticipant, rsvpRespond utökade med dietary/plus_one
+- [x] `backend/src/db/participant.queries.ts` — INSERT och UPDATE stödjer nya fält
+- [x] `backend/src/services/rsvp.service.ts` — respond() sparar dietary_notes, plus_one_name, plus_one_email
+- [x] `backend/src/routes/rsvp.ts` — GET returnerar dietary/plus_one + event.image_url, POST skickar extra fält
+- [x] `frontend/src/api/client.ts` — RsvpInfo utökad, RsvpRespondPayload med extra fält, imagesApi.upload()
+- [x] `frontend/src/pages/RsvpPage.tsx` — Hero image, dietary textarea, plusett-formulär, bekräftelse-sammanfattning, avbokningsbekräftelse
+- [x] `frontend/src/components/features/settings/SettingsTab.tsx` — Komplett inställningssida med inline-redigering, hero image upload, synlighets-toggle, sender mailbox, GDPR-text, PermissionsPanel, DangerZone
+- [x] `frontend/src/components/features/settings/DangerZone.tsx` — Soft-delete med bekräftelsedialog
+- [x] `frontend/src/pages/EventDetail.tsx` — SettingsTab ersätter PermissionsPanel, Redigera-knapp borttagen (inline istället)
+- [x] 2 nya tester (dietary/plus_one create + RSVP respond med extra fält) — totalt 68 tester, alla passerar
+- [x] 7 testfiler uppdaterade med ny PARTICIPANTS_SQL (nya kolumner)
+- [x] SAD.md uppdaterad med nya participant-kolumner
+- [x] TESTPLAN.md uppdaterad med 12 nya testfall + TC-0.4 uppdaterad till 68
+
+### Avvikelser från plan
+Inga avvikelser — alla leverabler uppfyllda.
+
+### Anteckningar
+- SettingsTab samlar alla eventinställningar (info, bild, synlighet, avsändare, GDPR, behörigheter, borttagning) i en vy
+- Redigera-knapp borttagen från EventDetail topbar — all redigering sker inline via Inställningar-tab
+- RSVP-sida visar hero-bild som bakgrund med gradient-overlay om event har image_url
+- Avbokning kräver nu bekräftelsesteg (visas som egen state 'confirm-cancel')
+- Plus-one-formuläret har expanderbart UI ("+ Ta med en gäst" → formulär → "Ta bort gäst")
+- Migration 0005 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0005_participant_dietary_plusone.sql`
+- Frontend build: 499KB JS, 4.2KB CSS (gzipped: ~142KB JS, 1.4KB CSS)
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
 |-----------|-----|----------|-------|--------|
-| 0001 | events_participants.sql | events, participants | ❌ | ✅ |
-| 0002 | mailings.sql | mailings | ❌ | ✅ |
-| 0003 | event_permissions.sql | users, event_permissions | ❌ | ❌ |
-| 0004 | activities.sql | activities, email_queue | ❌ | ❌ |
+| 0001 | events_participants.sql | events, participants | ✅ | ✅ |
+| 0002 | mailings.sql | mailings | ✅ | ✅ |
+| 0003 | event_permissions.sql | users, event_permissions | ✅ | ❌ |
+| 0004 | activities.sql | activities, email_queue | ✅ | ❌ |
+| 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ❌ |

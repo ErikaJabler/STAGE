@@ -76,6 +76,9 @@ export const createParticipantSchema = z.object({
   category: z.enum(participantCategories).optional(),
   status: z.enum(participantStatuses).optional(),
   response_deadline: z.string().nullish(),
+  dietary_notes: z.string().nullish(),
+  plus_one_name: z.string().nullish(),
+  plus_one_email: z.string().regex(emailPattern, "plus_one_email måste vara en giltig emailadress").nullish(),
 });
 
 export type CreateParticipantInput = z.infer<typeof createParticipantSchema>;
@@ -88,6 +91,9 @@ export const updateParticipantSchema = z.object({
   status: z.enum(participantStatuses).optional(),
   queue_position: z.number().nullish(),
   response_deadline: z.string().nullish(),
+  dietary_notes: z.string().nullish(),
+  plus_one_name: z.string().nullish(),
+  plus_one_email: z.string().regex(emailPattern, "plus_one_email måste vara en giltig emailadress").nullish(),
 });
 
 export type UpdateParticipantInput = z.infer<typeof updateParticipantSchema>;
@@ -108,6 +114,9 @@ export const rsvpRespondSchema = z.object({
   status: z.enum(["attending", "declined"], {
     errorMap: () => ({ message: "status måste vara 'attending' eller 'declined'" }),
   }),
+  dietary_notes: z.string().nullish(),
+  plus_one_name: z.string().nullish(),
+  plus_one_email: z.string().regex(emailPattern, "plus_one_email måste vara en giltig emailadress").nullish(),
 });
 
 /* ---- Reorder schema ---- */

@@ -43,8 +43,9 @@ export async function createParticipant(
     .prepare(
       `INSERT INTO participants (
         event_id, name, email, company, category, status,
-        response_deadline, cancellation_token, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        response_deadline, dietary_notes, plus_one_name, plus_one_email,
+        cancellation_token, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       eventId,
@@ -54,6 +55,9 @@ export async function createParticipant(
       input.category ?? "other",
       input.status ?? "invited",
       input.response_deadline ?? null,
+      input.dietary_notes ?? null,
+      input.plus_one_name ?? null,
+      input.plus_one_email ?? null,
       cancellationToken,
       now,
       now
@@ -86,8 +90,9 @@ export async function bulkCreateParticipants(
       .prepare(
         `INSERT INTO participants (
           event_id, name, email, company, category, status,
-          response_deadline, cancellation_token, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          response_deadline, dietary_notes, plus_one_name, plus_one_email,
+          cancellation_token, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         eventId,
@@ -97,6 +102,9 @@ export async function bulkCreateParticipants(
         input.category ?? "other",
         input.status ?? "invited",
         input.response_deadline ?? null,
+        input.dietary_notes ?? null,
+        input.plus_one_name ?? null,
+        input.plus_one_email ?? null,
         cancellationToken,
         now,
         now
@@ -125,6 +133,9 @@ export async function updateParticipant(
     "status",
     "queue_position",
     "response_deadline",
+    "dietary_notes",
+    "plus_one_name",
+    "plus_one_email",
   ];
 
   for (const key of updatable) {

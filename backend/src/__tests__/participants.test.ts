@@ -8,7 +8,7 @@ import app from "../index";
 
 const EVENTS_SQL = `CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, emoji TEXT, slug TEXT NOT NULL UNIQUE, date TEXT NOT NULL, time TEXT NOT NULL, end_date TEXT, end_time TEXT, location TEXT NOT NULL, description TEXT, organizer TEXT NOT NULL, organizer_email TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'planning', type TEXT NOT NULL DEFAULT 'other', max_participants INTEGER, overbooking_limit INTEGER NOT NULL DEFAULT 0, visibility TEXT NOT NULL DEFAULT 'private', sender_mailbox TEXT, gdpr_consent_text TEXT, image_url TEXT, created_by TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), deleted_at TEXT);`;
 
-const PARTICIPANTS_SQL = `CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT, category TEXT NOT NULL DEFAULT 'other', status TEXT NOT NULL DEFAULT 'invited', queue_position INTEGER, response_deadline TEXT, cancellation_token TEXT NOT NULL UNIQUE, email_status TEXT, gdpr_consent_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE);`;
+const PARTICIPANTS_SQL = `CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT, category TEXT NOT NULL DEFAULT 'other', status TEXT NOT NULL DEFAULT 'invited', queue_position INTEGER, response_deadline TEXT, dietary_notes TEXT, plus_one_name TEXT, plus_one_email TEXT, cancellation_token TEXT NOT NULL UNIQUE, email_status TEXT, gdpr_consent_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE);`;
 
 const USERS_SQL = `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, name TEXT NOT NULL, token TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));`;
 
@@ -205,6 +205,72 @@ Lisa Import,lisa-import-${Date.now()}@test.se,,`;
     expect(lines.length).toBeGreaterThanOrEqual(2);
     expect(lines[1]).toContain("Export Test");
     expect(lines[1]).toContain("Consid AB");
+  });
+
+  it("POST /api/events/:id/participants creates participant with dietary_notes and plus_one", async () => {
+    const eventId = await createTestEvent();
+
+    const res = await request("POST", `/api/events/${eventId}/participants`, {
+      name: "Diet Test",
+      email: `diet-${Date.now()}@consid.se`,
+      dietary_notes: "Vegetarian, nötallergi",
+      plus_one_name: "Partner Person",
+      plus_one_email: "partner@example.com",
+    });
+    expect(res.status).toBe(201);
+
+    const p = (await res.json()) as {
+      dietary_notes: string | null;
+      plus_one_name: string | null;
+      plus_one_email: string | null;
+    };
+    expect(p.dietary_notes).toBe("Vegetarian, nötallergi");
+    expect(p.plus_one_name).toBe("Partner Person");
+    expect(p.plus_one_email).toBe("partner@example.com");
+  });
+
+  it("RSVP respond saves dietary_notes and plus_one fields", async () => {
+    const eventId = await createTestEvent();
+
+    // Create participant
+    const createRes = await request("POST", `/api/events/${eventId}/participants`, {
+      name: "RSVP Diet Test",
+      email: `rsvp-diet-${Date.now()}@consid.se`,
+    });
+    const created = (await createRes.json()) as { cancellation_token: string };
+
+    // Respond via RSVP (public endpoint, no auth)
+    const rsvpReq = new Request(
+      `http://localhost/stage/api/rsvp/${created.cancellation_token}/respond`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "attending",
+          dietary_notes: "Glutenfri",
+          plus_one_name: "Guest Name",
+          plus_one_email: "guest@example.com",
+        }),
+      }
+    );
+    const ctx = createExecutionContext();
+    const rsvpRes = await app.fetch(rsvpReq, env, ctx);
+    await waitOnExecutionContext(ctx);
+    expect(rsvpRes.status).toBe(200);
+
+    // Verify fields saved via GET /participants
+    const listRes = await request("GET", `/api/events/${eventId}/participants`);
+    const participants = (await listRes.json()) as {
+      name: string;
+      dietary_notes: string | null;
+      plus_one_name: string | null;
+      plus_one_email: string | null;
+    }[];
+    const p = participants.find((pp) => pp.name === "RSVP Diet Test");
+    expect(p).toBeDefined();
+    expect(p!.dietary_notes).toBe("Glutenfri");
+    expect(p!.plus_one_name).toBe("Guest Name");
+    expect(p!.plus_one_email).toBe("guest@example.com");
   });
 
   it("POST /api/events/:id/participants/import skips duplicates and invalid emails", async () => {

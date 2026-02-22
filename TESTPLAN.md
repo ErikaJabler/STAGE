@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 66 tester gröna (health, events inkl. auth, participants, mailings/RSVP, waitlist/ICS, event.service, participant.service, permission.service, activity.service)
-**Status:** ☑ Testad (session 11)
+**Förväntat resultat:** 68 tester gröna (health, events inkl. auth, participants inkl. dietary/plus_one, mailings/RSVP, waitlist/ICS, event.service, participant.service, permission.service, activity.service)
+**Status:** ☑ Testad (session 12)
 
 ---
 
@@ -645,3 +645,85 @@
 1. Kör `npm run test`
 **Förväntat resultat:** 5 activity.service.test passerar (log+retrieve, list, metadata JSON, limit, status change)
 **Status:** ☑ Testad (session 11, 66 tester totalt)
+
+---
+
+## Session 12: RSVP-förbättringar + Inställningar-tab
+
+### TC-12.1: RSVP — hero-bild visas
+**Steg:**
+1. Skapa event med hero-bild (ladda upp via Inställningar)
+2. Öppna RSVP-sida via deltagartoken
+**Förväntat resultat:** Hero-bild visas överst i RSVP-kortet med gradient-overlay och "Stage"-logotyp
+**Status:** ☐ Ej testad
+
+### TC-12.2: RSVP — dietary notes sparas
+**Steg:**
+1. Öppna RSVP-sida → fyll i "Allergier / kostpreferenser" → "Jag kommer"
+2. Kolla deltagaren i admin
+**Förväntat resultat:** dietary_notes syns i deltagardata
+**Status:** ☑ Testad (automatiskt test)
+
+### TC-12.3: RSVP — plusett-gäst sparas
+**Steg:**
+1. Öppna RSVP-sida → klicka "+ Ta med en gäst" → fyll i namn + email → "Jag kommer"
+2. Kolla deltagaren i admin
+**Förväntat resultat:** plus_one_name och plus_one_email sparas
+**Status:** ☑ Testad (automatiskt test)
+
+### TC-12.4: RSVP — bekräftelsesida med sammanfattning
+**Steg:**
+1. Öppna RSVP-sida → "Jag kommer"
+**Förväntat resultat:** Bekräftelsesida visar datum, tid, plats i sammanfattningskort + kalenderknapp
+**Status:** ☐ Ej testad
+
+### TC-12.5: RSVP — avbokning med bekräftelsesteg
+**Steg:**
+1. Öppna RSVP-sida (redan attending) → "Avboka min plats"
+**Förväntat resultat:** Bekräftelsesteg visas med "Ja, avboka" / "Nej, behåll min plats" — inte direkt avbokning
+**Status:** ☐ Ej testad
+
+### TC-12.6: Inställningar-tab — inline-redigering
+**Steg:**
+1. Öppna event → Inställningar-tab → klicka "Redigera" på Eventinformation
+2. Ändra namn eller datum → "Spara"
+**Förväntat resultat:** Eventinfo uppdateras, toast "Eventinformation uppdaterad", formuläret stängs
+**Status:** ☐ Ej testad
+
+### TC-12.7: Inställningar-tab — hero image upload
+**Steg:**
+1. Öppna event → Inställningar → Hero-bild → klicka uploadarea
+2. Välj en JPEG/PNG bild < 5 MB
+**Förväntat resultat:** Bilden laddas upp, visas som preview, event.image_url uppdateras
+**Status:** ☐ Ej testad
+
+### TC-12.8: Inställningar-tab — synlighets-toggle
+**Steg:**
+1. Öppna event → Inställningar → klicka toggle "Publikt/Privat"
+**Förväntat resultat:** Toggle byter, toast "Synlighet ändrad till publik/privat"
+**Status:** ☐ Ej testad
+
+### TC-12.9: Inställningar-tab — GDPR-text
+**Steg:**
+1. Öppna event → Inställningar → skriv GDPR-samtyckestext → "Spara"
+**Förväntat resultat:** GDPR-text sparas, toast "GDPR-text uppdaterad"
+**Status:** ☐ Ej testad
+
+### TC-12.10: Inställningar-tab — sender mailbox
+**Steg:**
+1. Öppna event → Inställningar → fyll i avsändaradress → "Spara"
+**Förväntat resultat:** Avsändare sparas, toast "Avsändare uppdaterad"
+**Status:** ☐ Ej testad
+
+### TC-12.11: Inställningar-tab — soft-delete med bekräftelse
+**Steg:**
+1. Öppna event → Inställningar → scroll ner till "Farozon" → "Ta bort event"
+2. Bekräfta i dialog
+**Förväntat resultat:** Eventet soft-deletas, redirect till översikt, toast "Eventet har tagits bort"
+**Status:** ☐ Ej testad
+
+### TC-12.12: Participant med dietary_notes och plus_one (automatiskt test)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** 2 nya tester passerar (create participant med dietary/plus_one + RSVP respond med dietary/plus_one)
+**Status:** ☑ Testad (session 12, 68 tester totalt)

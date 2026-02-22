@@ -171,6 +171,9 @@ export interface CreateParticipantPayload {
   category?: string;
   status?: string;
   response_deadline?: string | null;
+  dietary_notes?: string | null;
+  plus_one_name?: string | null;
+  plus_one_email?: string | null;
 }
 
 export interface UpdateParticipantPayload {
@@ -181,6 +184,9 @@ export interface UpdateParticipantPayload {
   status?: string;
   queue_position?: number | null;
   response_deadline?: string | null;
+  dietary_notes?: string | null;
+  plus_one_name?: string | null;
+  plus_one_email?: string | null;
 }
 
 /** Mailing API */
@@ -248,6 +254,9 @@ export interface RsvpInfo {
     email: string;
     status: string;
     company: string | null;
+    dietary_notes: string | null;
+    plus_one_name: string | null;
+    plus_one_email: string | null;
   };
   event: {
     name: string;
@@ -257,6 +266,7 @@ export interface RsvpInfo {
     end_time: string | null;
     location: string;
     description: string | null;
+    image_url: string | null;
   };
 }
 
@@ -266,20 +276,48 @@ export interface RsvpResponse {
   name: string;
 }
 
+export interface RsvpRespondPayload {
+  status: "attending" | "declined";
+  dietary_notes?: string | null;
+  plus_one_name?: string | null;
+  plus_one_email?: string | null;
+}
+
 export const rsvpApi = {
   get: (token: string) =>
     request<RsvpInfo>(`/rsvp/${token}`),
 
-  respond: (token: string, status: "attending" | "declined") =>
+  respond: (token: string, data: RsvpRespondPayload) =>
     request<RsvpResponse>(`/rsvp/${token}/respond`, {
       method: "POST",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(data),
     }),
 
   cancel: (token: string) =>
     request<RsvpResponse>(`/rsvp/${token}/cancel`, {
       method: "POST",
     }),
+};
+
+/** Images API */
+export const imagesApi = {
+  upload: async (file: File): Promise<{ url: string; key: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) headers["X-Auth-Token"] = token;
+    const res = await fetch(`${BASE_URL}/images`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, (body as { details?: string[] }).details);
+    }
+    return res.json() as Promise<{ url: string; key: string }>;
+  },
 };
 
 /** Activities API */

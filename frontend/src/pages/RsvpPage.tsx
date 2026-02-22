@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { rsvpApi, type RsvpInfo } from '../api/client';
 
-type RsvpState = 'loading' | 'loaded' | 'responded' | 'cancelled' | 'error';
+type RsvpState = 'loading' | 'loaded' | 'responded' | 'confirm-cancel' | 'cancelled' | 'error';
 
 export function RsvpPage() {
   const { token } = useParams<{ token: string }>();
@@ -13,12 +13,20 @@ export function RsvpPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Extra fields for RSVP
+  const [dietaryNotes, setDietaryNotes] = useState('');
+  const [plusOneName, setPlusOneName] = useState('');
+  const [plusOneEmail, setPlusOneEmail] = useState('');
+
   useEffect(() => {
     if (!token) return;
     rsvpApi.get(token).then((data: RsvpInfo) => {
       setInfo(data);
+      setDietaryNotes(data.participant.dietary_notes ?? '');
+      setPlusOneName(data.participant.plus_one_name ?? '');
+      setPlusOneEmail(data.participant.plus_one_email ?? '');
       setState('loaded');
-    }).catch((_err: unknown) => {
+    }).catch(() => {
       setState('error');
       setErrorMsg('Länken är ogiltig eller har utgått.');
     });
@@ -28,11 +36,16 @@ export function RsvpPage() {
     if (!token) return;
     setSubmitting(true);
     try {
-      const result = await rsvpApi.respond(token, status);
+      const result = await rsvpApi.respond(token, {
+        status,
+        dietary_notes: dietaryNotes || null,
+        plus_one_name: plusOneName || null,
+        plus_one_email: plusOneEmail || null,
+      });
       setResponseName(result.name);
       setResponseStatus(result.status);
       setState('responded');
-    } catch (_err: unknown) {
+    } catch {
       setErrorMsg('Något gick fel. Försök igen.');
     } finally {
       setSubmitting(false);
@@ -47,7 +60,7 @@ export function RsvpPage() {
       setResponseName(result.name);
       setResponseStatus(result.status);
       setState('cancelled');
-    } catch (_err: unknown) {
+    } catch {
       setErrorMsg('Något gick fel. Försök igen.');
     } finally {
       setSubmitting(false);
@@ -55,95 +68,93 @@ export function RsvpPage() {
   }
 
   return (
-    <div style={rsvpStyles.page}>
-      <div style={rsvpStyles.card}>
-        {/* Consid branding header */}
-        <div style={rsvpStyles.header}>
-          <svg width="120" height="28" viewBox="0 0 120 28" fill="none">
-            <text x="0" y="22" fontFamily="'Consid Sans', system-ui, sans-serif" fontSize="22" fontWeight="600" fill="#FFFFFF">
-              Stage
-            </text>
-          </svg>
-        </div>
-
-        {state === 'loading' && (
-          <div style={rsvpStyles.body}>
-            <p style={rsvpStyles.loadingText}>Laddar...</p>
+    <div style={s.page}>
+      <div style={s.card}>
+        {/* Hero image or Consid header */}
+        {info?.event.image_url ? (
+          <div style={s.heroWrapper}>
+            <img src={info.event.image_url} alt="" style={s.heroImg} />
+            <div style={s.heroOverlay}>
+              <span style={s.heroLogo}>Stage</span>
+            </div>
+          </div>
+        ) : (
+          <div style={s.header}>
+            <svg width="120" height="28" viewBox="0 0 120 28" fill="none">
+              <text x="0" y="22" fontFamily="'Consid Sans', system-ui, sans-serif" fontSize="22" fontWeight="600" fill="#FFFFFF">
+                Stage
+              </text>
+            </svg>
           </div>
         )}
 
+        {state === 'loading' && (
+          <div style={s.body}><p style={s.loadingText}>Laddar...</p></div>
+        )}
+
         {state === 'error' && (
-          <div style={rsvpStyles.body}>
-            <div style={rsvpStyles.errorIcon}>!</div>
-            <h2 style={rsvpStyles.title}>Ogiltig länk</h2>
-            <p style={rsvpStyles.text}>{errorMsg}</p>
+          <div style={s.body}>
+            <div style={s.errorIcon}>!</div>
+            <h2 style={s.title}>Ogiltig länk</h2>
+            <p style={s.text}>{errorMsg}</p>
           </div>
         )}
 
         {state === 'loaded' && info && (
-          <div style={rsvpStyles.body}>
-            <h2 style={rsvpStyles.title}>
+          <div style={s.body}>
+            <h2 style={s.title}>
               {info.event.emoji ? `${info.event.emoji} ` : ''}{info.event.name}
             </h2>
 
-            <div style={rsvpStyles.infoGrid}>
-              <div style={rsvpStyles.infoItem}>
+            <div style={s.infoGrid}>
+              <div style={s.infoItem}>
                 <CalendarIcon />
                 <span>{formatRsvpDate(info.event.date)}</span>
               </div>
-              <div style={rsvpStyles.infoItem}>
+              <div style={s.infoItem}>
                 <ClockIcon />
                 <span>{info.event.time}{info.event.end_time ? ` – ${info.event.end_time}` : ''}</span>
               </div>
-              <div style={rsvpStyles.infoItem}>
+              <div style={s.infoItem}>
                 <LocationIcon />
                 <span>{info.event.location}</span>
               </div>
             </div>
 
             {info.event.description && (
-              <p style={rsvpStyles.description}>{info.event.description}</p>
+              <p style={s.description}>{info.event.description}</p>
             )}
 
-            <div style={rsvpStyles.greeting}>
-              <p style={rsvpStyles.text}>
+            <div style={s.greeting}>
+              <p style={s.text}>
                 Hej <strong>{info.participant.name}</strong>! Du är inbjuden till detta event.
               </p>
             </div>
 
             {info.participant.status === 'attending' && (
-              <div style={rsvpStyles.alreadyResponded}>
-                <div style={rsvpStyles.checkIcon}>✓</div>
-                <p style={rsvpStyles.text}>Du har redan tackat ja till detta event.</p>
-                <button
-                  onClick={() => downloadICS(info.event)}
-                  style={rsvpStyles.calendarBtn}
-                >
-                  <CalendarIcon />
-                  Lägg till i kalender
+              <div style={s.alreadyResponded}>
+                <div style={s.checkIcon}>✓</div>
+                <p style={s.text}>Du har redan tackat ja till detta event.</p>
+                <button onClick={() => downloadICS(info.event)} style={s.calendarBtn}>
+                  <CalendarIcon /> Lägg till i kalender
                 </button>
-                <button
-                  onClick={handleCancel}
-                  disabled={submitting}
-                  style={rsvpStyles.cancelLink}
-                >
-                  {submitting ? 'Avbokar...' : 'Avboka min plats'}
+                <button onClick={() => setState('confirm-cancel')} style={s.cancelLink}>
+                  Avboka min plats
                 </button>
               </div>
             )}
 
             {info.participant.status === 'declined' && (
-              <div style={rsvpStyles.alreadyResponded}>
-                <p style={rsvpStyles.text}>Du har avböjt inbjudan.</p>
-                <p style={rsvpStyles.smallText}>
-                  Ändrat dig? Svara nedan.
-                </p>
-                <div style={rsvpStyles.buttonGroup}>
-                  <button
-                    onClick={() => handleRespond('attending')}
-                    disabled={submitting}
-                    style={rsvpStyles.primaryBtn}
-                  >
+              <div style={s.alreadyResponded}>
+                <p style={s.text}>Du har avböjt inbjudan.</p>
+                <p style={s.smallText}>Ändrat dig? Svara nedan.</p>
+                <ExtraFieldsForm
+                  dietaryNotes={dietaryNotes} setDietaryNotes={setDietaryNotes}
+                  plusOneName={plusOneName} setPlusOneName={setPlusOneName}
+                  plusOneEmail={plusOneEmail} setPlusOneEmail={setPlusOneEmail}
+                />
+                <div style={s.buttonGroup}>
+                  <button onClick={() => handleRespond('attending')} disabled={submitting} style={s.primaryBtn}>
                     {submitting ? 'Sparar...' : 'Jag kommer'}
                   </button>
                 </div>
@@ -151,17 +162,16 @@ export function RsvpPage() {
             )}
 
             {info.participant.status === 'cancelled' && (
-              <div style={rsvpStyles.alreadyResponded}>
-                <p style={rsvpStyles.text}>Du har avbokat din plats.</p>
-                <p style={rsvpStyles.smallText}>
-                  Ändrat dig? Svara nedan.
-                </p>
-                <div style={rsvpStyles.buttonGroup}>
-                  <button
-                    onClick={() => handleRespond('attending')}
-                    disabled={submitting}
-                    style={rsvpStyles.primaryBtn}
-                  >
+              <div style={s.alreadyResponded}>
+                <p style={s.text}>Du har avbokat din plats.</p>
+                <p style={s.smallText}>Ändrat dig? Svara nedan.</p>
+                <ExtraFieldsForm
+                  dietaryNotes={dietaryNotes} setDietaryNotes={setDietaryNotes}
+                  plusOneName={plusOneName} setPlusOneName={setPlusOneName}
+                  plusOneEmail={plusOneEmail} setPlusOneEmail={setPlusOneEmail}
+                />
+                <div style={s.buttonGroup}>
+                  <button onClick={() => handleRespond('attending')} disabled={submitting} style={s.primaryBtn}>
                     {submitting ? 'Sparar...' : 'Jag kommer ändå'}
                   </button>
                 </div>
@@ -169,66 +179,161 @@ export function RsvpPage() {
             )}
 
             {(info.participant.status === 'invited' || info.participant.status === 'waitlisted') && (
-              <div style={rsvpStyles.buttonGroup}>
-                <button
-                  onClick={() => handleRespond('attending')}
-                  disabled={submitting}
-                  style={rsvpStyles.primaryBtn}
-                >
-                  {submitting ? 'Sparar...' : 'Jag kommer'}
-                </button>
-                <button
-                  onClick={() => handleRespond('declined')}
-                  disabled={submitting}
-                  style={rsvpStyles.secondaryBtn}
-                >
-                  {submitting ? 'Sparar...' : 'Jag kan inte'}
-                </button>
-              </div>
+              <>
+                <ExtraFieldsForm
+                  dietaryNotes={dietaryNotes} setDietaryNotes={setDietaryNotes}
+                  plusOneName={plusOneName} setPlusOneName={setPlusOneName}
+                  plusOneEmail={plusOneEmail} setPlusOneEmail={setPlusOneEmail}
+                />
+                <div style={s.buttonGroup}>
+                  <button onClick={() => handleRespond('attending')} disabled={submitting} style={s.primaryBtn}>
+                    {submitting ? 'Sparar...' : 'Jag kommer'}
+                  </button>
+                  <button onClick={() => handleRespond('declined')} disabled={submitting} style={s.secondaryBtn}>
+                    {submitting ? 'Sparar...' : 'Jag kan inte'}
+                  </button>
+                </div>
+              </>
             )}
 
-            {errorMsg && (
-              <p style={rsvpStyles.errorText}>{errorMsg}</p>
-            )}
+            {errorMsg && <p style={s.errorText}>{errorMsg}</p>}
           </div>
         )}
 
-        {(state === 'responded' || state === 'cancelled') && (
-          <div style={rsvpStyles.body}>
-            <div style={rsvpStyles.confirmIcon}>
-              {responseStatus === 'attending' ? '🎉' : responseStatus === 'cancelled' ? '👋' : '✓'}
+        {/* Cancellation confirmation step */}
+        {state === 'confirm-cancel' && info && (
+          <div style={s.body}>
+            <h2 style={s.title}>Bekräfta avbokning</h2>
+            <p style={s.text}>
+              Är du säker på att du vill avboka din plats på <strong>{info.event.name}</strong>?
+            </p>
+            <div style={s.infoGrid}>
+              <div style={s.infoItem}>
+                <CalendarIcon />
+                <span>{formatRsvpDate(info.event.date)}</span>
+              </div>
+              <div style={s.infoItem}>
+                <LocationIcon />
+                <span>{info.event.location}</span>
+              </div>
             </div>
-            <h2 style={rsvpStyles.title}>
-              {responseStatus === 'attending'
-                ? 'Tack, vi ses!'
-                : responseStatus === 'cancelled'
-                  ? 'Din plats är avbokad'
-                  : 'Tack för ditt svar'}
+            <div style={s.buttonGroup}>
+              <button onClick={handleCancel} disabled={submitting} style={s.dangerBtn}>
+                {submitting ? 'Avbokar...' : 'Ja, avboka'}
+              </button>
+              <button onClick={() => setState('loaded')} disabled={submitting} style={s.secondaryBtn}>
+                Nej, behåll min plats
+              </button>
+            </div>
+            {errorMsg && <p style={s.errorText}>{errorMsg}</p>}
+          </div>
+        )}
+
+        {/* Confirmation / Response summary */}
+        {(state === 'responded' || state === 'cancelled') && info && (
+          <div style={s.body}>
+            <div style={s.confirmIcon}>
+              {responseStatus === 'attending' ? '🎉' : responseStatus === 'cancelled' ? '👋' : responseStatus === 'waitlisted' ? '⏳' : '✓'}
+            </div>
+            <h2 style={s.title}>
+              {responseStatus === 'attending' ? 'Tack, vi ses!'
+                : responseStatus === 'waitlisted' ? 'Du står på väntelistan'
+                : responseStatus === 'cancelled' ? 'Din plats är avbokad'
+                : 'Tack för ditt svar'}
             </h2>
-            <p style={rsvpStyles.text}>
+            <p style={s.text}>
               {responseStatus === 'attending'
                 ? `Vad kul att du kommer, ${responseName}! Vi ser fram emot att se dig.`
-                : responseStatus === 'cancelled'
-                  ? `Din plats har avbokats, ${responseName}.`
-                  : `Ditt svar har registrerats, ${responseName}.`}
+                : responseStatus === 'waitlisted'
+                  ? `Du har placerats på väntelistan, ${responseName}. Vi meddelar dig om en plats blir ledig.`
+                  : responseStatus === 'cancelled'
+                    ? `Din plats har avbokats, ${responseName}.`
+                    : `Ditt svar har registrerats, ${responseName}.`}
             </p>
-            {responseStatus === 'attending' && info && (
-              <button
-                onClick={() => downloadICS(info.event)}
-                style={rsvpStyles.calendarBtn}
-              >
+
+            {/* Event summary on confirmation */}
+            <div style={s.summaryCard}>
+              <div style={s.summaryRow}>
                 <CalendarIcon />
-                Lägg till i kalender
+                <span>{formatRsvpDate(info.event.date)}</span>
+              </div>
+              <div style={s.summaryRow}>
+                <ClockIcon />
+                <span>{info.event.time}{info.event.end_time ? ` – ${info.event.end_time}` : ''}</span>
+              </div>
+              <div style={s.summaryRow}>
+                <LocationIcon />
+                <span>{info.event.location}</span>
+              </div>
+            </div>
+
+            {responseStatus === 'attending' && (
+              <button onClick={() => downloadICS(info.event)} style={s.calendarBtn}>
+                <CalendarIcon /> Lägg till i kalender
               </button>
             )}
           </div>
         )}
 
-        {/* Footer */}
-        <div style={rsvpStyles.footer}>
+        <div style={s.footer}>
           <span>Powered by Stage — Consid</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ---- Extra fields form (dietary + plus-one) ---- */
+function ExtraFieldsForm({
+  dietaryNotes, setDietaryNotes,
+  plusOneName, setPlusOneName,
+  plusOneEmail, setPlusOneEmail,
+}: {
+  dietaryNotes: string; setDietaryNotes: (v: string) => void;
+  plusOneName: string; setPlusOneName: (v: string) => void;
+  plusOneEmail: string; setPlusOneEmail: (v: string) => void;
+}) {
+  const [showPlusOne, setShowPlusOne] = useState(!!(plusOneName || plusOneEmail));
+
+  return (
+    <div style={s.extraFields}>
+      <div style={s.fieldGroup}>
+        <label style={s.fieldLabel}>Allergier / kostpreferenser</label>
+        <textarea
+          value={dietaryNotes}
+          onChange={(e) => setDietaryNotes(e.target.value)}
+          placeholder="T.ex. glutenfri, vegetarian, nötallergi..."
+          style={s.fieldTextarea}
+          rows={2}
+        />
+      </div>
+
+      {!showPlusOne ? (
+        <button onClick={() => setShowPlusOne(true)} style={s.addPlusOneBtn}>
+          + Ta med en gäst
+        </button>
+      ) : (
+        <div style={s.fieldGroup}>
+          <label style={s.fieldLabel}>Plusettgäst</label>
+          <input
+            type="text"
+            value={plusOneName}
+            onChange={(e) => setPlusOneName(e.target.value)}
+            placeholder="Gästens namn"
+            style={s.fieldInput}
+          />
+          <input
+            type="email"
+            value={plusOneEmail}
+            onChange={(e) => setPlusOneEmail(e.target.value)}
+            placeholder="Gästens e-post (valfritt)"
+            style={s.fieldInput}
+          />
+          <button onClick={() => { setShowPlusOne(false); setPlusOneName(''); setPlusOneEmail(''); }} style={s.removePlusOneBtn}>
+            Ta bort gäst
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -243,38 +348,26 @@ function downloadICS(event: RsvpInfo['event']) {
   if (event.end_time) {
     dtend = `${startDate}T${event.end_time.replace(':', '')}00`;
   } else {
-    // Default +2h
     const [h, m] = event.time.split(':').map(Number);
     const endH = String(h + 2).padStart(2, '0');
     dtend = `${startDate}T${endH}${String(m).padStart(2, '0')}00`;
   }
 
-  const escICS = (s: string) =>
-    s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  const escICS = (t: string) =>
+    t.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 
   const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
+    'BEGIN:VCALENDAR', 'VERSION:2.0',
     'PRODID:-//Stage//Consid Eventplattform//SV',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VTIMEZONE',
-    'TZID:Europe/Stockholm',
-    'BEGIN:STANDARD',
-    'DTSTART:19701025T030000',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE', 'TZID:Europe/Stockholm',
+    'BEGIN:STANDARD', 'DTSTART:19701025T030000',
     'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10',
-    'TZOFFSETFROM:+0200',
-    'TZOFFSETTO:+0100',
-    'TZNAME:CET',
-    'END:STANDARD',
-    'BEGIN:DAYLIGHT',
-    'DTSTART:19700329T020000',
+    'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET',
+    'END:STANDARD', 'BEGIN:DAYLIGHT', 'DTSTART:19700329T020000',
     'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3',
-    'TZOFFSETFROM:+0100',
-    'TZOFFSETTO:+0200',
-    'TZNAME:CEST',
-    'END:DAYLIGHT',
-    'END:VTIMEZONE',
+    'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST',
+    'END:DAYLIGHT', 'END:VTIMEZONE',
     'BEGIN:VEVENT',
     `UID:${event.date}-${encodeURIComponent(event.name)}@stage.mikwik.se`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
@@ -283,8 +376,7 @@ function downloadICS(event: RsvpInfo['event']) {
     `SUMMARY:${escICS(event.name)}`,
     `LOCATION:${escICS(event.location)}`,
     ...(event.description ? [`DESCRIPTION:${escICS(event.description)}`] : []),
-    'END:VEVENT',
-    'END:VCALENDAR',
+    'END:VEVENT', 'END:VCALENDAR',
   ];
 
   const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
@@ -298,7 +390,7 @@ function downloadICS(event: RsvpInfo['event']) {
   URL.revokeObjectURL(url);
 }
 
-/* ---- RSVP Helpers ---- */
+/* ---- Helpers ---- */
 function formatRsvpDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00');
   return date.toLocaleDateString('sv-SE', {
@@ -333,8 +425,8 @@ function LocationIcon() {
   );
 }
 
-/* ---- RSVP Styles ---- */
-const rsvpStyles: Record<string, React.CSSProperties> = {
+/* ---- Styles ---- */
+const s: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg-primary)',
@@ -358,6 +450,31 @@ const rsvpStyles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
   },
+  heroWrapper: {
+    position: 'relative',
+    width: '100%',
+    height: '180px',
+    overflow: 'hidden',
+  },
+  heroImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+  },
+  heroOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: '12px 24px',
+    background: 'linear-gradient(transparent, rgba(112, 17, 49, 0.85))',
+  },
+  heroLogo: {
+    fontFamily: "'Consid Sans', system-ui, sans-serif",
+    fontSize: '18px',
+    fontWeight: 600,
+    color: '#FFFFFF',
+  },
   body: {
     padding: '32px',
     display: 'flex',
@@ -366,156 +483,85 @@ const rsvpStyles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     gap: '16px',
   },
-  title: {
-    fontSize: '1.5rem',
-    fontWeight: 600,
-    color: 'var(--color-text-primary)',
-    margin: 0,
-  },
-  text: {
-    fontSize: '0.9375rem',
-    color: 'var(--color-text-secondary)',
-    lineHeight: 1.6,
-    margin: 0,
-  },
-  smallText: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-muted)',
-    margin: 0,
-  },
-  loadingText: {
-    fontSize: '0.9375rem',
-    color: 'var(--color-text-muted)',
-    padding: '40px 0',
-  },
+  title: { fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 },
+  text: { fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 },
+  smallText: { fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 },
+  loadingText: { fontSize: '0.9375rem', color: 'var(--color-text-muted)', padding: '40px 0' },
   infoGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    width: '100%',
-    padding: '16px',
-    backgroundColor: 'var(--color-bg-primary)',
-    borderRadius: 'var(--radius-lg)',
+    display: 'flex', flexDirection: 'column', gap: '10px', width: '100%',
+    padding: '16px', backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)',
   },
-  infoItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '0.875rem',
-    color: 'var(--color-text-secondary)',
-  },
-  description: {
-    fontSize: '0.875rem',
-    color: 'var(--color-text-muted)',
-    lineHeight: 1.6,
-    margin: 0,
-    textAlign: 'left',
-    width: '100%',
-  },
-  greeting: {
-    paddingTop: '8px',
-  },
-  alreadyResponded: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    paddingTop: '8px',
-  },
+  infoItem: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: 'var(--color-text-secondary)' },
+  description: { fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.6, margin: 0, textAlign: 'left', width: '100%' },
+  greeting: { paddingTop: '8px' },
+  alreadyResponded: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', paddingTop: '8px' },
   checkIcon: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    backgroundColor: '#2D7A4F',
-    color: '#FFFFFF',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px',
-    fontWeight: 700,
+    width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#2D7A4F',
+    color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 700,
   },
-  confirmIcon: {
-    fontSize: '48px',
-    marginBottom: '8px',
-  },
+  confirmIcon: { fontSize: '48px', marginBottom: '8px' },
   errorIcon: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--color-danger)',
-    color: '#FFFFFF',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px',
-    fontWeight: 700,
+    width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--color-danger)',
+    color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 700,
   },
-  buttonGroup: {
-    display: 'flex',
-    gap: '12px',
-    paddingTop: '8px',
-    width: '100%',
-    justifyContent: 'center',
-  },
+  buttonGroup: { display: 'flex', gap: '12px', paddingTop: '8px', width: '100%', justifyContent: 'center' },
   primaryBtn: {
-    padding: '12px 32px',
-    backgroundColor: 'var(--color-accent)',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: 'var(--radius-lg)',
-    fontSize: '0.9375rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'background-color 150ms ease',
+    padding: '12px 32px', backgroundColor: 'var(--color-accent)', color: '#FFFFFF',
+    border: 'none', borderRadius: 'var(--radius-lg)', fontSize: '0.9375rem',
+    fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 150ms ease',
   },
   secondaryBtn: {
-    padding: '12px 32px',
-    backgroundColor: 'transparent',
-    color: 'var(--color-text-secondary)',
-    border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-lg)',
-    fontSize: '0.9375rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'background-color 150ms ease',
+    padding: '12px 32px', backgroundColor: 'transparent', color: 'var(--color-text-secondary)',
+    border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-lg)',
+    fontSize: '0.9375rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 150ms ease',
+  },
+  dangerBtn: {
+    padding: '12px 32px', backgroundColor: 'var(--color-raspberry-red)', color: '#FFFFFF',
+    border: 'none', borderRadius: 'var(--radius-lg)', fontSize: '0.9375rem',
+    fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 150ms ease',
   },
   calendarBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 20px',
-    backgroundColor: 'var(--color-bg-primary)',
-    color: 'var(--color-burgundy)',
-    border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-lg)',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'background-color 150ms ease',
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '10px 20px', backgroundColor: 'var(--color-bg-primary)', color: 'var(--color-burgundy)',
+    border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-lg)',
+    fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 150ms ease',
   },
   cancelLink: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--color-text-muted)',
-    fontSize: '0.8125rem',
-    textDecoration: 'underline',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    marginTop: '4px',
+    background: 'none', border: 'none', color: 'var(--color-text-muted)',
+    fontSize: '0.8125rem', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', marginTop: '4px',
   },
-  errorText: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-danger)',
-    margin: 0,
+  errorText: { fontSize: '0.8125rem', color: 'var(--color-danger)', margin: 0 },
+  footer: { padding: '16px 32px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)' },
+  // Summary card on confirmation
+  summaryCard: {
+    display: 'flex', flexDirection: 'column', gap: '8px', width: '100%',
+    padding: '14px', backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)',
   },
-  footer: {
-    padding: '16px 32px',
-    textAlign: 'center',
-    fontSize: '0.75rem',
-    color: 'var(--color-text-muted)',
-    borderTop: '1px solid var(--color-border)',
+  summaryRow: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' },
+  // Extra fields
+  extraFields: {
+    width: '100%', display: 'flex', flexDirection: 'column', gap: '12px',
+    padding: '16px', backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', textAlign: 'left',
+  },
+  fieldGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  fieldLabel: { fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-secondary)' },
+  fieldTextarea: {
+    padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--color-border-strong)',
+    backgroundColor: 'var(--color-white)', fontSize: '0.875rem', color: 'var(--color-text-primary)',
+    fontFamily: 'inherit', resize: 'vertical' as const, outline: 'none', width: '100%',
+  },
+  fieldInput: {
+    padding: '8px 12px', height: '36px', borderRadius: '8px', border: '1px solid var(--color-border-strong)',
+    backgroundColor: 'var(--color-white)', fontSize: '0.875rem', color: 'var(--color-text-primary)',
+    fontFamily: 'inherit', outline: 'none', width: '100%',
+  },
+  addPlusOneBtn: {
+    background: 'none', border: '1px dashed var(--color-border-strong)', borderRadius: '8px',
+    padding: '8px 12px', fontSize: '0.8125rem', color: 'var(--color-burgundy)',
+    cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
+  },
+  removePlusOneBtn: {
+    background: 'none', border: 'none', padding: 0, fontSize: '0.75rem',
+    color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline',
   },
 };

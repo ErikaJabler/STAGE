@@ -38,6 +38,9 @@ export interface Participant {
   queue_position: number | null;
   response_deadline: string | null;
   cancellation_token: string;
+  dietary_notes: string | null;
+  plus_one_name: string | null;
+  plus_one_email: string | null;
   email_status: string | null;
   gdpr_consent_at: string | null;
   created_at: string;

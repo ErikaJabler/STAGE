@@ -69,15 +69,8 @@
 
 ---
 
-## Session 12: Inställningar-tab + Polish
-**Mål:** Komplett Inställningar-tab + UI-polish.
-
-**Filer att skapa/ändra:**
-- `frontend/src/components/features/settings/EventSettingsForm.tsx`
-- `frontend/src/components/features/settings/VisibilityToggle.tsx`
-- `frontend/src/components/features/settings/DangerZone.tsx`
-
-**Klart när:** Event redigerbart via Inställningar-tabb, synlighet togglas, radera fungerar
+## Session 12: RSVP-förbättringar + Inställningar-tab ✅ DONE
+**Levererat:** RSVP: hero-bild, dietary/allergier, plus-one-gäst, bekräftelsesammanfattning, avbokningsbekräftelse. Inställningar: inline-redigering, hero image upload, synlighets-toggle, sender mailbox, GDPR-text, DangerZone. Migration 0005. 68 tester.
 
 ---
 

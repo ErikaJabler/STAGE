@@ -129,6 +129,9 @@ Integrationer:
 | status | TEXT NOT NULL | invited/attending/declined/waitlisted/cancelled |
 | queue_position | INTEGER | Köplats (för väntlista) |
 | response_deadline | TEXT | Svarsfrist |
+| dietary_notes | TEXT | Allergier/kostpreferenser |
+| plus_one_name | TEXT | +1 gästens namn |
+| plus_one_email | TEXT | +1 gästens email |
 | cancellation_token | TEXT NOT NULL UNIQUE | Token för RSVP/avbokning |
 | email_status | TEXT | Senaste mailstatus |
 | gdpr_consent_at | TEXT | GDPR-samtycke tidsstämpel |
