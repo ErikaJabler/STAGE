@@ -32,9 +32,14 @@ export default function EmailEditor({ initialHtml, initialProjectData, onSave, o
     // Register email blocks
     registerEmailBlocks(editor);
 
-    // Custom image upload via R2
-    editor.on('asset:upload:start', () => {
-      // Could show loading indicator
+    // Make table cells editable (double-click to edit text)
+    editor.DomComponents.addType('cell', {
+      extend: 'cell',
+      model: {
+        defaults: {
+          editable: true,
+        },
+      },
     });
 
     // Load initial content
@@ -169,15 +174,19 @@ ${html}
 
                   try {
                     const result = await imagesApi.upload(file);
+                    // Make URL absolute so it works inside GrapeJS iframe
+                    const absoluteUrl = result.url.startsWith('http')
+                      ? result.url
+                      : `${window.location.origin}${result.url}`;
                     editor.AssetManager.add({
-                      src: result.url,
+                      src: absoluteUrl,
                       type: 'image',
                       name: file.name,
                     });
-                    // Auto-select the uploaded image
+                    // Auto-select the uploaded image on the selected component
                     const selected = editor.getSelected();
                     if (selected && selected.is('image')) {
-                      selected.set('src', result.url);
+                      selected.set('src', absoluteUrl);
                     }
                   } catch {
                     alert(`Kunde inte ladda upp "${file.name}"`);
