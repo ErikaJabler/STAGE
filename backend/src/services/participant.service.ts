@@ -145,6 +145,15 @@ function mapCategory(value: string): string | undefined {
   return map[lower] || undefined;
 }
 
+/* ---- CSV helpers ---- */
+
+function escapeCSVField(value: string): string {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
 /* ---- Service ---- */
 
 export const ParticipantService = {
@@ -204,6 +213,20 @@ export const ParticipantService = {
     }
 
     return true;
+  },
+
+  async exportCSV(db: D1Database, eventId: number): Promise<string> {
+    const participants = await listParticipants(db, eventId);
+    const header = "Namn,E-post,Företag,Kategori,Status";
+    const rows = participants.map((p) => {
+      const name = escapeCSVField(p.name);
+      const email = escapeCSVField(p.email);
+      const company = escapeCSVField(p.company ?? "");
+      const category = escapeCSVField(p.category);
+      const status = escapeCSVField(p.status);
+      return `${name},${email},${company},${category},${status}`;
+    });
+    return [header, ...rows].join("\n");
   },
 
   async importCSV(

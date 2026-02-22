@@ -384,18 +384,60 @@ Inga avvikelser — sessionen följde planen exakt.
 | 2 | Ingen Zod-validering | 8b ✅ |
 | 3 | Ingen error-handler middleware | 8b ✅ |
 | 4 | Tom middleware/ | 8b ✅ |
-| 5 | Ingen R2-integration | 9 |
-| 6 | Ingen dnd-kit för väntlista | 9 |
+| 5 | Ingen R2-integration | 9 ✅ |
+| 6 | Ingen dnd-kit för väntlista | 9 ✅ |
 | 7 | Email i en fil (196 rader) | 8a ✅ |
 | 8 | Ingen email-queue/Cron Trigger | 11 |
 | 9 | Frontend-mallar istf backend | 11 |
-| 10 | EventDetail.tsx = 1727 rader | 9 |
-| 11 | Tom features/ mapp | 9 |
+| 10 | EventDetail.tsx = 1727 rader | 9 ✅ |
+| 11 | Tom features/ mapp | 9 ✅ |
 | 12 | queries.ts = 654 rader | 8a ✅ |
 | 13 | Duplicerad validering | 8b ✅ |
 | 14 | Inga enhetstester för services | 8a ✅ |
 | 15 | CLAUDE.md matchar inte verkligheten | 8a ✅ |
-| 16 | Saknar CSV-export endpoint | 9 |
+| 16 | Saknar CSV-export endpoint | 9 ✅ |
+
+---
+
+## Session 9: Frontend-refaktorering + R2 + dnd-kit + CSV-export
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] EventDetail.tsx bruten från 1727 → 176 rader (< 200)
+- [x] 10 nya filer under `frontend/src/components/features/`:
+  - `events/SummaryTab.tsx` — sammanfattningstab med statistik + eventinfo
+  - `participants/ParticipantsTab.tsx` — deltagartabell, sök, filter, export
+  - `participants/AddParticipantModal.tsx` — lägg till deltagare
+  - `participants/ImportCSVModal.tsx` — CSV-import
+  - `participants/WaitlistPanel.tsx` — dnd-kit drag-n-drop för väntlista
+  - `email/MailingsTab.tsx` — utskickslista + förhandsgranskning
+  - `email/CreateMailingModal.tsx` — skapa utskick + mallväljare
+  - `shared-styles.ts` — delade CSS-styles
+  - `shared-helpers.ts` — delade hjälpfunktioner
+  - `shared-icons.tsx` — delade SVG-ikoner
+- [x] R2-bilduppladdning: `image.service.ts` (validering: JPEG/PNG/WebP, max 5 MB), `routes/images.ts` (POST + GET)
+- [x] R2-bucket aktiverad i `wrangler.toml` + `bindings.ts` (IMAGES binding)
+- [x] dnd-kit installerad (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`)
+- [x] WaitlistPanel med drag-n-drop — ersätter chevron-knappar (behålls i tabellen som fallback)
+- [x] CSV-export: `GET /api/events/:id/participants/export` — returnerar CSV med header + data
+- [x] CSV-export: `ParticipantService.exportCSV()` med `escapeCSVField()` för korrekt CSV-formatering
+- [x] Frontend: "Exportera CSV"-knapp i ParticipantsTab
+- [x] 1 nytt test (CSV-export) — totalt 52 tester, alla passerar
+- [x] SAD.md uppdaterad med nya endpoints, R2-integration, ImageService
+- [x] TESTPLAN.md uppdaterad med nya testfall + TC-0.4
+
+### Avvikelser från plan
+Inga avvikelser — alla leverabler uppfyllda.
+
+### Anteckningar
+- R2-bucket `stage-images` behöver skapas med `wrangler r2 bucket create stage-images` innan deploy
+- IMAGES binding är optional (`R2Bucket?`) — images route returnerar 503 om bucket ej konfigurerad
+- dnd-kit tillagd som npm dependency (ej CDN)
+- Chevron-knappar behålls i huvudtabellen som komplement till drag-n-drop i WaitlistPanel
+- Delade hjälpare (styles, helpers, icons) undviker duplicering mellan feature-komponenter
+- Frontend build: 462KB JS, 4.2KB CSS (gzipped: ~135KB JS, 1.4KB CSS) — ökning från dnd-kit
+- Inga nya migrationer behövdes
 
 ---
 

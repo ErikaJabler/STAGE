@@ -106,6 +106,20 @@ participants.put("/:id/reorder", async (c) => {
   return c.json(result);
 });
 
+/** GET /api/events/:eventId/participants/export — Export participants as CSV */
+participants.get("/export", async (c) => {
+  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
+  if (error) return c.json({ error }, status);
+
+  const csv = await ParticipantService.exportCSV(c.env.DB, eventId);
+  return new Response(csv, {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="deltagare-event-${eventId}.csv"`,
+    },
+  });
+});
+
 /** DELETE /api/events/:eventId/participants/:id — Remove a participant */
 participants.delete("/:id", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);

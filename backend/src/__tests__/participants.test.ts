@@ -168,6 +168,30 @@ Lisa Import,lisa-import-${Date.now()}@test.se,,`;
     expect(participants.length).toBe(3);
   });
 
+  it("GET /api/events/:id/participants/export returns CSV with header and data", async () => {
+    const eventId = await createTestEvent();
+
+    // Add participants
+    await request("POST", `/api/events/${eventId}/participants`, {
+      name: "Export Test",
+      email: `export-${Date.now()}@test.se`,
+      company: "Consid AB",
+      category: "internal",
+    });
+
+    const res = await request("GET", `/api/events/${eventId}/participants/export`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toContain("text/csv");
+    expect(res.headers.get("Content-Disposition")).toContain("deltagare-event-");
+
+    const csv = await res.text();
+    const lines = csv.split("\n");
+    expect(lines[0]).toBe("Namn,E-post,Företag,Kategori,Status");
+    expect(lines.length).toBeGreaterThanOrEqual(2);
+    expect(lines[1]).toContain("Export Test");
+    expect(lines[1]).toContain("Consid AB");
+  });
+
   it("POST /api/events/:id/participants/import skips duplicates and invalid emails", async () => {
     const eventId = await createTestEvent();
 

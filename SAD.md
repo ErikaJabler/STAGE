@@ -25,9 +25,9 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 
 Integrationer:
 - **Resend** — Email via Resend API (session 4–5). Domän `mikwik.se` verifierad (DKIM + SPF). HTML-mail med Consid-branding. Avsändare: `Stage <noreply@mikwik.se>`. ConsoleEmailProvider som fallback utan API-nyckel.
+- **R2** — Bildlagring (session 9). Bucket `stage-images`. Stöder JPEG, PNG, WebP, max 5 MB. Bilder serveras via `/api/images/:prefix/:filename` med cache-headers. IMAGES binding optional — returnerar 503 om ej konfigurerad.
 
 Framtida integrationer (ej implementerade ännu):
-- **R2** — Bildlagring
 - **Cron Triggers** — Schemalagda mail
 
 ## Repostruktur
@@ -37,12 +37,13 @@ Framtida integrationer (ej implementerade ännu):
 | `backend/src/index.ts` | Hono app entry — alla routes monteras här |
 | `backend/src/bindings.ts` | Cloudflare Env-typer (D1, R2, secrets) |
 | `backend/src/routes/` | Tunna API-routes (parse → service → response) |
-| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp) |
+| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp, image) |
 | `backend/src/services/email/` | Email-abstraktionslager (interface, resend, console, factory, html-builder) |
 | `backend/src/services/__tests__/` | Service-enhetstester |
 | `backend/src/middleware/error-handler.ts` | Global error-handler (ZodError → 400, övriga → 500) |
 | `backend/src/utils/validation.ts` | `parseBody()` — Zod-wrapper för request-validering |
 | `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist) |
+| `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email) |
 | `frontend/src/` | React-app (Vite) |
 | `packages/shared/src/` | Delade typer, konstanter + Zod-schemas |
 | `migrations/` | Inkrementella D1 SQL-filer |
@@ -68,6 +69,9 @@ Framtida integrationer (ej implementerade ännu):
 | GET | `/api/events/:id/mailings` | Lista utskick för event | 4 |
 | POST | `/api/events/:id/mailings` | Skapa nytt utskick | 4 |
 | POST | `/api/events/:id/mailings/:mid/send` | Skicka utskick | 4 |
+| GET | `/api/events/:id/participants/export` | Exportera deltagare som CSV | 9 |
+| POST | `/api/images` | Ladda upp bild till R2 (multipart form-data) | 9 |
+| GET | `/api/images/:prefix/:filename` | Hämta bild från R2 | 9 |
 | GET | `/api/rsvp/:token` | Hämta deltagarinfo + eventinfo (publik) | 4 |
 | POST | `/api/rsvp/:token/respond` | Svara attending/declined (publik) | 4 |
 | POST | `/api/rsvp/:token/cancel` | Avboka deltagande (publik) | 4 |
@@ -150,6 +154,7 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 | Variabel | Beskrivning | Källa |
 |---|---|---|
 | `DB` | D1-databas binding | wrangler.toml |
+| `IMAGES` | R2-bucket binding (optional, session 9) | wrangler.toml |
 | `RESEND_API_KEY` | API-nyckel för Resend (konfigurerad session 5) | wrangler secret |
 
 ## Emailtjänst (session 4–5, refaktorerad session 8a)
@@ -171,6 +176,7 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 | WaitlistService | `backend/src/services/waitlist.service.ts` | shouldWaitlist, promoteNext, reorder |
 | MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk |
 | RsvpService | `backend/src/services/rsvp.service.ts` | RSVP-svar, avbokning, auto-waitlist vid kapacitet |
+| ImageService | `backend/src/services/image.service.ts` | Bilduppladdning till R2, validering (typ/storlek), servering |
 
 **Emailflöde vid utskick:**
 1. Hämtar mottagare baserat på `recipient_filter`

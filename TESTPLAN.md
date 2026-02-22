@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 51 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP, waitlist/ICS, event.service, participant.service inkl. Zod-schema-validering)
-**Status:** ☑ Testad (session 8b)
+**Förväntat resultat:** 52 tester gröna (health, events, participants inkl. CSV-import/export, mailings/RSVP, waitlist/ICS, event.service, participant.service inkl. Zod-schema-validering)
+**Status:** ☑ Testad (session 9)
 
 ---
 
@@ -400,3 +400,75 @@
 1. Kör `npm run test`
 **Förväntat resultat:** createParticipantSchema-tester (4 st) + updateParticipantSchema-tester (2 st) passerar
 **Status:** ☑ Testad (session 8b)
+
+---
+
+## Session 9: Frontend-refaktorering + R2 + dnd-kit + CSV-export
+
+### TC-9.1: EventDetail.tsx under 200 rader
+**Steg:**
+1. Kör `wc -l frontend/src/pages/EventDetail.tsx`
+**Förväntat resultat:** < 200 rader (alla tabs utbrutna till feature-komponenter)
+**Status:** ☑ Testad (session 9 — 176 rader)
+
+### TC-9.2: Feature-komponenter fungerar (Sammanfattningstab)
+**Steg:**
+1. Öppna event → Sammanfattning-tab
+**Förväntat resultat:** Statistik (deltagare, status, typ), eventinfo (datum, tid, plats, arrangör) visas korrekt
+**Status:** ☐ Ej testad
+
+### TC-9.3: Feature-komponenter fungerar (Deltagartab)
+**Steg:**
+1. Öppna event med deltagare → Deltagare-tab
+**Förväntat resultat:** Deltagartabell, sökfält, statusfilter, knappar (lägg till, importera, exportera) fungerar
+**Status:** ☐ Ej testad
+
+### TC-9.4: Feature-komponenter fungerar (Utskickstab)
+**Steg:**
+1. Öppna event → Utskick-tab → "+ Nytt utskick"
+**Förväntat resultat:** Utskickslista, mallväljare, förhandsgranskning fungerar som innan
+**Status:** ☐ Ej testad
+
+### TC-9.5: CSV-export
+**Steg:**
+1. Öppna event med deltagare → Deltagare-tab
+2. Klicka "Exportera CSV"
+**Förväntat resultat:** CSV-fil laddas ner med header (Namn,E-post,Företag,Kategori,Status) + rader per deltagare
+**Status:** ☐ Ej testad
+
+### TC-9.6: CSV-export API
+**Steg:**
+1. Kör `curl https://mikwik.se/stage/api/events/<id>/participants/export`
+**Förväntat resultat:** CSV-data med Content-Type: text/csv och Content-Disposition: attachment
+**Status:** ☑ Testad (automatiskt test)
+
+### TC-9.7: R2-bilduppladdning (backend)
+**Steg:**
+1. `curl -X POST https://mikwik.se/stage/api/images -F "file=@bild.jpg"`
+**Förväntat resultat:** 201 Created med `{ "key": "events/<uuid>.jpg", "url": "/stage/api/images/events/<uuid>.jpg" }`
+**Status:** ☐ Ej testad (kräver R2-bucket skapad)
+
+### TC-9.8: R2-bilduppladdning — filtyp-validering
+**Steg:**
+1. `curl -X POST https://mikwik.se/stage/api/images -F "file=@dokument.pdf"`
+**Förväntat resultat:** 400 med `{ "error": "Otillåten filtyp: application/pdf. Tillåtna: JPEG, PNG, WebP." }`
+**Status:** ☐ Ej testad
+
+### TC-9.9: R2-bilduppladdning — storleksgräns
+**Steg:**
+1. Försök ladda upp en bild > 5 MB
+**Förväntat resultat:** 400 med felmeddelande om storlek
+**Status:** ☐ Ej testad
+
+### TC-9.10: dnd-kit väntlista drag-n-drop
+**Steg:**
+1. Öppna event med väntlistade deltagare → Deltagare-tab
+2. Dra en deltagare i WaitlistPanel till en ny position
+**Förväntat resultat:** Deltagaren byter position, köplatser uppdateras
+**Status:** ☐ Ej testad
+
+### TC-9.11: API — CSV-export (automatiskt test)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** CSV-export-test passerar (header + data + Content-Type/Disposition)
+**Status:** ☑ Testad (session 9, 52 tester totalt)
