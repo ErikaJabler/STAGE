@@ -153,7 +153,7 @@ ${html}
 
                 // Handle both drag-and-drop and click-to-upload
                 const dragEv = ev as DragEvent;
-                const inputEv = ev as { target: HTMLInputElement };
+                const inputEv = ev as unknown as { target: HTMLInputElement };
                 const files = dragEv.dataTransfer?.files || inputEv.target?.files;
                 if (!files || files.length === 0) return;
 
@@ -241,14 +241,8 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    height: '100%',
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
+    flex: 1,
+    overflow: 'hidden',
     backgroundColor: '#f5f5f5',
   },
   toolbar: {
