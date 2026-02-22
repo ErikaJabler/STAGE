@@ -587,6 +587,9 @@ Ska inkludera:
 ### Avvikelser från plan
 Inga avvikelser — alla leverabler uppfyllda.
 
+### Bugfixar efter session
+- [x] **RSVP-knapp ej synlig på mobil:** Sidan använde `alignItems: 'center'` som vertikalt centrerade kortet — på mobil hamnade "Jag kommer"-knappen under synligt område pga ExtraFieldsForm (dietary + plus-one). Fix: `alignItems: 'flex-start'` + större/tydligare knapp med hårdkodad färg + box-shadow.
+
 ### Anteckningar
 - SettingsTab samlar alla eventinställningar (info, bild, synlighet, avsändare, GDPR, behörigheter, borttagning) i en vy
 - Redigera-knapp borttagen från EventDetail topbar — all redigering sker inline via Inställningar-tab
@@ -604,6 +607,6 @@ Inga avvikelser — alla leverabler uppfyllda.
 |-----------|-----|----------|-------|--------|
 | 0001 | events_participants.sql | events, participants | ✅ | ✅ |
 | 0002 | mailings.sql | mailings | ✅ | ✅ |
-| 0003 | event_permissions.sql | users, event_permissions | ✅ | ❌ |
-| 0004 | activities.sql | activities, email_queue | ✅ | ❌ |
-| 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ❌ |
+| 0003 | event_permissions.sql | users, event_permissions | ✅ | ✅ |
+| 0004 | activities.sql | activities, email_queue | ✅ | ✅ |
+| 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |

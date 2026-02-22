@@ -431,9 +431,9 @@ const s: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg-primary)',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    padding: '24px',
+    padding: '40px 24px',
     fontFamily: "'Consid Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   },
   card: {
@@ -506,9 +506,10 @@ const s: Record<string, React.CSSProperties> = {
   },
   buttonGroup: { display: 'flex', gap: '12px', paddingTop: '8px', width: '100%', justifyContent: 'center' },
   primaryBtn: {
-    padding: '12px 32px', backgroundColor: 'var(--color-accent)', color: '#FFFFFF',
-    border: 'none', borderRadius: 'var(--radius-lg)', fontSize: '0.9375rem',
+    padding: '14px 36px', backgroundColor: '#B5223F', color: '#FFFFFF',
+    border: 'none', borderRadius: '8px', fontSize: '1rem',
     fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 150ms ease',
+    boxShadow: '0 2px 8px rgba(181, 34, 63, 0.3)',
   },
   secondaryBtn: {
     padding: '12px 32px', backgroundColor: 'transparent', color: 'var(--color-text-secondary)',

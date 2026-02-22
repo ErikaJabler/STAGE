@@ -15,57 +15,18 @@
 
 ---
 
-## Session 9: Frontend-refaktorering + R2 + dnd-kit + CSV-export
-**Mål:** Bryt ut EventDetail.tsx. R2-bilduppladdning, dnd-kit, CSV-export.
-
-**Filer att skapa/ändra:**
-- `frontend/src/components/features/participants/ParticipantsTab.tsx`
-- `frontend/src/components/features/participants/AddParticipantModal.tsx`
-- `frontend/src/components/features/participants/ImportCSVModal.tsx`
-- `frontend/src/components/features/participants/WaitlistPanel.tsx` — dnd-kit
-- `frontend/src/components/features/email/MailingsTab.tsx`
-- `frontend/src/components/features/email/CreateMailingModal.tsx`
-- `frontend/src/components/features/events/SummaryTab.tsx`
-- `backend/src/routes/images.ts` — POST /api/images (R2)
-- `backend/src/services/image.service.ts` — validering
-- `GET /api/events/:id/participants/export` — CSV-export
-
-**Arkitekturkrav:** EventDetail.tsx < 200 rader, features/ har 6+ filer
-
-**Klart när:** EventDetail.tsx < 200 rader, R2 fungerar, dnd-kit fungerar, CSV-export fungerar
+## Session 9: Frontend-refaktorering + R2 + dnd-kit + CSV-export ✅ DONE
+**Levererat:** EventDetail.tsx 1727→176 rader, 10 feature-filer, R2-bilduppladdning, dnd-kit WaitlistPanel, CSV-export. 52 tester.
 
 ---
 
-## Session 10: Behörighetssystem
-**Mål:** Auth-middleware + roller per event.
-
-**Filer att skapa/ändra:**
-- `migrations/0003_event_permissions.sql`
-- `backend/src/middleware/auth.ts` — AuthProvider interface + token
-- `backend/src/services/permission.service.ts` + tester
-- `backend/src/routes/auth.ts` — POST /api/auth/login
-- `backend/src/routes/permissions.ts`
-- `frontend/src/pages/Login.tsx`
-- `frontend/src/components/features/settings/PermissionsPanel.tsx`
-
-**Klart när:** Inloggning, endpoints skyddade, roller fungerar, 5+ nya tester
+## Session 10: Behörighetssystem ✅ DONE
+**Levererat:** Auth-middleware, roller per event (owner/editor/viewer), login-sida, PermissionsPanel, auto-owner. 61 tester.
 
 ---
 
-## Session 11: Email-förbättringar + Aktivitetslogg + Sök
-**Mål:** Backend-mallar, email-queue med Cron Trigger, aktivitetslogg, global sök.
-
-**Filer att skapa/ändra:**
-- `backend/src/services/email/templates/` — 6 mallar
-- `backend/src/services/email/template-renderer.ts`
-- `backend/src/services/email/send-queue.ts`
-- `migrations/0004_activities.sql`
-- `backend/src/services/activity.service.ts` + tester
-- `backend/src/routes/activities.ts`, `search.ts`
-- `frontend/src/components/features/events/ActivityTimeline.tsx`
-- `frontend/src/components/layout/SearchBar.tsx`
-
-**Klart när:** Mallar på backend, Cron processar kö, aktivitetslogg, sök fungerar
+## Session 11: Email-förbättringar + Aktivitetslogg + Sök ✅ DONE
+**Levererat:** 6 backend-mallar, template-renderer, email-kö med Cron Trigger, aktivitetslogg, global sök, ActivityTimeline, SearchBar. 66 tester.
 
 ---
 
@@ -74,11 +35,44 @@
 
 ---
 
-## Session 13: Integrationstester + Deploy Fas 1
-**Mål:** E2E-tester, final docs, deploy.
+## Session 13: Saknade features + Integrationstester + Deploy Fas 1
+**Mål:** Implementera saknade features från planen, integrationstester, deploy.
 
-**Tester:** Event→deltagare→waitlist→promote, Inbjudan→RSVP→bekräftelse, Behörigheter, Email-queue
-**Klart när:** Alla tester gröna, appen deployad, docs kompletta
+### Del A: Saknade features från planen
+**1. Klona event**
+- `backend/src/routes/events.ts` — POST /api/events/:id/clone
+- `backend/src/services/event.service.ts` — clone() kopierar alla fält utom datum/tid/slug
+- `frontend/src/pages/Overview.tsx` — "Klona"-knapp per EventCard
+
+**2. Unsubscribe-länk i mail (GDPR art. 7(3))**
+- `backend/src/services/email/html-builder.ts` — lägg till unsubscribe-footer i alla mail
+- Länken pekar till RSVP-sidan (avboka = opt-out)
+
+**3. Skicka testmail till mig**
+- `backend/src/routes/mailings.ts` — POST /api/events/:id/mailings/:mid/test (skickar till inloggad användare)
+- `frontend/src/components/features/email/MailingsTab.tsx` — "Skicka testmail"-knapp
+
+**4. Svarsfrist-UI för väntlistade**
+- `backend/src/routes/participants.ts` — PUT deadline (response_deadline kolumn finns redan)
+- `frontend/src/components/features/participants/ParticipantsTab.tsx` — datepicker per väntlistad
+
+**5. Template preview-endpoint**
+- `backend/src/routes/mailings.ts` — GET /api/templates/:type/preview (renderad HTML med exempeldata)
+
+### Del B: Integrationstester
+- `backend/src/__tests__/integration.test.ts`:
+  - Event→deltagare→waitlist→promote
+  - Inbjudan→RSVP→bekräftelse
+  - Behörigheter (owner/editor/viewer)
+  - Email-queue (Cron processning)
+  - Klona event
+
+### Del C: Docs + Deploy
+- Uppdatera SAD.md med nya endpoints
+- Uppdatera TESTPLAN.md med nya testfall
+- `npm run build && npx wrangler deploy`
+
+**Klart när:** Alla saknade features implementerade, integrationstester gröna, appen deployad, docs kompletta
 
 ---
 

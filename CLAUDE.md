@@ -137,7 +137,8 @@ Varje session MÅSTE avslutas med:
 4. Uppdatera **PROGRESS.md** — markera session DONE, lista deliverables + avvikelser från plan
 5. Uppdatera **SAD.md** — nya endpoints, schemaändringar, integrationer
 6. Uppdatera **TESTPLAN.md** — testfall för nya features + uppdatera TC-0.4 testantal
-7. Ge användaren en kopierbar prompt för nästa session
+7. Uppdatera **docs/SESSION-GUIDE.md** — markera sessionen ✅ DONE med kort leveranssammanfattning
+8. Ge användaren en kopierbar prompt för nästa session
 
 ## Vad INTE göra
 - Använd INTE egna färger — bara Consid-paletten
