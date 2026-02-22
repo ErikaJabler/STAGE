@@ -9,6 +9,10 @@ import rsvp from "./routes/rsvp";
 import images from "./routes/images";
 import auth from "./routes/auth";
 import permissions from "./routes/permissions";
+import activities from "./routes/activities";
+import search from "./routes/search";
+import { processQueue } from "./services/email/send-queue";
+import { templates } from "./services/email";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -28,12 +32,29 @@ app.route("/stage/api/rsvp", rsvp);
 
 app.use("/stage/api/events/*", authMiddleware);
 app.use("/stage/api/images/*", authMiddleware);
+app.use("/stage/api/search/*", authMiddleware);
+app.use("/stage/api/templates/*", authMiddleware);
 
 app.route("/stage/api/events", events);
 app.route("/stage/api/events/:eventId/participants", participants);
 app.route("/stage/api/events/:eventId/mailings", mailings);
 app.route("/stage/api/events/:eventId/permissions", permissions);
+app.route("/stage/api/events/:eventId/activities", activities);
 app.route("/stage/api/images", images);
+app.route("/stage/api/search", search);
+
+/** GET /api/templates — list available email templates */
+app.get("/stage/api/templates", (c) => {
+  return c.json(
+    templates.map((t) => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      defaultSubject: t.defaultSubject,
+      body: t.body,
+    }))
+  );
+});
 
 /* ---- Bare /stage → redirect to /stage/ ---- */
 app.get("/stage", (c) => c.redirect("/stage/"));
@@ -58,4 +79,18 @@ app.all("/stage/*", async (c) => {
   return c.env.ASSETS.fetch(new Request(url.toString(), c.req.raw));
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+
+  /** Cron Trigger — process email queue every 5 minutes */
+  async scheduled(
+    _event: ScheduledEvent,
+    env: Env,
+    _ctx: ExecutionContext
+  ): Promise<void> {
+    const result = await processQueue(env.DB, env.RESEND_API_KEY);
+    if (result.sent > 0 || result.failed > 0) {
+      console.log(`[Cron] Email queue processed: ${result.sent} sent, ${result.failed} failed`);
+    }
+  },
+};

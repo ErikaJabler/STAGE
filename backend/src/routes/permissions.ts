@@ -3,6 +3,7 @@ import type { Env, AuthVariables } from "../bindings";
 import { addPermissionSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
 import { PermissionService } from "../services/permission.service";
+import { ActivityService } from "../services/activity.service";
 
 const permissions = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -34,6 +35,7 @@ permissions.post("/", async (c) => {
   const { email, name, role } = parseBody(addPermissionSchema, body);
 
   const perm = await PermissionService.addPermission(c.env.DB, eventId, email, name, role);
+  await ActivityService.logPermissionAdded(c.env.DB, eventId, email, role, user.email);
   return c.json(perm, 201);
 });
 

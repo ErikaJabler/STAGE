@@ -4,6 +4,7 @@ import { createEventSchema, updateEventSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
 import { EventService, generateICS } from "../services/event.service";
 import { PermissionService } from "../services/permission.service";
+import { ActivityService } from "../services/activity.service";
 import { listEventsForUser } from "../db/event.queries";
 
 const events = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -46,6 +47,7 @@ events.post("/", async (c) => {
   // Auto-assign creator as owner
   const user = c.var.user;
   await PermissionService.setOwner(c.env.DB, user.id, event.id);
+  await ActivityService.log(c.env.DB, event.id, "event_created", `Event skapat: "${event.name}"`, user.email);
 
   return c.json(event, 201);
 });
@@ -70,6 +72,9 @@ events.put("/:id", async (c) => {
   if (!event) {
     return c.json({ error: "Event hittades inte" }, 404);
   }
+
+  const updatedFields = Object.keys(input);
+  await ActivityService.logEventUpdated(c.env.DB, id, updatedFields, user.email);
 
   return c.json(event);
 });

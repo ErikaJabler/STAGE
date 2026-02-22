@@ -5,6 +5,7 @@ import { parseBody } from "../utils/validation";
 import { getEventById } from "../db/queries";
 import { MailingService } from "../services/mailing.service";
 import { PermissionService } from "../services/permission.service";
+import { ActivityService } from "../services/activity.service";
 
 const mailings = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -49,6 +50,7 @@ mailings.post("/", async (c) => {
   const input = parseBody(createMailingSchema, body);
 
   const mailing = await MailingService.create(c.env.DB, eventId, input);
+  await ActivityService.logMailingCreated(c.env.DB, eventId, input.subject, user.email);
   return c.json(mailing, 201);
 });
 
@@ -76,6 +78,8 @@ mailings.post("/:mid/send", async (c) => {
   if (result.errors.length > 0 && result.sent === 0) {
     return c.json({ error: result.errors[0] }, 400);
   }
+
+  await ActivityService.logMailingSent(c.env.DB, eventId, result.mailing.subject, result.total, user.email);
 
   return c.json({
     mailing: result.mailing,

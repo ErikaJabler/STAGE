@@ -25,6 +25,6 @@ zone_name = "mikwik.se"
 binding = "IMAGES"
 bucket_name = "stage-images"
 
-# Cron Triggers (session 7)
-# [triggers]
-# crons = ["*/5 * * * *"]
+# Cron Triggers (session 11) — process email queue every 5 minutes
+[triggers]
+crons = ["*/5 * * * *"]

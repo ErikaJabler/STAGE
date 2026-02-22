@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 61 tester gröna (health, events inkl. auth, participants, mailings/RSVP, waitlist/ICS, event.service, participant.service, permission.service)
-**Status:** ☑ Testad (session 10)
+**Förväntat resultat:** 66 tester gröna (health, events inkl. auth, participants, mailings/RSVP, waitlist/ICS, event.service, participant.service, permission.service, activity.service)
+**Status:** ☑ Testad (session 11)
 
 ---
 
@@ -559,3 +559,89 @@
 1. Kör `npm run test`
 **Förväntat resultat:** 8 permission.service.test passerar (setOwner, owner/editor/viewer rollkontroll, oautentiserad nekas, removePermission, listForEvent, roleUpgrade)
 **Status:** ☑ Testad (session 10, 61 tester totalt)
+
+---
+
+## Session 11: Email-förbättringar + Aktivitetslogg + Sök
+
+### TC-11.1: Aktivitetslogg visas i Sammanfattning-tab
+**Steg:**
+1. Öppna event → Sammanfattning-tab
+**Förväntat resultat:** "Aktivitetslogg" sektion visas med tidslinje av händelser (skapat, deltagare tillagda, utskick, etc.)
+**Status:** ☐ Ej testad
+
+### TC-11.2: Aktivitetslogg loggar event-skapande
+**Steg:**
+1. Skapa ett nytt event
+2. Öppna eventet → Sammanfattning-tab
+**Förväntat resultat:** Aktivitetsloggen visar "Event 'Namn' skapat" med tidsstämpel
+**Status:** ☐ Ej testad
+
+### TC-11.3: Aktivitetslogg loggar deltagare tillagd
+**Steg:**
+1. Öppna event → Deltagare-tab → "+ Lägg till"
+2. Fyll i och spara
+3. Gå till Sammanfattning-tab
+**Förväntat resultat:** Aktivitetsloggen visar "Deltagare 'Namn' tillagd" med tidsstämpel
+**Status:** ☐ Ej testad
+
+### TC-11.4: Aktivitetslogg loggar utskick skapat
+**Steg:**
+1. Öppna event → Utskick-tab → "+ Nytt utskick" → "Skapa utkast"
+2. Gå till Sammanfattning-tab
+**Förväntat resultat:** Aktivitetsloggen visar "Utskick 'Ämne' skapat" med tidsstämpel
+**Status:** ☐ Ej testad
+
+### TC-11.5: Sökfält i topbar
+**Steg:**
+1. Logga in → se topbar
+**Förväntat resultat:** Sökfält med "Sök event..."-placeholder visas till höger i topbar
+**Status:** ☐ Ej testad
+
+### TC-11.6: Sök event
+**Steg:**
+1. Skriv minst 2 tecken i sökfältet
+**Förväntat resultat:** Dropdown med matchande events (namn, plats, arrangör), visar eventnamn + datum/plats
+**Status:** ☐ Ej testad
+
+### TC-11.7: Sökresultat navigerar till event
+**Steg:**
+1. Sök och klicka på ett event i dropdown-listan
+**Förväntat resultat:** Navigerar till eventdetalj-sidan, sökfältet töms
+**Status:** ☐ Ej testad
+
+### TC-11.8: Sök med tangentbord
+**Steg:**
+1. Skriv sökterm → använd piltangenter (upp/ner) → tryck Enter
+**Förväntat resultat:** Piltangenter markerar resultat, Enter navigerar till markerat event, Escape stänger dropdown
+**Status:** ☐ Ej testad
+
+### TC-11.9: Sök visar "Inga resultat"
+**Steg:**
+1. Skriv en sökterm som inte matchar något event
+**Förväntat resultat:** Dropdown visar "Inga resultat" (italic, muted)
+**Status:** ☐ Ej testad
+
+### TC-11.10: Email-mallar från backend
+**Steg:**
+1. Öppna event → Utskick-tab → "+ Nytt utskick"
+**Förväntat resultat:** 6 mallkort visas (Save the date, Inbjudan, Väntelista, Bekräftelse, Påminnelse, Tack), hämtade från backend
+**Status:** ☐ Ej testad
+
+### TC-11.11: Mallval fyller i ämne och meddelande med merge-fält
+**Steg:**
+1. Klicka på en mall (t.ex. "Inbjudan")
+**Förväntat resultat:** Ämne och brödtext fylls i med malltext, inkluderar {{name}}, {{event}}, {{datum}}, {{rsvp_link}} etc.
+**Status:** ☐ Ej testad
+
+### TC-11.12: Email-kö (Cron Trigger)
+**Steg:**
+1. Skicka utskick till > 5 mottagare
+**Förväntat resultat:** Utskick köas i email_queue-tabellen, Cron Trigger processar kön var 5:e minut
+**Status:** ☐ Ej testad (kräver deploy med Cron Trigger)
+
+### TC-11.13: Aktivitetslogg API (automatiska tester)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** 5 activity.service.test passerar (log+retrieve, list, metadata JSON, limit, status change)
+**Status:** ☑ Testad (session 11, 66 tester totalt)

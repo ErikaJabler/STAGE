@@ -1,4 +1,4 @@
-import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility, MailingStatus, Role } from "./constants";
+import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility, MailingStatus, Role, ActivityType, EmailQueueStatus } from "./constants";
 
 export interface Event {
   id: number;
@@ -79,4 +79,29 @@ export interface EventPermission {
 export interface EventPermissionWithUser extends EventPermission {
   user_email: string;
   user_name: string;
+}
+
+export interface Activity {
+  id: number;
+  event_id: number;
+  type: ActivityType;
+  description: string;
+  metadata: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface EmailQueueItem {
+  id: number;
+  mailing_id: number;
+  event_id: number;
+  to_email: string;
+  to_name: string;
+  subject: string;
+  html: string;
+  plain_text: string;
+  status: EmailQueueStatus;
+  error: string | null;
+  created_at: string;
+  sent_at: string | null;
 }

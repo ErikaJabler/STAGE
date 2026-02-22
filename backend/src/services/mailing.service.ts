@@ -1,4 +1,4 @@
-import type { Mailing } from "@stage/shared";
+import type { Mailing, Event } from "@stage/shared";
 import {
   listMailings,
   getMailingById,
@@ -8,7 +8,8 @@ import {
   getEventById,
   type CreateMailingInput,
 } from "../db/queries";
-import { createEmailProvider, buildEmailHtml } from "./email";
+import { buildMergeContext, renderEmail, createEmailProvider } from "./email";
+import { enqueueEmails, getQueueStats } from "./email/send-queue";
 
 export const MailingService = {
   list(db: D1Database, eventId: number): Promise<Mailing[]> {
@@ -19,11 +20,13 @@ export const MailingService = {
     return createMailing(db, eventId, input);
   },
 
+  /** Enqueue all emails for a mailing (processed by Cron Trigger) */
   async send(
     db: D1Database,
     eventId: number,
     mailingId: number,
-    apiKey?: string
+    apiKey?: string,
+    baseUrl = "https://mikwik.se"
   ): Promise<{
     mailing: Mailing | null;
     sent: number;
@@ -46,40 +49,65 @@ export const MailingService = {
     }
 
     const event = (await getEventById(db, eventId))!;
-    const emailProvider = createEmailProvider(apiKey);
+
+    // Build queue items using template renderer
+    const queueItems = recipients.map((recipient) => {
+      const context = buildMergeContext(event, recipient, baseUrl);
+      const rendered = renderEmail(mailing.body, mailing.subject, context, event);
+      return {
+        mailing_id: mailingId,
+        event_id: eventId,
+        to_email: recipient.email,
+        to_name: recipient.name,
+        subject: rendered.subject,
+        html: rendered.html,
+        plain_text: rendered.text,
+      };
+    });
+
+    // Try direct send for small batches, queue for larger ones
+    if (recipients.length <= 5) {
+      return this.sendDirect(db, event, mailing, queueItems, apiKey);
+    }
+
+    // Enqueue for Cron processing
+    const enqueued = await enqueueEmails(db, queueItems);
+    const updated = await markMailingSent(db, mailingId);
+
+    return {
+      mailing: updated,
+      sent: 0,
+      failed: 0,
+      total: enqueued,
+      errors: [],
+    };
+  },
+
+  /** Send emails directly (for small batches) */
+  async sendDirect(
+    db: D1Database,
+    _event: Event,
+    mailing: Mailing,
+    items: Array<{ mailing_id: number; event_id: number; to_email: string; to_name: string; subject: string; html: string; plain_text: string }>,
+    apiKey?: string
+  ): Promise<{
+    mailing: Mailing | null;
+    sent: number;
+    failed: number;
+    total: number;
+    errors: string[];
+  }> {
+    const provider = createEmailProvider(apiKey);
     let sent = 0;
     let failed = 0;
     const errors: string[] = [];
 
-    for (const recipient of recipients) {
-      const rsvpUrl = `https://mikwik.se/stage/rsvp/${recipient.cancellation_token}`;
-
-      let personalizedBody = mailing.body;
-      if (personalizedBody.includes("{{rsvp_link}}")) {
-        personalizedBody = personalizedBody.replace(/\{\{rsvp_link\}\}/g, rsvpUrl);
-      } else {
-        personalizedBody += `\n\nSvara på inbjudan: ${rsvpUrl}`;
-      }
-
-      personalizedBody = personalizedBody.replace(/\{\{name\}\}/g, recipient.name);
-
-      const calendarUrl = `https://mikwik.se/stage/api/events/${eventId}/calendar.ics`;
-      const html = buildEmailHtml({
-        body: personalizedBody,
-        recipientName: recipient.name,
-        eventName: event.name,
-        eventDate: event.date,
-        eventTime: event.time,
-        eventLocation: event.location,
-        rsvpUrl,
-        calendarUrl,
-      });
-
-      const result = await emailProvider.send({
-        to: recipient.email,
-        subject: mailing.subject,
-        body: personalizedBody,
-        html,
+    for (const item of items) {
+      const result = await provider.send({
+        to: item.to_email,
+        subject: item.subject,
+        body: item.plain_text,
+        html: item.html,
       });
 
       if (result.success) {
@@ -87,13 +115,17 @@ export const MailingService = {
       } else {
         failed++;
         if (result.error) {
-          errors.push(`${recipient.email}: ${result.error}`);
+          errors.push(`${item.to_email}: ${result.error}`);
         }
       }
     }
 
-    const updated = await markMailingSent(db, mailingId);
+    const updated = await markMailingSent(db, mailing.id);
+    return { mailing: updated, sent, failed, total: items.length, errors };
+  },
 
-    return { mailing: updated, sent, failed, total: recipients.length, errors };
+  /** Get queue stats for a mailing */
+  getQueueStats(db: D1Database, mailingId: number) {
+    return getQueueStats(db, mailingId);
   },
 };

@@ -6,6 +6,7 @@ import { getEventById } from "../db/queries";
 import { ParticipantService } from "../services/participant.service";
 import { WaitlistService } from "../services/waitlist.service";
 import { PermissionService } from "../services/permission.service";
+import { ActivityService } from "../services/activity.service";
 
 const participants = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -50,6 +51,7 @@ participants.post("/", async (c) => {
   const input = parseBody(createParticipantSchema, body);
 
   const participant = await ParticipantService.create(c.env.DB, eventId, input);
+  await ActivityService.logParticipantAdded(c.env.DB, eventId, input.name, user.email);
   return c.json(participant, 201);
 });
 
@@ -74,6 +76,9 @@ participants.post("/import", async (c) => {
 
   try {
     const result = await ParticipantService.importCSV(c.env.DB, eventId, csvText);
+    if (result.imported > 0) {
+      await ActivityService.logParticipantImported(c.env.DB, eventId, result.imported, user.email);
+    }
     return c.json(result);
   } catch (err) {
     return c.json({ error: (err as Error).message }, 400);
@@ -166,9 +171,17 @@ participants.delete("/:id", async (c) => {
     return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
   }
 
+  // Fetch participant name before deletion for activity log
+  const participants_list = await ParticipantService.list(c.env.DB, eventId);
+  const target = participants_list.find((p) => p.id === id);
+
   const deleted = await ParticipantService.delete(c.env.DB, eventId, id);
   if (!deleted) {
     return c.json({ error: "Deltagare hittades inte" }, 404);
+  }
+
+  if (target) {
+    await ActivityService.logParticipantRemoved(c.env.DB, eventId, target.name, user.email);
   }
 
   return c.json({ ok: true });

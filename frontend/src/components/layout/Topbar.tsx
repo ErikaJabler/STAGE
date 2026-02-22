@@ -1,3 +1,5 @@
+import { SearchBar } from './SearchBar';
+
 interface TopbarProps {
   title: string;
   subtitle?: string;
@@ -11,7 +13,10 @@ export function Topbar({ title, subtitle, actions }: TopbarProps) {
         <h1 style={styles.title}>{title}</h1>
         {subtitle && <span style={styles.subtitle}>{subtitle}</span>}
       </div>
-      {actions && <div style={styles.actions}>{actions}</div>}
+      <div style={styles.rightArea}>
+        <SearchBar />
+        {actions && <div style={styles.actions}>{actions}</div>}
+      </div>
     </header>
   );
 }
@@ -43,6 +48,11 @@ const styles: Record<string, React.CSSProperties> = {
   subtitle: {
     fontSize: 'var(--font-size-sm)',
     color: 'var(--color-text-muted)',
+  },
+  rightArea: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
   },
   actions: {
     display: 'flex',

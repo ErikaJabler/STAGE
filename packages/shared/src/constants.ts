@@ -60,3 +60,26 @@ export const ROLE = {
 } as const;
 
 export type Role = (typeof ROLE)[keyof typeof ROLE];
+
+export const ACTIVITY_TYPE = {
+  MAILING_SENT: "mailing_sent",
+  MAILING_CREATED: "mailing_created",
+  PARTICIPANT_ADDED: "participant_added",
+  PARTICIPANT_REMOVED: "participant_removed",
+  PARTICIPANT_STATUS_CHANGED: "participant_status_changed",
+  PARTICIPANT_IMPORTED: "participant_imported",
+  EVENT_CREATED: "event_created",
+  EVENT_UPDATED: "event_updated",
+  PERMISSION_ADDED: "permission_added",
+  PERMISSION_REMOVED: "permission_removed",
+} as const;
+
+export type ActivityType = (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];
+
+export const EMAIL_QUEUE_STATUS = {
+  PENDING: "pending",
+  SENT: "sent",
+  FAILED: "failed",
+} as const;
+
+export type EmailQueueStatus = (typeof EMAIL_QUEUE_STATUS)[keyof typeof EMAIL_QUEUE_STATUS];

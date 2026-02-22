@@ -1,4 +1,4 @@
-import type { Event, EventWithCount, Participant, Mailing } from "@stage/shared";
+import type { Event, EventWithCount, Participant, Mailing, Activity } from "@stage/shared";
 
 const BASE_URL = "/stage/api";
 const TOKEN_KEY = 'stage_auth_token';
@@ -280,6 +280,31 @@ export const rsvpApi = {
     request<RsvpResponse>(`/rsvp/${token}/cancel`, {
       method: "POST",
     }),
+};
+
+/** Activities API */
+export const activitiesApi = {
+  list: (eventId: number, limit?: number) =>
+    request<Activity[]>(`/events/${eventId}/activities${limit ? `?limit=${limit}` : ""}`),
+};
+
+/** Search API */
+export const searchApi = {
+  search: (q: string) =>
+    request<EventWithCount[]>(`/search?q=${encodeURIComponent(q)}`),
+};
+
+/** Templates API */
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  description: string;
+  defaultSubject: string;
+  body: string;
+}
+
+export const templatesApi = {
+  list: () => request<EmailTemplate[]>("/templates"),
 };
 
 export { ApiError };

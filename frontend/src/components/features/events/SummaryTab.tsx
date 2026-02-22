@@ -1,5 +1,6 @@
 import type { EventWithCount } from '@stage/shared';
 import { getStatusBadge, getTypeLabel, formatDate } from '../shared-helpers';
+import { ActivityTimeline } from './ActivityTimeline';
 
 export function SummaryTab({ event }: { event: EventWithCount }) {
   const statusBadge = getStatusBadge(event.status);
@@ -44,6 +45,8 @@ export function SummaryTab({ event }: { event: EventWithCount }) {
           </div>
         )}
       </div>
+
+      <ActivityTimeline eventId={event.id} />
     </div>
   );
 }

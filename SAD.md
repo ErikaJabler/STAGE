@@ -27,8 +27,7 @@ Integrationer:
 - **Resend** — Email via Resend API (session 4–5). Domän `mikwik.se` verifierad (DKIM + SPF). HTML-mail med Consid-branding. Avsändare: `Stage <noreply@mikwik.se>`. ConsoleEmailProvider som fallback utan API-nyckel.
 - **R2** — Bildlagring (session 9). Bucket `stage-images`. Stöder JPEG, PNG, WebP, max 5 MB. Bilder serveras via `/api/images/:prefix/:filename` med cache-headers. IMAGES binding optional — returnerar 503 om ej konfigurerad.
 
-Framtida integrationer (ej implementerade ännu):
-- **Cron Triggers** — Schemalagda mail
+- **Cron Triggers** — Email-kö (session 11). Kör var 5:e minut, processar upp till 20 väntande mail per körning. Konfigurerat i `wrangler.toml`: `crons = ["*/5 * * * *"]`.
 
 ## Repostruktur
 
@@ -39,8 +38,9 @@ Framtida integrationer (ej implementerade ännu):
 | `backend/src/routes/` | Tunna API-routes (parse → service → response) |
 | `backend/src/routes/auth.ts` | Login-endpoint (POST /api/auth/login, GET /api/auth/me) |
 | `backend/src/routes/permissions.ts` | Behörighets-CRUD per event |
-| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp, image, permission) |
-| `backend/src/services/email/` | Email-abstraktionslager (interface, resend, console, factory, html-builder) |
+| `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp, image, permission, activity) |
+| `backend/src/services/email/` | Email-abstraktionslager (interface, resend, console, factory, html-builder, template-renderer, send-queue) |
+| `backend/src/services/email/templates/` | 6 email-mallar (save-the-date, invitation, waitlist, confirmation, reminder, thank-you) |
 | `backend/src/services/__tests__/` | Service-enhetstester |
 | `backend/src/middleware/auth.ts` | Auth-middleware + AuthProvider interface + token-provider |
 | `backend/src/middleware/error-handler.ts` | Global error-handler (ZodError → 400, övriga → 500) |
@@ -80,6 +80,9 @@ Framtida integrationer (ej implementerade ännu):
 | GET | `/api/events/:id/permissions` | Lista behörigheter för event (viewer+) | 10 |
 | POST | `/api/events/:id/permissions` | Lägg till/uppdatera behörighet (owner) | 10 |
 | DELETE | `/api/events/:id/permissions/:userId` | Ta bort behörighet (owner) | 10 |
+| GET | `/api/events/:id/activities` | Lista aktivitetslogg (viewer+) | 11 |
+| GET | `/api/search?q=` | Sök events (namn, plats, arrangör) | 11 |
+| GET | `/api/templates` | Lista email-mallar (metadata) | 11 |
 | GET | `/api/rsvp/:token` | Hämta deltagarinfo + eventinfo (publik) | 4 |
 | POST | `/api/rsvp/:token/respond` | Svara attending/declined (publik) | 4 |
 | POST | `/api/rsvp/:token/cancel` | Avboka deltagande (publik) | 4 |
@@ -164,6 +167,33 @@ Framtida integrationer (ej implementerade ännu):
 | created_at | TEXT NOT NULL | Skapades |
 | UNIQUE(user_id, event_id) | | En roll per user per event |
 
+### activities (migration 0004)
+| Kolumn | Typ | Beskrivning |
+|---|---|---|
+| id | INTEGER PK | Auto-increment |
+| event_id | INTEGER FK | Referens till events |
+| type | TEXT NOT NULL | Aktivitetstyp (event_created, participant_added, mailing_sent, etc.) |
+| description | TEXT NOT NULL | Beskrivning av händelsen |
+| metadata | TEXT | JSON-metadata (extra detaljer) |
+| created_by | TEXT | Användarens email |
+| created_at | TEXT NOT NULL | Tidsstämpel |
+
+### email_queue (migration 0004)
+| Kolumn | Typ | Beskrivning |
+|---|---|---|
+| id | INTEGER PK | Auto-increment |
+| mailing_id | INTEGER FK | Referens till mailings |
+| event_id | INTEGER FK | Referens till events |
+| to_email | TEXT NOT NULL | Mottagarens email |
+| to_name | TEXT NOT NULL | Mottagarens namn |
+| subject | TEXT NOT NULL | Ämnesrad |
+| html | TEXT NOT NULL | HTML-body |
+| plain_text | TEXT NOT NULL | Plaintext-body |
+| status | TEXT NOT NULL | pending/sent/failed |
+| error | TEXT | Felmeddelande vid failure |
+| created_at | TEXT NOT NULL | Skapades |
+| sent_at | TEXT | Skickades |
+
 ## Deploy-flöde
 1. `npm run build` — bygger frontend (Vite) + backend (esbuild)
 2. `wrangler deploy` — deployer Worker med Assets
@@ -221,12 +251,23 @@ Framtida integrationer (ej implementerade ännu):
 | RsvpService | `backend/src/services/rsvp.service.ts` | RSVP-svar, avbokning, auto-waitlist vid kapacitet |
 | ImageService | `backend/src/services/image.service.ts` | Bilduppladdning till R2, validering (typ/storlek), servering |
 | PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter |
+| ActivityService | `backend/src/services/activity.service.ts` | Aktivitetsloggning per event (log, logMailingCreated, logParticipantAdded, etc.) |
 
-**Emailflöde vid utskick:**
+**Emailflöde vid utskick (session 11 — template-renderer + email-kö):**
 1. Hämtar mottagare baserat på `recipient_filter`
-2. Per mottagare: ersätter `{{name}}` och `{{rsvp_link}}` (auto-append om ej i body)
-3. Genererar HTML med `buildEmailHtml()` (burgundy header, RSVP-knapp, eventinfo)
-4. Skickar via Resend (text + html) från `Stage <noreply@mikwik.se>`
+2. Per mottagare: bygger `MergeContext` med `buildMergeContext()` — ersätter `{{name}}`, `{{event}}`, `{{datum}}`, `{{tid}}`, `{{plats}}`, `{{rsvp_link}}`, `{{calendar_link}}`
+3. Renderar text + HTML med `renderEmail()` (auto-append RSVP-länk om ej i body)
+4. ≤5 mottagare: skickas direkt via Resend. >5 mottagare: köas i `email_queue` och processas av Cron Trigger (var 5:e min, 20 mail/batch)
+
+**Email-mallar (6 st, session 11):**
+| Mall | ID | Beskrivning |
+|---|---|---|
+| Save the date | `save-the-date` | Förhandsinformation om kommande event |
+| Inbjudan | `invitation` | Formell inbjudan med RSVP-länk |
+| Väntelista | `waitlist` | Bekräftelse på väntelisteplacering |
+| Bekräftelse | `confirmation` | Bekräftelse av anmälan |
+| Påminnelse | `reminder` | Påminnelse inför eventet |
+| Tack | `thank-you` | Tackmejl efter genomfört event |
 
 **DNS-konfiguration (mikwik.se):**
 - DKIM: TXT `resend._domainkey` — verifierad

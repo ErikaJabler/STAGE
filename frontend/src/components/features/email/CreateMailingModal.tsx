@@ -1,63 +1,9 @@
 import { useState } from 'react';
 import { Button, Input, Modal, useToast } from '../../ui';
 import { useCreateMailing } from '../../../hooks/useMailings';
+import { useTemplates } from '../../../hooks/useTemplates';
 import type { CreateMailingPayload } from '../../../api/client';
 import { sharedStyles } from '../shared-styles';
-
-const MAIL_TEMPLATES = [
-  {
-    id: 'save-the-date',
-    name: 'Save the date',
-    description: 'Tidigt meddelande för att boka datum',
-    subject: 'Save the date!',
-    body: `Hej {{name}},
-
-Vi vill ge dig en tidig heads-up! Vi planerar ett event som vi gärna vill att du deltar i.
-
-Mer information och en formell inbjudan kommer inom kort. Under tiden, boka gärna datumet i din kalender.
-
-Vi återkommer snart med fler detaljer!
-
-Med vänlig hälsning,
-Consid`,
-  },
-  {
-    id: 'official-invitation',
-    name: 'Officiell inbjudan',
-    description: 'Formell inbjudan med RSVP-länk',
-    subject: 'Inbjudan: Du är välkommen!',
-    body: `Hej {{name}},
-
-Du är varmt välkommen att delta i vårt kommande event!
-
-Vi har ett spännande program planerat och hoppas att du kan vara med. Svara gärna på inbjudan via länken nedan så snart du kan.
-
-{{rsvp_link}}
-
-Har du frågor? Tveka inte att höra av dig.
-
-Varmt välkommen!
-Consid`,
-  },
-  {
-    id: 'reminder',
-    name: 'Påminnelse',
-    description: 'Påminnelse till de som inte svarat',
-    subject: 'Påminnelse: Har du svarat på inbjudan?',
-    body: `Hej {{name}},
-
-Vi vill påminna dig om vårt kommande event! Vi har ännu inte fått ditt svar och hoppas att du fortfarande kan delta.
-
-Svara gärna via länken nedan:
-
-{{rsvp_link}}
-
-Glöm inte att platsen kan vara begränsad, så svara gärna så snart du kan.
-
-Vi hoppas vi ses!
-Consid`,
-  },
-] as const;
 
 export function CreateMailingModal({ eventId, open, onClose }: {
   eventId: number;
@@ -66,6 +12,7 @@ export function CreateMailingModal({ eventId, open, onClose }: {
 }) {
   const { toast } = useToast();
   const createMailing = useCreateMailing(eventId);
+  const { data: templates } = useTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [form, setForm] = useState({
     subject: '',
@@ -90,10 +37,10 @@ export function CreateMailingModal({ eventId, open, onClose }: {
       setSelectedTemplate(null);
       return;
     }
-    const template = MAIL_TEMPLATES.find((t) => t.id === templateId);
+    const template = templates?.find((t) => t.id === templateId);
     if (template) {
       setSelectedTemplate(templateId);
-      setForm((prev) => ({ ...prev, subject: template.subject, body: template.body }));
+      setForm((prev) => ({ ...prev, subject: template.defaultSubject, body: template.body }));
       setErrors({});
     }
   }
@@ -131,6 +78,8 @@ export function CreateMailingModal({ eventId, open, onClose }: {
     });
   }
 
+  const displayTemplates = templates ?? [];
+
   return (
     <Modal
       open={open}
@@ -149,7 +98,7 @@ export function CreateMailingModal({ eventId, open, onClose }: {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={sharedStyles.modalSelectLabel}>Välj mall</label>
           <div style={styles.templateGrid}>
-            {MAIL_TEMPLATES.map((t) => (
+            {displayTemplates.map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -216,7 +165,7 @@ export function CreateMailingModal({ eventId, open, onClose }: {
             <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>{errors.body}</span>
           )}
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
-            Variabler: <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{name}}'}</code> = mottagarens namn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{rsvp_link}}'}</code> = personlig svarslänk. RSVP-länk läggs till automatiskt om den inte finns i meddelandet.
+            Variabler: <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{name}}'}</code> = mottagarens namn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{rsvp_link}}'}</code> = personlig svarslänk, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{event}}'}</code> = eventnamn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{datum}}'}</code> = datum, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{plats}}'}</code> = plats. RSVP-länk läggs till automatiskt om den inte finns i meddelandet.
           </span>
         </div>
       </form>

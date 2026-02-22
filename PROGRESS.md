@@ -182,6 +182,10 @@
 | 28 | X-Auth-Token header | Enkel header-baserad auth, klienten sätter header per request via localStorage | 10 |
 | 29 | Auto-owner vid event-skapande | POST /events sätter skaparen som owner automatiskt | 10 |
 | 30 | Roller per event (owner/editor/viewer) | Granulär åtkomstkontroll per event, ej global admin | 10 |
+| 31 | Backend email-mallar med template-renderer | Mallar i backend med merge fields, exponeras via API — framtida CMS-integration möjlig | 11 |
+| 32 | Email-kö med Cron Trigger | ≤5 mottagare direkt, >5 via D1-kö + Cron (var 5 min, batch 20) — respekterar rate limits | 11 |
+| 33 | Aktivitetslogg per event | Alla mutationer loggas med typ, beskrivning, metadata — ger audit trail | 11 |
+| 34 | Sök filtrerat per behörighet | SQL LIKE-sök på events, resultat filtrerat per användarens permissions | 11 |
 
 ---
 
@@ -391,8 +395,8 @@ Inga avvikelser — sessionen följde planen exakt.
 | 5 | Ingen R2-integration | 9 ✅ |
 | 6 | Ingen dnd-kit för väntlista | 9 ✅ |
 | 7 | Email i en fil (196 rader) | 8a ✅ |
-| 8 | Ingen email-queue/Cron Trigger | 11 |
-| 9 | Frontend-mallar istf backend | 11 |
+| 8 | Ingen email-queue/Cron Trigger | 11 ✅ |
+| 9 | Frontend-mallar istf backend | 11 ✅ |
 | 10 | EventDetail.tsx = 1727 rader | 9 ✅ |
 | 11 | Tom features/ mapp | 9 ✅ |
 | 12 | queries.ts = 654 rader | 8a ✅ |
@@ -492,6 +496,51 @@ Inga avvikelser — alla leverabler uppfyllda.
 
 ---
 
+## Session 11: Email-förbättringar + Aktivitetslogg + Sök
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `migrations/0004_activities.sql` — activities + email_queue tabeller med index
+- [x] `packages/shared/src/types.ts` — Activity, EmailQueueItem interfaces
+- [x] `packages/shared/src/constants.ts` — ACTIVITY_TYPE (10 typer), EMAIL_QUEUE_STATUS
+- [x] 6 email-mallar i `backend/src/services/email/templates/`: save-the-date, invitation, waitlist, confirmation, reminder, thank-you
+- [x] `backend/src/services/email/template-renderer.ts` — merge fields ({{name}}, {{event}}, {{datum}}, {{tid}}, {{plats}}, {{rsvp_link}}, {{calendar_link}}), renderEmail()
+- [x] `backend/src/services/email/send-queue.ts` — enqueueEmails(), processQueue() (batch 20), getQueueStats()
+- [x] Cron Trigger aktiverat i `wrangler.toml` (`*/5 * * * *`) + scheduled() handler i index.ts
+- [x] `backend/src/db/activity.queries.ts` — listActivities, createActivity
+- [x] `backend/src/services/activity.service.ts` — log, logMailingCreated, logMailingSent, logParticipantAdded, logParticipantRemoved, logParticipantStatusChanged, logParticipantImported, logEventUpdated, logPermissionAdded, logPermissionRemoved
+- [x] `backend/src/routes/activities.ts` — GET /api/events/:id/activities (viewer+)
+- [x] `backend/src/routes/search.ts` — GET /api/search?q= (auth, filtrerat per behörighet)
+- [x] GET /api/templates — lista email-mallmetadata (auth)
+- [x] Aktivitetsloggning integrerad i routes: events (create/update), participants (add/import/delete), mailings (create/send), permissions (add)
+- [x] `mailing.service.ts` omskriven — template-renderer + smart sändning (≤5 direkt, >5 via kö)
+- [x] `frontend/src/hooks/useActivities.ts`, `useSearch.ts`, `useTemplates.ts` — TanStack Query hooks
+- [x] `frontend/src/components/features/events/ActivityTimeline.tsx` — tidslinje med ikoner per typ, relativa tidsstämplar
+- [x] `frontend/src/components/layout/SearchBar.tsx` — autocomplete med tangentbordsnavigering, click-outside close
+- [x] SummaryTab.tsx — integrerar ActivityTimeline
+- [x] Topbar.tsx — integrerar SearchBar
+- [x] CreateMailingModal.tsx — hämtar mallar från backend istf hårdkodade
+- [x] `frontend/src/api/client.ts` — activitiesApi, searchApi, templatesApi
+- [x] 5 nya tester (activity.service.test.ts) — totalt 66 tester, alla passerar
+- [x] 4 befintliga testfiler uppdaterade med activities + email_queue tabeller i beforeAll
+- [x] SAD.md uppdaterad med 3 nya endpoints, 2 nya tabeller, Cron Trigger, mallar, uppdaterat emailflöde
+- [x] TESTPLAN.md uppdaterad med 13 nya testfall + TC-0.4 uppdaterad till 66
+
+### Avvikelser från plan
+Inga avvikelser — alla leverabler uppfyllda.
+
+### Anteckningar
+- Export i index.ts ändrad från `export default app` till `export default { fetch: app.fetch, async scheduled() { ... } }` för Cron Trigger-stöd
+- Email-kö: ≤5 mottagare skickas direkt, >5 köas för Cron-processning (respekterar Resend rate limits)
+- Mallar definierade som TypeScript-objekt i backend — exponeras via GET /api/templates för frontend
+- ActivityTimeline visar 20 senaste händelserna med emoji-ikoner och relativa tidsstämplar
+- SearchBar söker via SQL LIKE på namn, plats och arrangör, filtrerat per användarens behörigheter
+- Migration 0003 + 0004 behöver köras på remote innan nästa deploy
+- Frontend build: 477KB JS, 4.2KB CSS
+
+---
+
 ## Planerad: Migrering till Consid-ägd miljö
 
 **När:** Efter att alla utvecklingssessioner är klara
@@ -518,3 +567,4 @@ Ska inkludera:
 | 0001 | events_participants.sql | events, participants | ❌ | ✅ |
 | 0002 | mailings.sql | mailings | ❌ | ✅ |
 | 0003 | event_permissions.sql | users, event_permissions | ❌ | ❌ |
+| 0004 | activities.sql | activities, email_queue | ❌ | ❌ |
