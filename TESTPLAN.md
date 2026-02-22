@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 72 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service)
-**Status:** ☑ Testad (session 13a)
+**Förväntat resultat:** 86 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, integration e2e)
+**Status:** ☑ Testad (session 13b)
 
 ---
 
@@ -783,3 +783,51 @@
 1. Kör `npm run test`
 **Förväntat resultat:** 2 template-preview-tester passerar — save-the-date renderar HTML med exempeldata, nonexistent returnerar 404
 **Status:** ☑ Testad (session 13a)
+
+---
+
+## Session 13b: Integrationstester + Deploy
+
+### TC-13b.1: E2E — Event → deltagare → waitlist → promote
+**Steg:**
+1. Kör `npm run test` — integration.test.ts
+**Förväntat resultat:** 2 tester passerar:
+- Skapa event (max 2), fyll kapacitet, auto-waitlist 3:e och 4:e, ta bort 1:a → 3:e promoted
+- Skapa event (max 1), fyll kapacitet, ändra status till declined → waitlisted promoted
+**Status:** ☑ Testad (session 13b)
+
+### TC-13b.2: E2E — Inbjudan → RSVP → bekräftelse
+**Steg:**
+1. Kör `npm run test` — integration.test.ts
+**Förväntat resultat:** 3 tester passerar:
+- Fullständigt flöde: invited → RSVP attending med dietary + plus-one → verifierad i admin
+- RSVP cancel med auto-promote från väntelista
+- RSVP auto-waitlist vid full kapacitet (invited → RSVP → waitlisted)
+**Status:** ☑ Testad (session 13b)
+
+### TC-13b.3: E2E — Behörigheter (owner/editor/viewer)
+**Steg:**
+1. Kör `npm run test` — integration.test.ts
+**Förväntat resultat:** 5 tester passerar:
+- Owner skapar event, lägger till editor + viewer → 3 permissions
+- Editor kan läsa + redigera + lägga till deltagare
+- Viewer kan läsa men inte redigera (403)
+- Utan behörighet → 403
+- Editor kan inte hantera permissions (403)
+**Status:** ☑ Testad (session 13b)
+
+### TC-13b.4: E2E — Email-kö + Cron-processning
+**Steg:**
+1. Kör `npm run test` — integration.test.ts
+**Förväntat resultat:** 2 tester passerar:
+- >5 mottagare → köas → processQueue() skickar 6 → verifierad i DB
+- ≤5 mottagare → skickas direkt (ingen kö)
+**Status:** ☑ Testad (session 13b)
+
+### TC-13b.5: E2E — Klona event
+**Steg:**
+1. Kör `npm run test` — integration.test.ts
+**Förväntat resultat:** 2 tester passerar:
+- Klona event med deltagare → kopia har korrekt data, 0 deltagare
+- Klonat event har skaparen som owner
+**Status:** ☑ Testad (session 13b)

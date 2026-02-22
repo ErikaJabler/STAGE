@@ -40,22 +40,8 @@
 
 ---
 
-## Session 13b: Integrationstester + Deploy Fas 1
-**Mål:** End-to-end integrationstester, slutgiltig docs-uppdatering, deploy.
-
-**Integrationstester** (`backend/src/__tests__/integration.test.ts`):
-- Event→deltagare→waitlist→promote
-- Inbjudan→RSVP→bekräftelse
-- Behörigheter (owner/editor/viewer)
-- Email-queue (Cron processning)
-- Klona event→verifiera kopia
-
-**Docs + Deploy:**
-- Uppdatera SAD.md (komplett för onboarding)
-- Uppdatera TESTPLAN.md med nya testfall
-- `npm run build && npx wrangler deploy`
-
-**Klart när:** Alla integrationstester gröna, appen deployad, docs kompletta för Fas 1
+## Session 13b: Integrationstester + Deploy Fas 1 ✅ DONE
+**Levererat:** 14 E2E-integrationstester i 5 flöden: waitlist+promote, RSVP+bekräftelse, behörigheter (owner/editor/viewer), email-kö+Cron, klona event. Totalt 86 tester. Docs uppdaterade. Deploy.
 
 ---
 

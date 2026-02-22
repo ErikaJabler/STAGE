@@ -302,3 +302,28 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
+- **Antal:** 86 tester (10 testfiler)
+
+### Teststruktur
+
+| Typ | Plats | Antal | Beskrivning |
+|---|---|---|---|
+| Route-integration | `backend/src/__tests__/events.test.ts` | 11 | Events CRUD, auth, clone |
+| Route-integration | `backend/src/__tests__/participants.test.ts` | 9 | Participants CRUD |
+| Route-integration | `backend/src/__tests__/mailings.test.ts` | 10 | Mailings, RSVP, templates, testmail |
+| Route-integration | `backend/src/__tests__/waitlist.test.ts` | 4 | Waitlist auto-promote, ICS |
+| Route-integration | `backend/src/__tests__/health.test.ts` | 1 | Health endpoint |
+| E2E-integration | `backend/src/__tests__/integration.test.ts` | 14 | Fullständiga flöden (session 13b) |
+| Service-enhetstester | `backend/src/services/__tests__/event.service.test.ts` | 10 | EventService, slug, ICS |
+| Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts` | 14 | ParticipantService, CSV |
+| Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts` | 8 | PermissionService, roller |
+| Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts` | 5 | ActivityService, loggning |
+
+### E2E-integrationstester (session 13b)
+
+Testar fullständiga flöden som korsar service-gränser:
+1. **Event → Deltagare → Waitlist → Promote** — kapacitetsgräns, auto-waitlist, promote vid delete/statusändring
+2. **Inbjudan → RSVP → Bekräftelse** — invited→attending, dietary/plus-one, cancel med auto-promote, RSVP auto-waitlist
+3. **Behörigheter** — owner/editor/viewer rollkontroll, 403 vid obehörig åtkomst
+4. **Email-kö + Cron** — >5 mottagare köas, processQueue() processar, ≤5 direkt
+5. **Klona event** — kopia med korrekt data, 0 deltagare, skaparen som owner

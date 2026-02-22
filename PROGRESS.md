@@ -632,6 +632,34 @@ Inga avvikelser — alla 5 features implementerade.
 
 ---
 
+## Session 13b: Integrationstester + Deploy Fas 1
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `backend/src/__tests__/integration.test.ts` — 14 E2E-integrationstester i 5 flöden:
+  - Event → deltagare → waitlist → promote (2 tester: delete + statusändring)
+  - Inbjudan → RSVP → bekräftelse (3 tester: full flow med dietary/plus-one, cancel med auto-promote, auto-waitlist vid full kapacitet)
+  - Behörigheter owner/editor/viewer (5 tester: setup, editor read+write, viewer read-only, no-access 403, editor kan inte hantera permissions)
+  - Email-kö + Cron-processning (2 tester: >5 köas + processQueue(), ≤5 direkt)
+  - Klona event (2 tester: korrekt data + 0 deltagare, skaparen som owner)
+- [x] Alla 86 tester passerar (72 befintliga + 14 nya)
+- [x] SAD.md uppdaterad med teststruktur-tabell (86 tester, 10 filer)
+- [x] TESTPLAN.md uppdaterad med 5 nya testfall (TC-13b.1–5) + TC-0.4 uppdaterad till 86
+- [x] SESSION-GUIDE.md markerad ✅ DONE
+
+### Avvikelser från plan
+Inga avvikelser — alla 5 flöden implementerade och gröna.
+
+### Anteckningar
+- Integrationstesterna skapar 4 testanvändare (owner, editor, viewer, noaccess) med unika tokens
+- Varje test är self-contained — skapar sin egen data, ej beroende av andra tester
+- Email-kö-testet anropar `processQueue()` direkt (simulerar Cron Trigger)
+- Ingen ny migration behövdes
+- Inga frontend-ändringar
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
