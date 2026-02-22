@@ -142,12 +142,14 @@ ${html}
             // Asset manager with R2 upload
             assetManager: {
               upload: false,
-              uploadFile: async (ev: Event) => {
+              uploadFile: async (ev: DragEvent | Event) => {
                 const editor = editorRef.current;
                 if (!editor) return;
 
-                const input = ev.target as HTMLInputElement;
-                const files = input.files;
+                // Handle both drag-and-drop and click-to-upload
+                const dragEv = ev as DragEvent;
+                const inputEv = ev as { target: HTMLInputElement };
+                const files = dragEv.dataTransfer?.files || inputEv.target?.files;
                 if (!files || files.length === 0) return;
 
                 for (let i = 0; i < files.length; i++) {
@@ -172,6 +174,11 @@ ${html}
                       type: 'image',
                       name: file.name,
                     });
+                    // Auto-select the uploaded image
+                    const selected = editor.getSelected();
+                    if (selected && selected.is('image')) {
+                      selected.set('src', result.url);
+                    }
                   } catch {
                     alert(`Kunde inte ladda upp "${file.name}"`);
                   }
