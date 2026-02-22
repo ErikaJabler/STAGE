@@ -83,6 +83,9 @@ Integrationer:
 | GET | `/api/events/:id/activities` | Lista aktivitetslogg (viewer+) | 11 |
 | GET | `/api/search?q=` | Sök events (namn, plats, arrangör) | 11 |
 | GET | `/api/templates` | Lista email-mallar (metadata) | 11 |
+| POST | `/api/events/:id/clone` | Klona event (editor+) | 13a |
+| POST | `/api/events/:id/mailings/:mid/test` | Skicka testmail till inloggad användare (editor+) | 13a |
+| GET | `/api/templates/:type/preview` | Förhandsgranska renderad email-mall (auth) | 13a |
 | GET | `/api/rsvp/:token` | Hämta deltagarinfo + eventinfo (publik) | 4 |
 | POST | `/api/rsvp/:token/respond` | Svara attending/declined (publik) | 4 |
 | POST | `/api/rsvp/:token/cancel` | Avboka deltagande (publik) | 4 |
@@ -247,10 +250,10 @@ Integrationer:
 
 | Service | Fil | Beskrivning |
 |---|---|---|
-| EventService | `backend/src/services/event.service.ts` | Slug-generering, ICS-generering, event CRUD |
+| EventService | `backend/src/services/event.service.ts` | Slug-generering, ICS-generering, event CRUD, clone |
 | ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering |
 | WaitlistService | `backend/src/services/waitlist.service.ts` | shouldWaitlist, promoteNext, reorder |
-| MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk |
+| MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk, sendTest |
 | RsvpService | `backend/src/services/rsvp.service.ts` | RSVP-svar, avbokning, auto-waitlist vid kapacitet |
 | ImageService | `backend/src/services/image.service.ts` | Bilduppladdning till R2, validering (typ/storlek), servering |
 | PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter |

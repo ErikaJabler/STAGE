@@ -34,3 +34,10 @@ export function useSendMailing(eventId: number) {
     },
   });
 }
+
+export function useSendTestMailing(eventId: number) {
+  return useMutation({
+    mutationFn: (mailingId: number) =>
+      mailingsApi.sendTest(eventId, mailingId),
+  });
+}

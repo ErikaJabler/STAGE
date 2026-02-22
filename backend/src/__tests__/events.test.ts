@@ -183,6 +183,22 @@ describe("Events CRUD API", () => {
     }
   });
 
+  it("POST /api/events/:id/clone clones an event", async () => {
+    const payload = makeEvent({ name: "Original Event", slug: `original-${Date.now()}`, description: "Test description", type: "workshop" });
+    const createRes = await request("POST", "/api/events", payload);
+    expect(createRes.status).toBe(201);
+    const original = (await createRes.json()) as { id: number; name: string; type: string };
+
+    const cloneRes = await request("POST", `/api/events/${original.id}/clone`);
+    expect(cloneRes.status).toBe(201);
+    const cloned = (await cloneRes.json()) as { id: number; name: string; type: string; status: string; description: string };
+    expect(cloned.id).not.toBe(original.id);
+    expect(cloned.name).toBe("Original Event (kopia)");
+    expect(cloned.type).toBe("workshop");
+    expect(cloned.status).toBe("planning");
+    expect(cloned.description).toBe("Test description");
+  });
+
   it("returns 401 without auth token", async () => {
     const req = new Request(`http://localhost/stage/api/events`, { method: "GET" });
     const ctx = createExecutionContext();

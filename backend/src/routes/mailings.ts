@@ -90,4 +90,28 @@ mailings.post("/:mid/send", async (c) => {
   });
 });
 
+/** POST /api/events/:eventId/mailings/:mid/test — Send test email to logged-in user (editor+) */
+mailings.post("/:mid/test", async (c) => {
+  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
+  if (error) return c.json({ error }, status);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
+
+  const mid = Number(c.req.param("mid"));
+  if (!Number.isFinite(mid) || mid < 1) {
+    return c.json({ error: "Ogiltigt utskicks-ID" }, 400);
+  }
+
+  const result = await MailingService.sendTest(c.env.DB, eventId, mid, user.email, user.name, c.env.RESEND_API_KEY);
+
+  if (!result.success) {
+    return c.json({ error: result.error || "Kunde inte skicka testmail" }, 400);
+  }
+
+  return c.json({ ok: true, sentTo: user.email });
+});
+
 export default mailings;

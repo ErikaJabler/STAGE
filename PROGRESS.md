@@ -601,6 +601,37 @@ Inga avvikelser — alla leverabler uppfyllda.
 
 ---
 
+## Session 13a: Saknade features från planen
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] **Klona event:** `EventService.clone()` + `POST /api/events/:id/clone` + "Klona"-knapp (kopieringsikon) per EventCard i Overview
+- [x] **Unsubscribe-länk i mail (GDPR):** Avregistreringslänk i html-builder footer → pekar till deltagarens RSVP-sida
+- [x] **Skicka testmail:** `MailingService.sendTest()` + `POST /api/events/:id/mailings/:mid/test` + testmail-knapp i MailingsTab
+- [x] **Svarsfrist-UI för väntlistade:** Datepicker per väntlistad deltagare i ParticipantsTab → sparar `response_deadline` via befintlig PUT
+- [x] **Template preview-endpoint:** `GET /api/templates/:type/preview` → renderad HTML med exempeldata
+- [x] `frontend/src/hooks/useEvents.ts` — `useCloneEvent()` hook
+- [x] `frontend/src/hooks/useMailings.ts` — `useSendTestMailing()` hook
+- [x] `frontend/src/api/client.ts` — `eventsApi.clone()`, `mailingsApi.sendTest()`
+- [x] 4 nya tester (clone event, template preview ×2, send test email) — totalt 72 tester, alla passerar
+- [x] SAD.md uppdaterad med 3 nya endpoints
+- [x] TESTPLAN.md uppdaterad med 8 nya testfall + TC-0.4 uppdaterad till 72
+
+### Avvikelser från plan
+Inga avvikelser — alla 5 features implementerade.
+
+### Anteckningar
+- Klonat event får namn "(kopia)", status "planning", skaparens email som created_by, auto-owner
+- Testmail skickas med "[TEST]"-prefix i ämnesraden, fake RSVP-kontext
+- Unsubscribe-länk visas i mailfootern: "Avregistrera / hantera din anmälan"
+- Svarsfrist-kolumnen visas bara om det finns väntlistade deltagare
+- Template preview använder exempeldata (Anna Andersson, Consid Sommarmingel 2026)
+- Ingen ny migration behövdes — response_deadline-kolumnen fanns redan
+- Frontend build: ~502KB JS, 4.2KB CSS
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |

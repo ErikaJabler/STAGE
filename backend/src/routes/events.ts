@@ -107,6 +107,31 @@ events.get("/:id/calendar.ics", async (c) => {
   });
 });
 
+/** POST /api/events/:id/clone — Clone event (requires editor+) */
+events.post("/:id/clone", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id) || id < 1) {
+    return c.json({ error: "Ogiltigt event-ID" }, 400);
+  }
+
+  const user = c.var.user;
+  const canEdit = await PermissionService.canEdit(c.env.DB, user.id, id);
+  if (!canEdit) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
+
+  const cloned = await EventService.clone(c.env.DB, id, user.email);
+  if (!cloned) {
+    return c.json({ error: "Event hittades inte" }, 404);
+  }
+
+  // Auto-assign creator as owner of the clone
+  await PermissionService.setOwner(c.env.DB, user.id, cloned.id);
+  await ActivityService.log(c.env.DB, cloned.id, "event_created", `Event klonat från #${id}: "${cloned.name}"`, user.email);
+
+  return c.json(cloned, 201);
+});
+
 /** DELETE /api/events/:id — Soft-delete event (requires owner) */
 events.delete("/:id", async (c) => {
   const id = Number(c.req.param("id"));

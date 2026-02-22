@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, Button, useToast } from '../../ui';
-import { useParticipants, useDeleteParticipant, useReorderParticipant } from '../../../hooks/useParticipants';
+import { useParticipants, useDeleteParticipant, useReorderParticipant, useUpdateParticipant } from '../../../hooks/useParticipants';
 import type { Participant } from '@stage/shared';
 import { getCategoryLabel, getParticipantStatusLabel, getParticipantStatusVariant } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
@@ -28,6 +28,7 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
   const { toast } = useToast();
   const deleteParticipant = useDeleteParticipant(eventId);
   const reorderParticipant = useReorderParticipant(eventId);
+  const updateParticipant = useUpdateParticipant(eventId);
 
   function handleDelete(p: Participant) {
     if (!confirm(`Ta bort ${p.name}?`)) return;
@@ -44,6 +45,16 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
     reorderParticipant.mutate(
       { id: p.id, queuePosition: newPos },
       { onError: () => toast('Kunde inte ändra köplats', 'error') }
+    );
+  }
+
+  function handleDeadlineChange(p: Participant, deadline: string) {
+    updateParticipant.mutate(
+      { id: p.id, data: { response_deadline: deadline || null } },
+      {
+        onSuccess: () => toast('Svarsfrist uppdaterad', 'success'),
+        onError: () => toast('Kunde inte uppdatera svarsfrist', 'error'),
+      }
     );
   }
 
@@ -164,13 +175,14 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
               <th style={sharedStyles.th}>Kategori</th>
               <th style={sharedStyles.th}>Status</th>
               {hasWaitlisted && <th style={{ ...sharedStyles.th, width: '80px' }}>Kö</th>}
+              {hasWaitlisted && <th style={{ ...sharedStyles.th, width: '140px' }}>Svarsfrist</th>}
               <th style={{ ...sharedStyles.th, width: '60px' }}></th>
             </tr>
           </thead>
           <tbody>
             {filteredParticipants.length === 0 ? (
               <tr>
-                <td colSpan={hasWaitlisted ? 7 : 6} style={{ ...sharedStyles.td, textAlign: 'center', color: 'var(--color-text-muted)', padding: '24px 16px' }}>
+                <td colSpan={hasWaitlisted ? 8 : 6} style={{ ...sharedStyles.td, textAlign: 'center', color: 'var(--color-text-muted)', padding: '24px 16px' }}>
                   Inga deltagare matchar filtret
                 </td>
               </tr>
@@ -214,6 +226,21 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
                             </button>
                           </div>
                         </div>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-muted)' }}>—</span>
+                      )}
+                    </td>
+                  )}
+                  {hasWaitlisted && (
+                    <td style={sharedStyles.td}>
+                      {p.status === 'waitlisted' ? (
+                        <input
+                          type="date"
+                          value={p.response_deadline ?? ''}
+                          onChange={(e) => handleDeadlineChange(p, e.target.value)}
+                          style={styles.deadlineInput}
+                          title="Svarsfrist"
+                        />
                       ) : (
                         <span style={{ color: 'var(--color-text-muted)' }}>—</span>
                       )}
@@ -321,6 +348,16 @@ const styles: Record<string, React.CSSProperties> = {
     minWidth: '24px',
   },
   reorderBtns: { display: 'flex', flexDirection: 'column' as const, gap: '1px' },
+  deadlineInput: {
+    padding: '4px 6px',
+    fontSize: 'var(--font-size-xs)',
+    fontFamily: 'inherit',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    backgroundColor: 'var(--color-white)',
+    color: 'var(--color-text-primary)',
+    width: '120px',
+  },
   reorderBtn: {
     display: 'flex',
     alignItems: 'center',

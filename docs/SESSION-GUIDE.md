@@ -35,31 +35,8 @@
 
 ---
 
-## Session 13a: Saknade features från planen
-**Mål:** Implementera 5 saknade features som planen specificerade men som aldrig byggdes.
-
-**1. Klona event**
-- `backend/src/services/event.service.ts` — clone() kopierar alla fält utom datum/tid/slug
-- `backend/src/routes/events.ts` — POST /api/events/:id/clone
-- `frontend/src/pages/Overview.tsx` — "Klona"-knapp per EventCard
-- Zod-schema om det behövs i `packages/shared/src/schemas.ts`
-
-**2. Unsubscribe-länk i mail (GDPR art. 7(3))**
-- `backend/src/services/email/html-builder.ts` — lägg till avregistreringslänk i footer på alla mail
-- Länken pekar till deltagarens RSVP-sida (avboka = opt-out)
-
-**3. Skicka testmail till mig**
-- `backend/src/routes/mailings.ts` — POST /api/events/:id/mailings/:mid/test (skickar till inloggad användare)
-- `frontend/src/components/features/email/MailingsTab.tsx` — "Skicka testmail"-knapp
-
-**4. Svarsfrist-UI för väntlistade**
-- `backend/src/routes/participants.ts` — PUT response_deadline (kolumn finns redan i DB)
-- `frontend/src/components/features/participants/ParticipantsTab.tsx` — datepicker per väntlistad
-
-**5. Template preview-endpoint**
-- `backend/src/routes/mailings.ts` — GET /api/templates/:type/preview (renderad HTML med exempeldata)
-
-**Klart när:** Alla 5 features implementerade, tester för varje, typecheck + test gröna, deploy
+## Session 13a: Saknade features från planen ✅ DONE
+**Levererat:** 5 features: Klona event (POST /clone + frontend-knapp), unsubscribe-länk i mailfooter (GDPR), skicka testmail (POST /test + frontend-knapp), svarsfrist-UI för väntlistade (datepicker), template preview-endpoint (GET /preview). 4 nya tester (72 totalt).
 
 ---
 

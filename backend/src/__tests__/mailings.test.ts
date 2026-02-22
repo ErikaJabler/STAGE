@@ -125,6 +125,56 @@ describe("Mailings CRUD API", () => {
   });
 });
 
+describe("Template preview API", () => {
+  it("GET /api/templates/:type/preview returns rendered HTML for save-the-date", async () => {
+    const req = new Request(`http://localhost/stage/api/templates/save-the-date/preview`, {
+      method: "GET",
+      headers: { "X-Auth-Token": TEST_TOKEN },
+    });
+    const ctx = createExecutionContext();
+    const res = await app.fetch(req, env, ctx);
+    await waitOnExecutionContext(ctx);
+    expect(res.status).toBe(200);
+
+    const html = await res.text();
+    expect(html).toContain("Anna Andersson");
+    expect(html).toContain("Consid Sommarmingel 2026");
+    expect(html).toContain("Stage");
+  });
+
+  it("GET /api/templates/nonexistent/preview returns 404", async () => {
+    const req = new Request(`http://localhost/stage/api/templates/nonexistent/preview`, {
+      method: "GET",
+      headers: { "X-Auth-Token": TEST_TOKEN },
+    });
+    const ctx = createExecutionContext();
+    const res = await app.fetch(req, env, ctx);
+    await waitOnExecutionContext(ctx);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("Send test email API", () => {
+  it("POST /api/events/:id/mailings/:mid/test sends test email", async () => {
+    const eventId = await createTestEvent();
+
+    // Create a mailing
+    const createRes = await request("POST", `/api/events/${eventId}/mailings`, {
+      subject: "Test utskick",
+      body: "Hej {{name}}, välkommen!",
+    });
+    const mailing = (await createRes.json()) as { id: number };
+
+    // Send test email
+    const res = await request("POST", `/api/events/${eventId}/mailings/${mailing.id}/test`);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as { ok: boolean; sentTo: string };
+    expect(body.ok).toBe(true);
+    expect(body.sentTo).toBe("test@consid.se");
+  });
+});
+
 describe("RSVP API", () => {
   it("POST /api/rsvp/:token/respond updates participant status to attending", async () => {
     const eventId = await createTestEvent();

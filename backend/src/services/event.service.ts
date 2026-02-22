@@ -119,4 +119,35 @@ export const EventService = {
   softDelete(db: D1Database, id: number): Promise<boolean> {
     return softDeleteEvent(db, id);
   },
+
+  /** Clone an event — copies all fields except date/time/slug */
+  async clone(db: D1Database, sourceId: number, createdBy: string): Promise<Event | null> {
+    const source = await getEventById(db, sourceId);
+    if (!source) return null;
+
+    const input: CreateEventInput = {
+      name: `${source.name} (kopia)`,
+      date: source.date,
+      time: source.time,
+      location: source.location,
+      organizer: source.organizer,
+      organizer_email: source.organizer_email,
+      slug: generateSlug(`${source.name} kopia`),
+      emoji: source.emoji,
+      end_date: source.end_date,
+      end_time: source.end_time,
+      description: source.description,
+      status: "planning",
+      type: source.type as "conference" | "workshop" | "seminar" | "networking" | "internal" | "other",
+      max_participants: source.max_participants,
+      overbooking_limit: source.overbooking_limit ?? 0,
+      visibility: source.visibility as "public" | "private" | undefined,
+      sender_mailbox: source.sender_mailbox,
+      gdpr_consent_text: source.gdpr_consent_text,
+      image_url: source.image_url,
+      created_by: createdBy,
+    };
+
+    return createEvent(db, input);
+  },
 };

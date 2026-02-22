@@ -65,3 +65,15 @@ export function useDeleteEvent() {
     },
   });
 }
+
+/** Clone an event */
+export function useCloneEvent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => eventsApi.clone(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: EVENTS_KEY });
+    },
+  });
+}

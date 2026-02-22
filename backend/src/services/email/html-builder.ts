@@ -97,7 +97,7 @@ export function buildEmailHtml(opts: {
           <tr>
             <td style="background-color: #ffffff; padding: 24px 32px 28px; border-radius: 0 0 12px 12px;">
               <p style="font-family: 'Consid Sans', system-ui, sans-serif; font-size: 12px; color: #9b9490; margin: 0; border-top: 1px solid #e8e0d8; padding-top: 16px;">
-                Detta mail skickades via Stage, Consids eventplattform.
+                Detta mail skickades via Stage, Consids eventplattform.${opts.rsvpUrl ? `<br><a href="${escapeHtml(opts.rsvpUrl)}" style="color: #9b9490; text-decoration: underline;">Avregistrera / hantera din anm&auml;lan</a>` : ""}
               </p>
             </td>
           </tr>

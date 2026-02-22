@@ -124,6 +124,48 @@ export const MailingService = {
     return { mailing: updated, sent, failed, total: items.length, errors };
   },
 
+  /** Send a test email to a specific recipient (the logged-in user) */
+  async sendTest(
+    db: D1Database,
+    eventId: number,
+    mailingId: number,
+    testEmail: string,
+    testName: string,
+    apiKey?: string,
+    baseUrl = "https://mikwik.se"
+  ): Promise<{ success: boolean; error?: string }> {
+    const mailing = await getMailingById(db, mailingId);
+    if (!mailing || mailing.event_id !== eventId) {
+      return { success: false, error: "Utskick hittades inte" };
+    }
+
+    const event = (await getEventById(db, eventId))!;
+
+    // Build a fake participant context for the test email
+    const fakeContext = {
+      name: testName,
+      event: event.name,
+      datum: event.date,
+      tid: event.time,
+      plats: event.location,
+      organizer: `${event.organizer} (${event.organizer_email})`,
+      rsvp_link: `${baseUrl}/stage/rsvp/test-preview`,
+      calendar_link: `${baseUrl}/stage/api/events/${event.id}/calendar.ics`,
+    };
+
+    const rendered = renderEmail(mailing.body, `[TEST] ${mailing.subject}`, fakeContext, event);
+    const provider = createEmailProvider(apiKey);
+
+    const result = await provider.send({
+      to: testEmail,
+      subject: rendered.subject,
+      body: rendered.text,
+      html: rendered.html,
+    });
+
+    return { success: result.success, error: result.error };
+  },
+
   /** Get queue stats for a mailing */
   getQueueStats(db: D1Database, mailingId: number) {
     return getQueueStats(db, mailingId);

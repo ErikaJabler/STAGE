@@ -63,6 +63,11 @@ export const eventsApi = {
     request<{ ok: boolean }>(`/events/${id}`, {
       method: "DELETE",
     }),
+
+  clone: (id: number) =>
+    request<Event>(`/events/${id}/clone`, {
+      method: "POST",
+    }),
 };
 
 /** Payload types for create/update */
@@ -202,6 +207,11 @@ export const mailingsApi = {
 
   send: (eventId: number, mailingId: number) =>
     request<SendMailingResult>(`/events/${eventId}/mailings/${mailingId}/send`, {
+      method: "POST",
+    }),
+
+  sendTest: (eventId: number, mailingId: number) =>
+    request<{ ok: boolean; sentTo: string }>(`/events/${eventId}/mailings/${mailingId}/test`, {
       method: "POST",
     }),
 };

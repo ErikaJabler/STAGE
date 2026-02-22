@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Topbar } from '../components/layout';
-import { Badge, Button, EventGridSkeleton } from '../components/ui';
-import { useEvents } from '../hooks/useEvents';
+import { Badge, Button, EventGridSkeleton, useToast } from '../components/ui';
+import { useEvents, useCloneEvent } from '../hooks/useEvents';
 import type { EventWithCount } from '@stage/shared';
 
 export function Overview() {
@@ -42,6 +42,21 @@ export function Overview() {
 function EventCard({ event }: { event: EventWithCount }) {
   const dateStr = formatDate(event.date);
   const statusBadge = getStatusBadge(event.status);
+  const cloneEvent = useCloneEvent();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  function handleClone(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    cloneEvent.mutate(event.id, {
+      onSuccess: (cloned) => {
+        toast(`"${cloned.name}" skapades`, 'success');
+        navigate(`/events/${cloned.id}`);
+      },
+      onError: () => toast('Kunde inte klona eventet', 'error'),
+    });
+  }
 
   return (
     <Link to={`/events/${event.id}`} style={styles.card}>
@@ -64,7 +79,12 @@ function EventCard({ event }: { event: EventWithCount }) {
       </div>
       <div style={styles.cardFooter}>
         <span style={styles.organizer}>{event.organizer}</span>
-        <TypeBadge type={event.type} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={handleClone} style={styles.cloneBtn} title="Klona event" disabled={cloneEvent.isPending}>
+            <CopyIcon />
+          </button>
+          <TypeBadge type={event.type} />
+        </div>
       </div>
     </Link>
   );
@@ -159,6 +179,15 @@ function LocationIcon() {
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M7 13S2 8.5 2 5.5a5 5 0 1 1 10 0C12 8.5 7 13 7 13z" stroke="currentColor" strokeWidth="1.2" />
       <circle cx="7" cy="5.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M10 4V2.5A1.5 1.5 0 0 0 8.5 1h-6A1.5 1.5 0 0 0 1 2.5v6A1.5 1.5 0 0 0 2.5 10H4" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
 }
@@ -261,5 +290,19 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 'var(--font-size-base)',
     color: 'var(--color-text-muted)',
     marginBottom: '8px',
+  },
+  cloneBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '24px',
+    height: '24px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+    padding: 0,
+    borderRadius: 'var(--radius-sm)',
+    transition: 'color var(--transition-fast)',
   },
 };

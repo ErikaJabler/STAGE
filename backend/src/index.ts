@@ -12,7 +12,7 @@ import permissions from "./routes/permissions";
 import activities from "./routes/activities";
 import search from "./routes/search";
 import { processQueue } from "./services/email/send-queue";
-import { templates } from "./services/email";
+import { templates, getTemplate, renderText, buildEmailHtml } from "./services/email";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -54,6 +54,42 @@ app.get("/stage/api/templates", (c) => {
       body: t.body,
     }))
   );
+});
+
+/** GET /api/templates/:type/preview — render template with example data */
+app.get("/stage/api/templates/:type/preview", (c) => {
+  const type = c.req.param("type");
+  const template = getTemplate(type);
+  if (!template) {
+    return c.json({ error: "Mall hittades inte" }, 404);
+  }
+
+  const exampleContext = {
+    name: "Anna Andersson",
+    event: "Consid Sommarmingel 2026",
+    datum: "2026-06-15",
+    tid: "17:00",
+    plats: "Göteborg, Eriksberg",
+    organizer: "Erik Svensson (erik.svensson@consid.se)",
+    rsvp_link: "https://example.com/rsvp/preview",
+    calendar_link: "https://example.com/calendar.ics",
+  };
+
+  const renderedBody = renderText(template.body, exampleContext);
+  const renderedSubject = renderText(template.defaultSubject, exampleContext);
+
+  const html = buildEmailHtml({
+    body: renderedBody,
+    recipientName: exampleContext.name,
+    eventName: "Consid Sommarmingel 2026",
+    eventDate: exampleContext.datum,
+    eventTime: exampleContext.tid,
+    eventLocation: exampleContext.plats,
+    rsvpUrl: exampleContext.rsvp_link,
+    calendarUrl: exampleContext.calendar_link,
+  });
+
+  return c.html(html);
 });
 
 /* ---- Bare /stage → redirect to /stage/ ---- */

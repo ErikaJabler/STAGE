@@ -1,18 +1,38 @@
 import { useState } from 'react';
 import { Badge, Button, Modal, useToast } from '../../ui';
-import { useMailings, useSendMailing } from '../../../hooks/useMailings';
+import { useMailings, useSendMailing, useSendTestMailing } from '../../../hooks/useMailings';
 import type { Mailing } from '@stage/shared';
 import { getFilterLabel, formatDateTime } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
 import { EyeIcon, SendIcon, MailEmptyIcon } from '../shared-icons';
 import { CreateMailingModal } from './CreateMailingModal';
 
+function TestMailIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M1 4.5l7 4.5 7-4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12.5" cy="4" r="2.5" fill="var(--color-accent)" stroke="var(--color-bg-card)" strokeWidth="1" />
+    </svg>
+  );
+}
+
 export function MailingsTab({ eventId }: { eventId: number }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [previewMailing, setPreviewMailing] = useState<Mailing | null>(null);
   const { data: mailings, isLoading } = useMailings(eventId);
   const sendMailing = useSendMailing(eventId);
+  const sendTestMailing = useSendTestMailing(eventId);
   const { toast } = useToast();
+
+  function handleSendTest(mailing: Mailing) {
+    sendTestMailing.mutate(mailing.id, {
+      onSuccess: (result) => {
+        toast(`Testmail skickat till ${result.sentTo}`, 'success');
+      },
+      onError: () => toast('Kunde inte skicka testmail', 'error'),
+    });
+  }
 
   function handleSend(mailing: Mailing) {
     sendMailing.mutate(mailing.id, {
@@ -93,6 +113,14 @@ export function MailingsTab({ eventId }: { eventId: number }) {
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                     <button onClick={() => setPreviewMailing(m)} style={sharedStyles.actionBtn} title="Förhandsgranska">
                       <EyeIcon />
+                    </button>
+                    <button
+                      onClick={() => handleSendTest(m)}
+                      style={sharedStyles.actionBtn}
+                      title="Skicka testmail till mig"
+                      disabled={sendTestMailing.isPending}
+                    >
+                      <TestMailIcon />
                     </button>
                     {m.status === 'draft' && (
                       <button

@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 68 tester gröna (health, events inkl. auth, participants inkl. dietary/plus_one, mailings/RSVP, waitlist/ICS, event.service, participant.service, permission.service, activity.service)
-**Status:** ☑ Testad (session 12)
+**Förväntat resultat:** 72 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service)
+**Status:** ☑ Testad (session 13a)
 
 ---
 
@@ -727,3 +727,59 @@
 1. Kör `npm run test`
 **Förväntat resultat:** 2 nya tester passerar (create participant med dietary/plus_one + RSVP respond med dietary/plus_one)
 **Status:** ☑ Testad (session 12, 68 tester totalt)
+
+---
+
+## Session 13a: Saknade features
+
+### TC-13a.1: Klona event
+**Steg:**
+1. Öppna översikten med minst ett event
+2. Klicka kopieringsikonen på ett EventCard
+**Förväntat resultat:** Nytt event skapas med namn "(kopia)", status "planning", redirect till det nya eventet, toast-bekräftelse
+**Status:** ☐ Ej testad
+
+### TC-13a.2: Klona event (automatiskt test)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** Test "POST /api/events/:id/clone clones an event" passerar — verifierar att klonat event har korrekt namn, typ och status
+**Status:** ☑ Testad (session 13a)
+
+### TC-13a.3: Unsubscribe-länk i mail
+**Steg:**
+1. Skapa utskick med RSVP-mottagare → skicka
+2. Öppna mailet i mailklienten
+**Förväntat resultat:** Footer innehåller "Avregistrera / hantera din anmälan"-länk som pekar till deltagarens RSVP-sida
+**Status:** ☐ Ej testad
+
+### TC-13a.4: Skicka testmail
+**Steg:**
+1. Skapa ett utskick (draft)
+2. Klicka testmail-ikonen (kuvert med prick) i utskickslistan
+**Förväntat resultat:** Toast "Testmail skickat till [din email]", mail anländer med "[TEST]"-prefix i ämnesraden
+**Status:** ☐ Ej testad
+
+### TC-13a.5: Skicka testmail (automatiskt test)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** Test "POST /api/events/:id/mailings/:mid/test sends test email" passerar — verifierar sentTo = test@consid.se
+**Status:** ☑ Testad (session 13a)
+
+### TC-13a.6: Svarsfrist-UI för väntlistade
+**Steg:**
+1. Skapa event med max_participants = 1, lägg till 2 deltagare (en attending, en waitlisted)
+2. Gå till Deltagare-tab
+**Förväntat resultat:** "Svarsfrist"-kolumn visas med datepicker per väntlistad deltagare. Ange datum → toast "Svarsfrist uppdaterad"
+**Status:** ☐ Ej testad
+
+### TC-13a.7: Template preview
+**Steg:**
+1. Öppna `https://mikwik.se/stage/api/templates/save-the-date/preview` (inloggad)
+**Förväntat resultat:** Renderad HTML visas med exempeldata (Anna Andersson, Consid Sommarmingel 2026) i Consid-branded mall
+**Status:** ☐ Ej testad
+
+### TC-13a.8: Template preview (automatiskt test)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** 2 template-preview-tester passerar — save-the-date renderar HTML med exempeldata, nonexistent returnerar 404
+**Status:** ☑ Testad (session 13a)
