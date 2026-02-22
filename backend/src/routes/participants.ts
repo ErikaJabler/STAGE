@@ -1,11 +1,9 @@
 import { Hono } from "hono";
 import type { Env } from "../bindings";
-import { getEventById, type CreateParticipantInput, type UpdateParticipantInput } from "../db/queries";
-import {
-  ParticipantService,
-  validateCreateParticipant,
-  validateUpdateParticipant,
-} from "../services/participant.service";
+import { createParticipantSchema, updateParticipantSchema, reorderSchema } from "@stage/shared";
+import { parseBody } from "../utils/validation";
+import { getEventById } from "../db/queries";
+import { ParticipantService } from "../services/participant.service";
 import { WaitlistService } from "../services/waitlist.service";
 
 const participants = new Hono<{ Bindings: Env }>();
@@ -37,13 +35,10 @@ participants.post("/", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
   if (error) return c.json({ error }, status);
 
-  const body = await c.req.json<CreateParticipantInput>();
-  const errors = validateCreateParticipant(body);
-  if (errors.length > 0) {
-    return c.json({ error: "Valideringsfel", details: errors }, 400);
-  }
+  const body = await c.req.json();
+  const input = parseBody(createParticipantSchema, body);
 
-  const participant = await ParticipantService.create(c.env.DB, eventId, body);
+  const participant = await ParticipantService.create(c.env.DB, eventId, input);
   return c.json(participant, 201);
 });
 
@@ -79,13 +74,10 @@ participants.put("/:id", async (c) => {
     return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
   }
 
-  const body = await c.req.json<UpdateParticipantInput>();
-  const errors = validateUpdateParticipant(body);
-  if (errors.length > 0) {
-    return c.json({ error: "Valideringsfel", details: errors }, 400);
-  }
+  const body = await c.req.json();
+  const input = parseBody(updateParticipantSchema, body);
 
-  const participant = await ParticipantService.update(c.env.DB, eventId, id, body);
+  const participant = await ParticipantService.update(c.env.DB, eventId, id, input);
   if (!participant) {
     return c.json({ error: "Deltagare hittades inte" }, 404);
   }
@@ -103,12 +95,10 @@ participants.put("/:id/reorder", async (c) => {
     return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
   }
 
-  const body = await c.req.json<{ queue_position: number }>();
-  if (!Number.isFinite(body.queue_position) || body.queue_position < 1) {
-    return c.json({ error: "queue_position måste vara ett positivt heltal" }, 400);
-  }
+  const body = await c.req.json();
+  const input = parseBody(reorderSchema, body);
 
-  const result = await WaitlistService.reorder(c.env.DB, eventId, id, body.queue_position);
+  const result = await WaitlistService.reorder(c.env.DB, eventId, id, input.queue_position);
   if (!result) {
     return c.json({ error: "Deltagare hittades inte eller är inte väntlistad" }, 404);
   }

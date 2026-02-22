@@ -10,25 +10,8 @@
 
 ---
 
-## Session 8b: Zod-validering + Error-handler + Tunna routes
-**Mål:** Centraliserad validering med Zod, error-handler middleware, flytta validering från routes.
-
-**Filer att skapa/ändra:**
-- `packages/shared/src/schemas.ts` — Zod-schemas för Event, Participant, Mailing
-- `backend/src/utils/validation.ts` — parse-funktioner som wrapprar Zod
-- `backend/src/middleware/error-handler.ts` — global Hono onError handler
-- Refaktorera `backend/src/routes/events.ts` — ersätt inline validering med Zod
-- Refaktorera övriga routes vid behov
-
-**Arkitekturkrav:**
-- Validering via Zod, ALDRIG ad-hoc i routes
-- Error-handler middleware registrerad i index.ts
-
-**Klart när:**
-- Zod installerad, schemas i packages/shared/src/schemas.ts
-- Error-handler middleware registrerad
-- Alla 51+ tester passerar
-- Validering centraliserad
+## Session 8b: Zod-validering + Error-handler + Tunna routes ✅ DONE
+**Levererat:** 7 Zod-schemas, parseBody() wrapper, error-handler middleware, all inline-validering ersatt. Netto -199 rader. 51 tester passerar.
 
 ---
 

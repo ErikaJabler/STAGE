@@ -40,10 +40,11 @@ Framtida integrationer (ej implementerade ännu):
 | `backend/src/services/` | Affärslogik per domän (event, participant, waitlist, mailing, rsvp) |
 | `backend/src/services/email/` | Email-abstraktionslager (interface, resend, console, factory, html-builder) |
 | `backend/src/services/__tests__/` | Service-enhetstester |
-| `backend/src/middleware/` | Middleware (error-handler planerad session 8b) |
+| `backend/src/middleware/error-handler.ts` | Global error-handler (ZodError → 400, övriga → 500) |
+| `backend/src/utils/validation.ts` | `parseBody()` — Zod-wrapper för request-validering |
 | `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist) |
 | `frontend/src/` | React-app (Vite) |
-| `packages/shared/src/` | Delade typer + konstanter |
+| `packages/shared/src/` | Delade typer, konstanter + Zod-schemas |
 | `migrations/` | Inkrementella D1 SQL-filer |
 | `docs/` | IMPLEMENTATION-PLAN.md, RECOVERY-PLAN.md, SESSION-GUIDE.md, PRD, brand guidelines |
 
@@ -181,6 +182,22 @@ Ej implementerad ännu (session 10). Interface-baserad design för framtida Azur
 - DKIM: TXT `resend._domainkey` — verifierad
 - SPF: MX `send` + TXT `send` — verifierad
 - DMARC: TXT `_dmarc` — `v=DMARC1; p=none;`
+
+## Validering (session 8b)
+
+All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`:
+
+| Schema | Beskrivning |
+|---|---|
+| `createEventSchema` | Skapar event: required name/date/time/location/organizer/organizer_email |
+| `updateEventSchema` | Uppdaterar event: alla fält optional, validerar format om angivna |
+| `createParticipantSchema` | Skapar deltagare: required name/email, enum category/status |
+| `updateParticipantSchema` | Uppdaterar deltagare: alla fält optional |
+| `createMailingSchema` | Skapar utskick: required subject/body, enum recipient_filter |
+| `rsvpRespondSchema` | RSVP-svar: status = "attending" | "declined" |
+| `reorderSchema` | Omsortera väntelista: queue_position (positivt heltal) |
+
+**Flöde:** Route → `parseBody(schema, body)` → ZodError fångas av `errorHandler` → 400 med `{ error, details }`.
 
 ## Testning
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers

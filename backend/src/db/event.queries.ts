@@ -1,51 +1,6 @@
-import type { Event, EventWithCount } from "@stage/shared";
+import type { Event, EventWithCount, CreateEventInput, UpdateEventInput } from "@stage/shared";
 
-/** Fields accepted when creating an event */
-export interface CreateEventInput {
-  name: string;
-  slug: string;
-  date: string;
-  time: string;
-  location: string;
-  organizer: string;
-  organizer_email: string;
-  created_by: string;
-  emoji?: string | null;
-  end_date?: string | null;
-  end_time?: string | null;
-  description?: string | null;
-  status?: string;
-  type?: string;
-  max_participants?: number | null;
-  overbooking_limit?: number;
-  visibility?: string;
-  sender_mailbox?: string | null;
-  gdpr_consent_text?: string | null;
-  image_url?: string | null;
-}
-
-/** Fields accepted when updating an event */
-export interface UpdateEventInput {
-  name?: string;
-  slug?: string;
-  date?: string;
-  time?: string;
-  location?: string;
-  organizer?: string;
-  organizer_email?: string;
-  emoji?: string | null;
-  end_date?: string | null;
-  end_time?: string | null;
-  description?: string | null;
-  status?: string;
-  type?: string;
-  max_participants?: number | null;
-  overbooking_limit?: number;
-  visibility?: string;
-  sender_mailbox?: string | null;
-  gdpr_consent_text?: string | null;
-  image_url?: string | null;
-}
+export type { CreateEventInput, UpdateEventInput };
 
 /** List all non-deleted events with participant count */
 export async function listEvents(db: D1Database): Promise<EventWithCount[]> {
@@ -108,7 +63,7 @@ export async function createEvent(
     .bind(
       input.name,
       input.emoji ?? null,
-      input.slug,
+      input.slug ?? "",
       input.date,
       input.time,
       input.end_date ?? null,

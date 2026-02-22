@@ -342,14 +342,48 @@ Validering finns kvar inline i routes (events.ts) — flyttas till Zod i session
 
 ---
 
+## Session 8b: Zod-validering + Error-handler middleware
+**Datum:** 2026-02-22
+**Status:** DONE
+
+### Deliverables
+- [x] `packages/shared/src/schemas.ts` — 7 Zod-schemas (createEvent, updateEvent, createParticipant, updateParticipant, createMailing, rsvpRespond, reorder)
+- [x] `packages/shared/src/index.ts` — exporterar schemas
+- [x] `backend/src/utils/validation.ts` — `parseBody()` wrapper som kastar ZodError
+- [x] `backend/src/middleware/error-handler.ts` — global Hono onError (ZodError → 400, övriga → 500)
+- [x] Error-handler registrerad i `backend/src/index.ts` via `app.onError(errorHandler)`
+- [x] `events.ts` — inline `validateCreateEvent`/`validateUpdateEvent` ersatta med `parseBody(createEventSchema, body)`
+- [x] `participants.ts` — inline-validering ersatt med Zod-parse
+- [x] `mailings.ts` — `validateCreateMailing` borttagen, Zod-parse
+- [x] `rsvp.ts` — inline status-validering ersatt med `parseBody(rsvpRespondSchema, body)`
+- [x] `participant.service.ts` — `validateCreateParticipant`/`validateUpdateParticipant` borttagna
+- [x] `mailing.service.ts` — `validateCreateMailing` borttagen
+- [x] DB query-filer (`event.queries.ts`, `participant.queries.ts`, `mailing.queries.ts`) — input-interfaces ersatta med re-export av Zod-typer
+- [x] `participant.service.test.ts` — uppdaterade tester att använda `createParticipantSchema.safeParse()` istf borttagna funktioner
+- [x] Alla 51 tester passerar
+- [x] SAD.md uppdaterad med validering, error-handler, nya moduler
+- [x] TESTPLAN.md uppdaterad med 6 nya testfall + TC-0.4
+
+### Avvikelser från plan
+Inga avvikelser — sessionen följde planen exakt.
+
+### Anteckningar
+- Zod redan installerad i `packages/shared` (version ^3.25.76)
+- DB-lagren behåller `??`-fallbacks (t.ex. `status ?? "planning"`) — Zod validerar format/enum men applicerar inte defaults, DB hanterar defaults
+- Netto: -199 rader kod (88 tillagda, 287 borttagna) — validering mer koncis med Zod
+- Inga nya migrationer behövdes
+- Inga frontend-ändringar
+
+---
+
 ### Avvikelser från plan — Session 0-7 (retrospektiv)
 
 | # | Avvikelse | Fixad i |
 |---|-----------|---------|
 | 1 | Ingen service-layer (all logik i routes) | 8a ✅ |
-| 2 | Ingen Zod-validering | 8b |
-| 3 | Ingen error-handler middleware | 8b |
-| 4 | Tom middleware/ | 8b |
+| 2 | Ingen Zod-validering | 8b ✅ |
+| 3 | Ingen error-handler middleware | 8b ✅ |
+| 4 | Tom middleware/ | 8b ✅ |
 | 5 | Ingen R2-integration | 9 |
 | 6 | Ingen dnd-kit för väntlista | 9 |
 | 7 | Email i en fil (196 rader) | 8a ✅ |
@@ -358,7 +392,7 @@ Validering finns kvar inline i routes (events.ts) — flyttas till Zod i session
 | 10 | EventDetail.tsx = 1727 rader | 9 |
 | 11 | Tom features/ mapp | 9 |
 | 12 | queries.ts = 654 rader | 8a ✅ |
-| 13 | Duplicerad validering | 8b |
+| 13 | Duplicerad validering | 8b ✅ |
 | 14 | Inga enhetstester för services | 8a ✅ |
 | 15 | CLAUDE.md matchar inte verkligheten | 8a ✅ |
 | 16 | Saknar CSV-export endpoint | 9 |

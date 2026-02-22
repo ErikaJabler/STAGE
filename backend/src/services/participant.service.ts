@@ -1,4 +1,4 @@
-import type { Participant } from "@stage/shared";
+import type { Participant, CreateParticipantInput, UpdateParticipantInput } from "@stage/shared";
 import {
   listParticipants,
   getParticipantById,
@@ -6,8 +6,6 @@ import {
   updateParticipant,
   deleteParticipant,
   getEventById,
-  type CreateParticipantInput,
-  type UpdateParticipantInput,
 } from "../db/queries";
 import { WaitlistService } from "./waitlist.service";
 
@@ -147,47 +145,6 @@ function mapCategory(value: string): string | undefined {
   return map[lower] || undefined;
 }
 
-/* ---- Validation ---- */
-
-export function validateCreateParticipant(body: CreateParticipantInput): string[] {
-  const errors: string[] = [];
-
-  if (!body.name?.trim()) errors.push("name krävs");
-  if (!body.email?.trim()) errors.push("email krävs");
-
-  if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-    errors.push("email måste vara en giltig emailadress");
-  }
-
-  const validCategories = ["internal", "public_sector", "private_sector", "partner", "other"];
-  if (body.category && !validCategories.includes(body.category)) {
-    errors.push(`category måste vara en av: ${validCategories.join(", ")}`);
-  }
-
-  const validStatuses = ["invited", "attending", "declined", "waitlisted", "cancelled"];
-  if (body.status && !validStatuses.includes(body.status)) {
-    errors.push(`status måste vara en av: ${validStatuses.join(", ")}`);
-  }
-
-  return errors;
-}
-
-export function validateUpdateParticipant(body: UpdateParticipantInput): string[] {
-  const errors: string[] = [];
-
-  if ("name" in body && !body.name?.trim()) {
-    errors.push("name kan inte vara tomt");
-  }
-  if ("email" in body && !body.email?.trim()) {
-    errors.push("email kan inte vara tomt");
-  }
-  if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-    errors.push("email måste vara en giltig emailadress");
-  }
-
-  return errors;
-}
-
 /* ---- Service ---- */
 
 export const ParticipantService = {
@@ -301,10 +258,10 @@ export const ParticipantService = {
 
       seenEmails.add(emailLower);
 
-      const validCategories = ["internal", "public_sector", "private_sector", "partner", "other"];
-      const category = data.category && validCategories.includes(data.category)
+      const validCategories = ["internal", "public_sector", "private_sector", "partner", "other"] as const;
+      const category = (data.category && validCategories.includes(data.category as typeof validCategories[number])
         ? data.category
-        : "other";
+        : "other") as CreateParticipantInput["category"];
 
       validRows.push({
         name: data.name.trim(),

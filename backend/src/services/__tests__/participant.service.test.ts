@@ -1,12 +1,8 @@
 import { env } from "cloudflare:test";
 import { describe, it, expect, beforeAll } from "vitest";
-import {
-  ParticipantService,
-  parseCSV,
-  validateCreateParticipant,
-  validateUpdateParticipant,
-} from "../participant.service";
+import { ParticipantService, parseCSV } from "../participant.service";
 import { EventService } from "../event.service";
+import { createParticipantSchema, updateParticipantSchema } from "@stage/shared";
 
 const EVENTS_SQL = `CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, emoji TEXT, slug TEXT NOT NULL UNIQUE, date TEXT NOT NULL, time TEXT NOT NULL, end_date TEXT, end_time TEXT, location TEXT NOT NULL, description TEXT, organizer TEXT NOT NULL, organizer_email TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'planning', type TEXT NOT NULL DEFAULT 'other', max_participants INTEGER, overbooking_limit INTEGER NOT NULL DEFAULT 0, visibility TEXT NOT NULL DEFAULT 'private', sender_mailbox TEXT, gdpr_consent_text TEXT, image_url TEXT, created_by TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), deleted_at TEXT);`;
 
@@ -75,38 +71,51 @@ describe("parseCSV", () => {
   });
 });
 
-describe("validateCreateParticipant", () => {
-  it("returns errors for missing required fields", () => {
-    const errors = validateCreateParticipant({ name: "", email: "" });
-    expect(errors).toContain("name krävs");
-    expect(errors).toContain("email krävs");
+describe("createParticipantSchema", () => {
+  it("rejects missing required fields", () => {
+    const result = createParticipantSchema.safeParse({ name: "", email: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.errors.map((e) => e.message);
+      expect(messages).toContain("name krävs");
+      expect(messages).toContain("email måste vara en giltig emailadress");
+    }
   });
 
-  it("validates email format", () => {
-    const errors = validateCreateParticipant({ name: "Test", email: "not-an-email" });
-    expect(errors).toContain("email måste vara en giltig emailadress");
+  it("rejects invalid email format", () => {
+    const result = createParticipantSchema.safeParse({ name: "Test", email: "not-an-email" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.errors.some((e) => e.message.includes("email"))).toBe(true);
+    }
   });
 
-  it("validates category enum", () => {
-    const errors = validateCreateParticipant({ name: "Test", email: "t@t.se", category: "invalid" });
-    expect(errors.some((e) => e.includes("category"))).toBe(true);
+  it("rejects invalid category", () => {
+    const result = createParticipantSchema.safeParse({ name: "Test", email: "t@t.se", category: "invalid" });
+    expect(result.success).toBe(false);
   });
 
   it("passes for valid input", () => {
-    const errors = validateCreateParticipant({ name: "Anna", email: "anna@test.se", category: "internal" });
-    expect(errors).toHaveLength(0);
+    const result = createParticipantSchema.safeParse({ name: "Anna", email: "anna@test.se", category: "internal" });
+    expect(result.success).toBe(true);
   });
 });
 
-describe("validateUpdateParticipant", () => {
+describe("updateParticipantSchema", () => {
   it("rejects empty name", () => {
-    const errors = validateUpdateParticipant({ name: "" });
-    expect(errors).toContain("name kan inte vara tomt");
+    const result = updateParticipantSchema.safeParse({ name: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.errors.some((e) => e.message.includes("name"))).toBe(true);
+    }
   });
 
   it("rejects invalid email", () => {
-    const errors = validateUpdateParticipant({ email: "bad" });
-    expect(errors).toContain("email måste vara en giltig emailadress");
+    const result = updateParticipantSchema.safeParse({ email: "bad" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.errors.some((e) => e.message.includes("email"))).toBe(true);
+    }
   });
 });
 

@@ -10,24 +10,6 @@ import {
 } from "../db/queries";
 import { createEmailProvider, buildEmailHtml } from "./email";
 
-/** Validate mailing creation input */
-export function validateCreateMailing(body: CreateMailingInput): string[] {
-  const errors: string[] = [];
-
-  if (!body.subject?.trim()) errors.push("subject krävs");
-  if (!body.body?.trim()) errors.push("body krävs");
-
-  const validFilters = [
-    "all", "invited", "attending", "declined", "waitlisted", "cancelled",
-    "internal", "public_sector", "private_sector", "partner", "other",
-  ];
-  if (body.recipient_filter && !validFilters.includes(body.recipient_filter)) {
-    errors.push(`recipient_filter måste vara en av: ${validFilters.join(", ")}`);
-  }
-
-  return errors;
-}
-
 export const MailingService = {
   list(db: D1Database, eventId: number): Promise<Mailing[]> {
     return listMailings(db, eventId);

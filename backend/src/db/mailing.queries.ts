@@ -1,11 +1,6 @@
-import type { Event, Participant, Mailing } from "@stage/shared";
+import type { Event, Participant, Mailing, CreateMailingInput } from "@stage/shared";
 
-/** Fields accepted when creating a mailing */
-export interface CreateMailingInput {
-  subject: string;
-  body: string;
-  recipient_filter?: string;
-}
+export type { CreateMailingInput };
 
 /** List all mailings for an event */
 export async function listMailings(

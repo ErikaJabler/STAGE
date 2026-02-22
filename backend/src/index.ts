@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import type { Env } from "./bindings";
+import { errorHandler } from "./middleware/error-handler";
 import events from "./routes/events";
 import participants from "./routes/participants";
 import mailings from "./routes/mailings";
 import rsvp from "./routes/rsvp";
 
 const app = new Hono<{ Bindings: Env }>();
+
+/* ---- Global error handler ---- */
+app.onError(errorHandler);
 
 /* ---- API routes (under /stage/api/) ---- */
 

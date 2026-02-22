@@ -1,25 +1,6 @@
-import type { Participant } from "@stage/shared";
+import type { Participant, CreateParticipantInput, UpdateParticipantInput } from "@stage/shared";
 
-/** Fields accepted when creating a participant */
-export interface CreateParticipantInput {
-  name: string;
-  email: string;
-  company?: string | null;
-  category?: string;
-  status?: string;
-  response_deadline?: string | null;
-}
-
-/** Fields accepted when updating a participant */
-export interface UpdateParticipantInput {
-  name?: string;
-  email?: string;
-  company?: string | null;
-  category?: string;
-  status?: string;
-  queue_position?: number | null;
-  response_deadline?: string | null;
-}
+export type { CreateParticipantInput, UpdateParticipantInput };
 
 /** List all participants for an event */
 export async function listParticipants(

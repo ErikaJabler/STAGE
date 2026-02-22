@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 51 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP, waitlist/ICS, event.service, participant.service)
-**Status:** ☑ Testad (session 8a)
+**Förväntat resultat:** 51 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP, waitlist/ICS, event.service, participant.service inkl. Zod-schema-validering)
+**Status:** ☑ Testad (session 8b)
 
 ---
 
@@ -360,3 +360,43 @@
 2. Klicka "Lägg till i kalender"
 **Förväntat resultat:** .ics-fil laddas ner med korrekt eventdata, öppnas i kalenderapp
 **Status:** ☐ Ej testad
+
+---
+
+## Session 8b: Zod-validering + Error-handler middleware
+
+### TC-8b.1: Zod-validering avvisar ogiltigt event
+**Steg:**
+1. `curl -X POST https://mikwik.se/stage/api/events -H "Content-Type: application/json" -d '{"name":"","date":"not-a-date"}'`
+**Förväntat resultat:** 400 med `{ "error": "Valideringsfel", "details": ["name krävs", "date måste vara YYYY-MM-DD", ...] }`
+**Status:** ☐ Ej testad
+
+### TC-8b.2: Zod-validering avvisar ogiltig deltagare
+**Steg:**
+1. `curl -X POST https://mikwik.se/stage/api/events/1/participants -H "Content-Type: application/json" -d '{"name":"","email":"invalid"}'`
+**Förväntat resultat:** 400 med `{ "error": "Valideringsfel", "details": ["name krävs", "email måste vara en giltig emailadress"] }`
+**Status:** ☐ Ej testad
+
+### TC-8b.3: Zod-validering avvisar ogiltig RSVP-status
+**Steg:**
+1. `curl -X POST https://mikwik.se/stage/api/rsvp/<token>/respond -H "Content-Type: application/json" -d '{"status":"maybe"}'`
+**Förväntat resultat:** 400 med `{ "error": "Valideringsfel", "details": ["status måste vara 'attending' eller 'declined'"] }`
+**Status:** ☐ Ej testad
+
+### TC-8b.4: Error-handler returnerar 500 vid oväntat fel
+**Steg:**
+1. Trigga ett oväntat serverfel (t.ex. via trasig DB-anslutning)
+**Förväntat resultat:** 500 med `{ "error": "Internt serverfel" }` (inte stack trace)
+**Status:** ☐ Ej testad
+
+### TC-8b.5: Giltigt event skapas korrekt med Zod-validering
+**Steg:**
+1. `curl -X POST https://mikwik.se/stage/api/events -H "Content-Type: application/json" -d '{"name":"Test","date":"2026-06-01","time":"18:00","location":"Kontoret","organizer":"Test","organizer_email":"test@test.se"}'`
+**Förväntat resultat:** 201 Created med event-JSON (slug auto-genererad, status "planning")
+**Status:** ☐ Ej testad
+
+### TC-8b.6: Zod-validering i participant.service.test (automatiska)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** createParticipantSchema-tester (4 st) + updateParticipantSchema-tester (2 st) passerar
+**Status:** ☑ Testad (session 8b)

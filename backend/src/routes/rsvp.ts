@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../bindings";
+import { rsvpRespondSchema } from "@stage/shared";
+import { parseBody } from "../utils/validation";
 import { RsvpService } from "../services/rsvp.service";
 
 const rsvp = new Hono<{ Bindings: Env }>();
@@ -37,13 +39,10 @@ rsvp.get("/:token", async (c) => {
 /** POST /api/rsvp/:token/respond — Respond attending or declined */
 rsvp.post("/:token/respond", async (c) => {
   const token = c.req.param("token");
-  const body = await c.req.json<{ status: string }>();
+  const body = await c.req.json();
+  const { status } = parseBody(rsvpRespondSchema, body);
 
-  if (!body.status || !["attending", "declined"].includes(body.status)) {
-    return c.json({ error: "status måste vara 'attending' eller 'declined'" }, 400);
-  }
-
-  const result = await RsvpService.respond(c.env.DB, token, body.status);
+  const result = await RsvpService.respond(c.env.DB, token, status);
 
   if (!result.ok) {
     const statusCode = result.error === "Ogiltig eller utgången länk" ? 404 : 500;

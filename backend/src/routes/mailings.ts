@@ -1,7 +1,9 @@
 import { Hono } from "hono";
 import type { Env } from "../bindings";
-import { getEventById, type CreateMailingInput } from "../db/queries";
-import { MailingService, validateCreateMailing } from "../services/mailing.service";
+import { createMailingSchema } from "@stage/shared";
+import { parseBody } from "../utils/validation";
+import { getEventById } from "../db/queries";
+import { MailingService } from "../services/mailing.service";
 
 const mailings = new Hono<{ Bindings: Env }>();
 
@@ -32,13 +34,10 @@ mailings.post("/", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
   if (error) return c.json({ error }, status);
 
-  const body = await c.req.json<CreateMailingInput>();
-  const errors = validateCreateMailing(body);
-  if (errors.length > 0) {
-    return c.json({ error: "Valideringsfel", details: errors }, 400);
-  }
+  const body = await c.req.json();
+  const input = parseBody(createMailingSchema, body);
 
-  const mailing = await MailingService.create(c.env.DB, eventId, body);
+  const mailing = await MailingService.create(c.env.DB, eventId, input);
   return c.json(mailing, 201);
 });
 
