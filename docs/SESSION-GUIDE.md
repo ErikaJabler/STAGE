@@ -35,44 +35,50 @@
 
 ---
 
-## Session 13: Saknade features + Integrationstester + Deploy Fas 1
-**Mål:** Implementera saknade features från planen, integrationstester, deploy.
+## Session 13a: Saknade features från planen
+**Mål:** Implementera 5 saknade features som planen specificerade men som aldrig byggdes.
 
-### Del A: Saknade features från planen
 **1. Klona event**
-- `backend/src/routes/events.ts` — POST /api/events/:id/clone
 - `backend/src/services/event.service.ts` — clone() kopierar alla fält utom datum/tid/slug
+- `backend/src/routes/events.ts` — POST /api/events/:id/clone
 - `frontend/src/pages/Overview.tsx` — "Klona"-knapp per EventCard
+- Zod-schema om det behövs i `packages/shared/src/schemas.ts`
 
 **2. Unsubscribe-länk i mail (GDPR art. 7(3))**
-- `backend/src/services/email/html-builder.ts` — lägg till unsubscribe-footer i alla mail
-- Länken pekar till RSVP-sidan (avboka = opt-out)
+- `backend/src/services/email/html-builder.ts` — lägg till avregistreringslänk i footer på alla mail
+- Länken pekar till deltagarens RSVP-sida (avboka = opt-out)
 
 **3. Skicka testmail till mig**
 - `backend/src/routes/mailings.ts` — POST /api/events/:id/mailings/:mid/test (skickar till inloggad användare)
 - `frontend/src/components/features/email/MailingsTab.tsx` — "Skicka testmail"-knapp
 
 **4. Svarsfrist-UI för väntlistade**
-- `backend/src/routes/participants.ts` — PUT deadline (response_deadline kolumn finns redan)
+- `backend/src/routes/participants.ts` — PUT response_deadline (kolumn finns redan i DB)
 - `frontend/src/components/features/participants/ParticipantsTab.tsx` — datepicker per väntlistad
 
 **5. Template preview-endpoint**
 - `backend/src/routes/mailings.ts` — GET /api/templates/:type/preview (renderad HTML med exempeldata)
 
-### Del B: Integrationstester
-- `backend/src/__tests__/integration.test.ts`:
-  - Event→deltagare→waitlist→promote
-  - Inbjudan→RSVP→bekräftelse
-  - Behörigheter (owner/editor/viewer)
-  - Email-queue (Cron processning)
-  - Klona event
+**Klart när:** Alla 5 features implementerade, tester för varje, typecheck + test gröna, deploy
 
-### Del C: Docs + Deploy
-- Uppdatera SAD.md med nya endpoints
+---
+
+## Session 13b: Integrationstester + Deploy Fas 1
+**Mål:** End-to-end integrationstester, slutgiltig docs-uppdatering, deploy.
+
+**Integrationstester** (`backend/src/__tests__/integration.test.ts`):
+- Event→deltagare→waitlist→promote
+- Inbjudan→RSVP→bekräftelse
+- Behörigheter (owner/editor/viewer)
+- Email-queue (Cron processning)
+- Klona event→verifiera kopia
+
+**Docs + Deploy:**
+- Uppdatera SAD.md (komplett för onboarding)
 - Uppdatera TESTPLAN.md med nya testfall
 - `npm run build && npx wrangler deploy`
 
-**Klart när:** Alla saknade features implementerade, integrationstester gröna, appen deployad, docs kompletta
+**Klart när:** Alla integrationstester gröna, appen deployad, docs kompletta för Fas 1
 
 ---
 
