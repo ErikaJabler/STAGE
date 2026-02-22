@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 21 tester gröna (health, events, participants, mailings/RSVP)
-**Status:** ☑ Testad (session 5)
+**Förväntat resultat:** 23 tester gröna (health, events, participants inkl. CSV-import, mailings/RSVP)
+**Status:** ☑ Testad (session 6)
 
 ---
 
@@ -204,3 +204,78 @@
 3. Gå till admin → Deltagare-tab
 **Förväntat resultat:** Deltagaren har status "Deltar" (attending)
 **Status:** ☑ Testad (session 5 — verifierat live)
+
+---
+
+## Session 6: CSV-import + mailmallar
+
+### TC-6.1: Importera CSV med header-rad
+**Steg:**
+1. Skapa en CSV-fil med innehåll:
+   ```
+   namn,email,företag,kategori
+   Anna Test,anna@test.se,Consid,intern
+   Erik Test,erik@test.se,IKEA,partner
+   Lisa Test,lisa@test.se,,
+   ```
+2. Öppna event → Deltagare-tab → "Importera CSV"
+3. Välj filen → se förhandsgranskning → "Importera"
+**Förväntat resultat:** Toast "3 deltagare importerade", alla tre syns i deltagartabellen med rätt kategori
+**Status:** ☐ Ej testad
+
+### TC-6.2: CSV-import hanterar dubbletter
+**Steg:**
+1. Importera CSV med en email som redan finns bland deltagarna
+**Förväntat resultat:** Befintlig deltagare hoppas över, toast visar "X rader hoppades över", feldetaljer visar "Finns redan: email@test.se"
+**Status:** ☐ Ej testad
+
+### TC-6.3: CSV-import hanterar ogiltiga rader
+**Steg:**
+1. Importera CSV med rader som saknar namn, har ogiltig email, eller är tomma
+**Förväntat resultat:** Giltiga rader importeras, ogiltiga hoppas över med tydliga felmeddelanden per rad
+**Status:** ☐ Ej testad
+
+### TC-6.4: CSV med semikolon-separator
+**Steg:**
+1. Skapa CSV med `;` som separator istället för `,`
+2. Importera via "Importera CSV"
+**Förväntat resultat:** Parsern identifierar semikolon som separator, import fungerar
+**Status:** ☐ Ej testad
+
+### TC-6.5: Importera CSV-knappen syns i tom-state och lista-vy
+**Steg:**
+1. Öppna event utan deltagare → Deltagare-tab
+2. Öppna event med deltagare → Deltagare-tab
+**Förväntat resultat:** "Importera CSV"-knapp syns i båda vyerna
+**Status:** ☐ Ej testad
+
+### TC-6.6: Välj mailmall "Save the date"
+**Steg:**
+1. Öppna event → Utskick-tab → "+ Nytt utskick"
+2. Klicka på "Save the date"-kortet
+**Förväntat resultat:** Ämne fylls i med "Save the date!", brödtext fylls i med malltext innehållande `{{name}}`
+**Status:** ☐ Ej testad
+
+### TC-6.7: Välj mailmall "Officiell inbjudan"
+**Steg:**
+1. Öppna "+ Nytt utskick" → klicka "Officiell inbjudan"
+**Förväntat resultat:** Ämne och brödtext fylls i med inbjudningsmall, innehåller `{{name}}` och `{{rsvp_link}}`
+**Status:** ☐ Ej testad
+
+### TC-6.8: Välj mall och redigera innan skapande
+**Steg:**
+1. Välj en mall → ändra ämne och brödtext manuellt → "Skapa utkast"
+**Förväntat resultat:** Utskicket skapas med den redigerade texten, inte originalmalltexten
+**Status:** ☐ Ej testad
+
+### TC-6.9: Avmarkera vald mall
+**Steg:**
+1. Välj en mall → klicka på samma mall igen
+**Förväntat resultat:** Mallen avmarkeras (ingen blå border), ämne och brödtext behåller aktuellt innehåll
+**Status:** ☐ Ej testad
+
+### TC-6.10: API — CSV-import (automatiska tester)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** 2 CSV-import-tester passerar (import med headers + dubbletter/validering)
+**Status:** ☑ Testad (session 6, 23 tester totalt)
