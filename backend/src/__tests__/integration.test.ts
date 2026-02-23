@@ -528,11 +528,11 @@ describe("Integration: Email Queue + Cron Processing", () => {
     expect(sendBody.sent).toBe(3);
     expect(sendBody.total).toBe(3);
 
-    // No items in email_queue for this mailing
+    // Direct sends are now recorded in email_queue with status='sent' for audit trail
     const queueCount = await env.DB.prepare(
-      "SELECT COUNT(*) as cnt FROM email_queue WHERE mailing_id = ?"
+      "SELECT COUNT(*) as cnt FROM email_queue WHERE mailing_id = ? AND status = 'sent'"
     ).bind(mailing.id).first<{ cnt: number }>();
-    expect(queueCount?.cnt).toBe(0);
+    expect(queueCount?.cnt).toBe(3);
   });
 });
 

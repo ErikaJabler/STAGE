@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   open: boolean;
@@ -10,41 +11,39 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, footer, width = 480 }: ModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
+  // Escape key closes modal
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
+  // Prevent body scroll when open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    const handleClose = () => onClose();
-    dialog.addEventListener('close', handleClose);
-    return () => dialog.removeEventListener('close', handleClose);
-  }, [onClose]);
+  if (!open) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === dialogRef.current) {
+    if (e.target === backdropRef.current) {
       onClose();
     }
   };
 
-  if (!open) return null;
-
-  return (
-    <dialog
-      ref={dialogRef}
+  return createPortal(
+    <div
+      ref={backdropRef}
       onClick={handleBackdropClick}
-      style={styles.dialog}
+      style={styles.backdrop}
     >
       <div style={{ ...styles.content, maxWidth: width }}>
         <div style={styles.header}>
@@ -58,23 +57,21 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
         <div style={styles.body}>{children}</div>
         {footer && <div style={styles.footer}>{footer}</div>}
       </div>
-    </dialog>
+    </div>,
+    document.body
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  dialog: {
-    border: 'none',
-    borderRadius: 'var(--radius-xl)',
-    padding: 0,
-    backgroundColor: 'transparent',
-    maxWidth: 'none',
-    maxHeight: 'none',
-    width: '100%',
-    height: '100%',
+  backdrop: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 1000,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    background: 'rgba(28, 28, 28, 0.4)',
+    backdropFilter: 'blur(2px)',
   },
   content: {
     backgroundColor: 'var(--color-bg-card)',

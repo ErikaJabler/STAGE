@@ -7,6 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 [assets]
 directory = "./frontend/dist"
 binding = "ASSETS"
+run_worker_first = true
 not_found_handling = "single-page-application"
 
 # D1 Database
@@ -15,7 +16,11 @@ binding = "DB"
 database_name = "stage_db_v2"
 database_id = "1e935a1e-4a24-44f4-b83d-c70235b982d9"
 
-# Route: serve on mikwik.se/stage/*
+# Route: serve on mikwik.se/stage (exact) + mikwik.se/stage/* (wildcard)
+[[routes]]
+pattern = "mikwik.se/stage"
+zone_name = "mikwik.se"
+
 [[routes]]
 pattern = "mikwik.se/stage/*"
 zone_name = "mikwik.se"

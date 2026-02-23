@@ -41,6 +41,45 @@ export async function enqueueEmails(
   return items.length;
 }
 
+/** Record already-sent emails in the queue (audit trail for direct sends) */
+export async function recordSentEmails(
+  db: D1Database,
+  items: Array<{
+    mailing_id: number;
+    event_id: number;
+    to_email: string;
+    to_name: string;
+    subject: string;
+    html: string;
+    plain_text: string;
+  }>
+): Promise<number> {
+  if (items.length === 0) return 0;
+
+  const now = new Date().toISOString();
+  const stmt = db.prepare(
+    `INSERT INTO email_queue (mailing_id, event_id, to_email, to_name, subject, html, plain_text, status, created_at, sent_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?)`
+  );
+
+  const batch = items.map((item) =>
+    stmt.bind(
+      item.mailing_id,
+      item.event_id,
+      item.to_email,
+      item.to_name,
+      item.subject,
+      item.html,
+      item.plain_text,
+      now,
+      now
+    )
+  );
+
+  await db.batch(batch);
+  return items.length;
+}
+
 /** Process pending emails from the queue (called by Cron Trigger) */
 export async function processQueue(
   db: D1Database,

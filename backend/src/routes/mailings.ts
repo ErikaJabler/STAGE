@@ -90,6 +90,44 @@ mailings.post("/:mid/send", async (c) => {
   });
 });
 
+/** POST /api/events/:eventId/mailings/:mid/send-to-new — Send to new participants (editor+) */
+mailings.post("/:mid/send-to-new", async (c) => {
+  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
+  if (error) return c.json({ error }, status);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
+
+  const mid = Number(c.req.param("mid"));
+  if (!Number.isFinite(mid) || mid < 1) {
+    return c.json({ error: "Ogiltigt utskicks-ID" }, 400);
+  }
+
+  const result = await MailingService.sendToNew(c.env.DB, eventId, mid, c.env.RESEND_API_KEY);
+
+  if (!result.mailing) {
+    return c.json({ error: result.errors[0] || "Utskick hittades inte" }, 404);
+  }
+
+  if (result.errors.length > 0 && result.sent === 0 && result.total === 0) {
+    return c.json({ error: result.errors[0] }, 400);
+  }
+
+  if (result.total > 0) {
+    await ActivityService.logMailingSent(c.env.DB, eventId, `${result.mailing.subject} (nya mottagare)`, result.total, user.email);
+  }
+
+  return c.json({
+    mailing: result.mailing,
+    sent: result.sent,
+    failed: result.failed,
+    total: result.total,
+    ...(result.errors.length > 0 ? { errors: result.errors } : {}),
+  });
+});
+
 /** POST /api/events/:eventId/mailings/:mid/test — Send test email to logged-in user (editor+) */
 mailings.post("/:mid/test", async (c) => {
   const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);

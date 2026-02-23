@@ -63,6 +63,9 @@ describe("generateICS", () => {
       sender_mailbox: null,
       gdpr_consent_text: null,
       image_url: null,
+      website_template: null,
+      website_data: null,
+      website_published: 0,
       created_by: "test@test.se",
       created_at: "2026-01-01",
       updated_at: "2026-01-01",
@@ -90,6 +93,7 @@ describe("generateICS", () => {
       max_participants: null, overbooking_limit: 0,
       visibility: "private" as const, sender_mailbox: null,
       gdpr_consent_text: null, image_url: null,
+      website_template: null, website_data: null, website_published: 0,
       created_by: "t@t.se", created_at: "", updated_at: "", deleted_at: null,
     });
 

@@ -232,9 +232,3 @@ img {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.15; }
 }
-
-/* --- Dialog backdrop --- */
-dialog::backdrop {
-  background: rgba(28, 28, 28, 0.4);
-  backdrop-filter: blur(2px);
-}

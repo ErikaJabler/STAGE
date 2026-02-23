@@ -125,6 +125,40 @@ export async function updateParticipantStatus(
   return participant ?? null;
 }
 
+/** Get NEW recipients for a mailing (not already in email_queue) */
+export async function getNewMailingRecipients(
+  db: D1Database,
+  eventId: number,
+  mailingId: number,
+  filter: string
+): Promise<Participant[]> {
+  let sql =
+    "SELECT * FROM participants WHERE event_id = ? AND email NOT IN (SELECT to_email FROM email_queue WHERE mailing_id = ?)";
+  const binds: unknown[] = [eventId, mailingId];
+
+  if (filter !== "all") {
+    const statuses = ["invited", "attending", "declined", "waitlisted", "cancelled"];
+    const categories = ["internal", "public_sector", "private_sector", "partner", "other"];
+
+    if (statuses.includes(filter)) {
+      sql += " AND status = ?";
+      binds.push(filter);
+    } else if (categories.includes(filter)) {
+      sql += " AND category = ?";
+      binds.push(filter);
+    }
+  }
+
+  sql += " ORDER BY name ASC";
+
+  const result = await db
+    .prepare(sql)
+    .bind(...binds)
+    .all<Participant>();
+
+  return result.results;
+}
+
 /** Get recipients for a mailing based on filter */
 export async function getMailingRecipients(
   db: D1Database,

@@ -41,3 +41,15 @@ export function useSendTestMailing(eventId: number) {
       mailingsApi.sendTest(eventId, mailingId),
   });
 }
+
+export function useSendToNewParticipants(eventId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (mailingId: number) =>
+      mailingsApi.sendToNew(eventId, mailingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: MAILINGS_KEY(eventId) });
+    },
+  });
+}

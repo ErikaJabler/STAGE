@@ -5,11 +5,12 @@ import {
   createMailing,
   markMailingSent,
   getMailingRecipients,
+  getNewMailingRecipients,
   getEventById,
   type CreateMailingInput,
 } from "../db/queries";
 import { buildMergeContext, renderEmail, renderText, createEmailProvider } from "./email";
-import { enqueueEmails, getQueueStats } from "./email/send-queue";
+import { enqueueEmails, recordSentEmails, getQueueStats } from "./email/send-queue";
 
 export const MailingService = {
   list(db: D1Database, eventId: number): Promise<Mailing[]> {
@@ -115,6 +116,7 @@ export const MailingService = {
     let sent = 0;
     let failed = 0;
     const errors: string[] = [];
+    const sentItems: typeof items = [];
 
     for (const item of items) {
       const result = await provider.send({
@@ -126,6 +128,7 @@ export const MailingService = {
 
       if (result.success) {
         sent++;
+        sentItems.push(item);
       } else {
         failed++;
         if (result.error) {
@@ -134,8 +137,109 @@ export const MailingService = {
       }
     }
 
+    // Record successfully sent emails in queue for audit trail
+    if (sentItems.length > 0) {
+      await recordSentEmails(db, sentItems);
+    }
+
     const updated = await markMailingSent(db, mailing.id);
     return { mailing: updated, sent, failed, total: items.length, errors };
+  },
+
+  /** Send a mailing to NEW participants only (not already sent) */
+  async sendToNew(
+    db: D1Database,
+    eventId: number,
+    mailingId: number,
+    apiKey?: string,
+    baseUrl = "https://mikwik.se"
+  ): Promise<{
+    mailing: Mailing | null;
+    sent: number;
+    failed: number;
+    total: number;
+    errors: string[];
+  }> {
+    const mailing = await getMailingById(db, mailingId);
+    if (!mailing || mailing.event_id !== eventId) {
+      return { mailing: null, sent: 0, failed: 0, total: 0, errors: ["Utskick hittades inte"] };
+    }
+
+    if (mailing.status !== "sent") {
+      return { mailing, sent: 0, failed: 0, total: 0, errors: ["Utskicket måste vara skickat först"] };
+    }
+
+    const recipients = await getNewMailingRecipients(db, eventId, mailingId, mailing.recipient_filter);
+    if (recipients.length === 0) {
+      return { mailing, sent: 0, failed: 0, total: 0, errors: [] };
+    }
+
+    const event = (await getEventById(db, eventId))!;
+
+    const queueItems = recipients.map((recipient) => {
+      const context = buildMergeContext(event, recipient, baseUrl);
+      if (mailing.html_body) {
+        const renderedSubject = renderText(mailing.subject, context);
+        const mergedHtml = renderText(mailing.html_body, context);
+        return {
+          mailing_id: mailingId,
+          event_id: eventId,
+          to_email: recipient.email,
+          to_name: recipient.name,
+          subject: renderedSubject,
+          html: mergedHtml,
+          plain_text: renderText(mailing.body, context),
+        };
+      }
+      const rendered = renderEmail(mailing.body, mailing.subject, context, event);
+      return {
+        mailing_id: mailingId,
+        event_id: eventId,
+        to_email: recipient.email,
+        to_name: recipient.name,
+        subject: rendered.subject,
+        html: rendered.html,
+        plain_text: rendered.text,
+      };
+    });
+
+    if (recipients.length <= 5) {
+      // Direct send — but don't re-mark as sent (already sent)
+      const provider = createEmailProvider(apiKey);
+      let sent = 0;
+      let failed = 0;
+      const errors: string[] = [];
+      const sentItems: typeof queueItems = [];
+
+      for (const item of queueItems) {
+        const result = await provider.send({
+          to: item.to_email,
+          subject: item.subject,
+          body: item.plain_text,
+          html: item.html,
+        });
+
+        if (result.success) {
+          sent++;
+          sentItems.push(item);
+        } else {
+          failed++;
+          if (result.error) {
+            errors.push(`${item.to_email}: ${result.error}`);
+          }
+        }
+      }
+
+      if (sentItems.length > 0) {
+        await recordSentEmails(db, sentItems);
+      }
+
+      return { mailing, sent, failed, total: queueItems.length, errors };
+    }
+
+    // Enqueue for Cron processing
+    const enqueued = await enqueueEmails(db, queueItems);
+    return { mailing, sent: 0, failed: 0, total: enqueued, errors: [] };
   },
 
   /** Send a test email to a specific recipient (the logged-in user) */

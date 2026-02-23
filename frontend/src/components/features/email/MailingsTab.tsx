@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, Button, Modal, useToast } from '../../ui';
-import { useMailings, useSendMailing, useSendTestMailing } from '../../../hooks/useMailings';
+import { useMailings, useSendMailing, useSendTestMailing, useSendToNewParticipants } from '../../../hooks/useMailings';
 import type { Mailing } from '@stage/shared';
 import { getFilterLabel, formatDateTime } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
@@ -17,12 +17,23 @@ function TestMailIcon() {
   );
 }
 
+function SendToNewIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M1 3l7 5 7-5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M12 9v4m-2-2h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function MailingsTab({ eventId }: { eventId: number }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [previewMailing, setPreviewMailing] = useState<Mailing | null>(null);
   const { data: mailings, isLoading } = useMailings(eventId);
   const sendMailing = useSendMailing(eventId);
   const sendTestMailing = useSendTestMailing(eventId);
+  const sendToNew = useSendToNewParticipants(eventId);
   const { toast } = useToast();
 
   function handleSendTest(mailing: Mailing) {
@@ -31,6 +42,21 @@ export function MailingsTab({ eventId }: { eventId: number }) {
         toast(`Testmail skickat till ${result.sentTo}`, 'success');
       },
       onError: () => toast('Kunde inte skicka testmail', 'error'),
+    });
+  }
+
+  function handleSendToNew(mailing: Mailing) {
+    sendToNew.mutate(mailing.id, {
+      onSuccess: (result) => {
+        if (result.total === 0) {
+          toast('Inga nya mottagare', 'info');
+        } else if (result.failed > 0) {
+          toast(`Skickat till ${result.sent}/${result.total} nya (${result.failed} misslyckades)`, 'error');
+        } else {
+          toast(`Skickat till ${result.total} nya mottagare`, 'success');
+        }
+      },
+      onError: () => toast('Kunde inte skicka till nya', 'error'),
     });
   }
 
@@ -130,6 +156,16 @@ export function MailingsTab({ eventId }: { eventId: number }) {
                         disabled={sendMailing.isPending}
                       >
                         <SendIcon />
+                      </button>
+                    )}
+                    {m.status === 'sent' && (
+                      <button
+                        onClick={() => handleSendToNew(m)}
+                        style={{ ...sharedStyles.actionBtn, color: 'var(--color-accent)' }}
+                        title="Skicka till nya deltagare"
+                        disabled={sendToNew.isPending}
+                      >
+                        <SendToNewIcon />
                       </button>
                     )}
                   </div>

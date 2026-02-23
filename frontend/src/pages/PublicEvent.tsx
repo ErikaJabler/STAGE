@@ -28,14 +28,14 @@ export function PublicEvent() {
     if (!slug) return;
     fetch(`/stage/api/public/events/${slug}`)
       .then(async (res) => {
-        if (!res.ok) throw new Error('not found');
+        if (!res.ok) throw new Error(`API ${res.status}`);
         return res.json() as Promise<PublicEventData>;
       })
       .then((data) => {
         setEventData(data);
         setState('loaded');
       })
-      .catch(() => {
+      .catch((err) => {
         setState('error');
         setErrorMsg('Eventet hittades inte eller är inte publicerat.');
       });

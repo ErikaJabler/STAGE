@@ -126,18 +126,25 @@ app.all("/stage/*", async (c) => {
   const url = new URL(c.req.url);
   url.pathname = url.pathname.replace(/^\/stage/, "") || "/";
 
-  const assetResponse = await c.env.ASSETS.fetch(
-    new Request(url.toString(), c.req.raw)
-  );
+  // Use a clean GET request to ASSETS — do NOT forward the browser's
+  // request mode/credentials (crossorigin="anonymous" on <script type=module>
+  // sets mode:"cors" which can cause ASSETS to return responses the browser rejects).
+  const assetResponse = await c.env.ASSETS.fetch(url.toString());
 
-  // If asset found, serve it (only accept 2xx responses)
   if (assetResponse.ok) {
+    // Stale asset detection: if a .js/.css/.woff2 request got text/html back,
+    // the SPA fallback served index.html for a non-existent hashed bundle.
+    // Return 404 so the browser doesn't try to parse HTML as JavaScript.
+    const ct = assetResponse.headers.get("content-type") || "";
+    if (/\.\w{2,}$/.test(url.pathname) && ct.includes("text/html")) {
+      return new Response("Not Found", { status: 404 });
+    }
     return assetResponse;
   }
 
-  // SPA fallback: serve index.html for client-side routes
+  // SPA fallback: serve index.html for client-side routes (e.g. /e/:slug, /login)
   url.pathname = "/index.html";
-  return c.env.ASSETS.fetch(new Request(url.toString(), c.req.raw));
+  return c.env.ASSETS.fetch(url.toString());
 });
 
 export default {

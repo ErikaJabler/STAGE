@@ -214,6 +214,11 @@ export const mailingsApi = {
     request<{ ok: boolean; sentTo: string }>(`/events/${eventId}/mailings/${mailingId}/test`, {
       method: "POST",
     }),
+
+  sendToNew: (eventId: number, mailingId: number) =>
+    request<SendMailingResult>(`/events/${eventId}/mailings/${mailingId}/send-to-new`, {
+      method: "POST",
+    }),
 };
 
 export interface CreateMailingPayload {
