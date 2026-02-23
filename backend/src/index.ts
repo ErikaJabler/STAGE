@@ -11,6 +11,8 @@ import auth from "./routes/auth";
 import permissions from "./routes/permissions";
 import activities from "./routes/activities";
 import search from "./routes/search";
+import website from "./routes/website";
+import { WebsiteService } from "./services/website.service";
 import { processQueue } from "./services/email/send-queue";
 import { templates, getTemplate, renderText, buildEmailHtml } from "./services/email";
 
@@ -28,9 +30,26 @@ app.get("/stage/api/health", (c) => {
 app.route("/stage/api/auth", auth);
 app.route("/stage/api/rsvp", rsvp);
 
+/** GET /api/public/events/:slug — public event data for website rendering (no auth) */
+app.get("/stage/api/public/events/:slug", async (c) => {
+  const slug = c.req.param("slug");
+  const event = await WebsiteService.getPublicEvent(c.env.DB, slug);
+  if (!event) {
+    return c.json({ error: "Event hittades inte eller är inte publicerat" }, 404);
+  }
+  return c.json({ event });
+});
+
+
 /* ---- Protected routes (auth required) ---- */
 
-app.use("/stage/api/events/*", authMiddleware);
+app.use("/stage/api/events/*", async (c, next) => {
+  // Public registration endpoint — no auth required
+  if (c.req.method === "POST" && c.req.path.endsWith("/register")) {
+    return next();
+  }
+  return authMiddleware(c, next);
+});
 app.use("/stage/api/images/*", async (c, next) => {
   // GET images is public (served with cache headers, UUID-based keys)
   // POST upload requires auth
@@ -45,6 +64,7 @@ app.route("/stage/api/events/:eventId/participants", participants);
 app.route("/stage/api/events/:eventId/mailings", mailings);
 app.route("/stage/api/events/:eventId/permissions", permissions);
 app.route("/stage/api/events/:eventId/activities", activities);
+app.route("/stage/api/events", website);
 app.route("/stage/api/images", images);
 app.route("/stage/api/search", search);
 

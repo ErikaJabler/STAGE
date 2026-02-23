@@ -147,3 +147,42 @@ export const addPermissionSchema = z.object({
 });
 
 export type AddPermissionInput = z.infer<typeof addPermissionSchema>;
+
+/* ---- Website schemas ---- */
+
+const websiteTemplates = ["hero-info", "hero-program-plats"] as const;
+
+export const updateWebsiteSchema = z.object({
+  template: z.enum(websiteTemplates).optional(),
+  data: z.object({
+    hero_title: z.string().optional(),
+    hero_subtitle: z.string().optional(),
+    program_items: z.array(z.object({
+      time: z.string(),
+      title: z.string(),
+      description: z.string().optional(),
+    })).optional(),
+    venue_description: z.string().optional(),
+    venue_address: z.string().optional(),
+    custom_fields: z.array(z.object({
+      label: z.string(),
+      required: z.boolean(),
+    })).optional(),
+  }).optional(),
+  published: z.boolean().optional(),
+});
+
+export type UpdateWebsiteInput = z.infer<typeof updateWebsiteSchema>;
+
+export const publicRegisterSchema = z.object({
+  name: z.string().min(1, "Namn krävs"),
+  email: z.string().regex(emailPattern, "Ogiltig e-postadress"),
+  company: z.string().nullish(),
+  category: z.enum(participantCategories).optional(),
+  dietary_notes: z.string().nullish(),
+  plus_one_name: z.string().nullish(),
+  plus_one_email: z.string().regex(emailPattern, "Ogiltig e-postadress för plusettgäst").nullish(),
+  gdpr_consent: z.boolean().refine((v) => v === true, "GDPR-samtycke krävs"),
+});
+
+export type PublicRegisterInput = z.infer<typeof publicRegisterSchema>;

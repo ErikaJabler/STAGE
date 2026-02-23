@@ -50,9 +50,11 @@
 
 ---
 
-## Session 15-18: Fas 2 (resterande)
+## Session 15: Eventwebbplats ✅ DONE
+Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anmälningsformulär med GDPR-samtycke. WebsitePanel i Inställningar-tab. 6 nya tester (92 totalt).
+
+## Session 16-18: Fas 2 (resterande)
 Följer `docs/IMPLEMENTATION-PLAN.md` exakt:
-- **15:** Eventwebbplats
 - **16:** GrapeJS webbplatsredigerare (valfri)
 - **17:** Systemadmin + brand-kontroll
 - **18:** Test, polish, deploy Fas 2

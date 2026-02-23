@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 86 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, integration e2e)
-**Status:** ☑ Testad (session 14)
+**Förväntat resultat:** 92 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, website.service, integration e2e)
+**Status:** ☑ Testad (session 15)
 
 ---
 
@@ -901,4 +901,85 @@
 **Steg:**
 1. Skicka utskicket
 **Förväntat resultat:** Mailet skickas med den visuella editorns HTML (inte auto-genererad). Merge fields ({{name}}, {{rsvp_link}}) ersätts korrekt.
+**Status:** ☐ Ej testad
+
+---
+
+## Session 15: Eventwebbplats
+
+### TC-15.1: Webbplatspanel i Inställningar
+**Förutsättning:** Inloggad, på eventets Inställningar-tab
+**Steg:**
+1. Scrolla ner till "Webbplats"-sektionen
+2. Välj template "Hero + Info"
+3. Fyll i hero-rubrik
+4. Klicka "Spara webbplats"
+**Förväntat resultat:** Toast "Webbplats sparad" visas. Konfigurationen sparas.
+**Status:** ☐ Ej testad
+
+### TC-15.2: Publicera webbplats
+**Förutsättning:** Inloggad, webbplats sparad med template
+**Steg:**
+1. Klicka "Publicera"
+2. Publik webbadress visas
+3. Klicka på URL:en
+**Förväntat resultat:** Publik eventwebbsida öppnas i ny flik med hero-sektion, eventinfo och anmälningsformulär. Consid-branding (Burgundy #701131, Beige #EFE6DD, Raspberry Red #B5223F CTA).
+**Status:** ☐ Ej testad
+
+### TC-15.3: Publik eventwebbsida — Hero + Info
+**Förutsättning:** Publicerad webbplats med Hero + Info template
+**Steg:**
+1. Öppna `/stage/e/:slug` i en annan webbläsare (ej inloggad)
+**Förväntat resultat:** Hero-sektion med bild (om uppladdad) eller burgundy bakgrund, eventnamn, datum, tid, plats, arrangör, beskrivning. Anmälningsformulär med namn, email, företag, kategori, GDPR-samtycke.
+**Status:** ☐ Ej testad
+
+### TC-15.4: Publik eventwebbsida — Hero + Program + Plats
+**Förutsättning:** Publicerad webbplats med Hero + Program + Plats template, programpunkter och platsinfo ifylld
+**Steg:**
+1. Öppna `/stage/e/:slug`
+**Förväntat resultat:** Utöver Hero + Info visas: programsektion med tidslinje (tidpunkter + aktiviteter), platssektion med beskrivning och adress.
+**Status:** ☐ Ej testad
+
+### TC-15.5: Anmälan via webbplats
+**Förutsättning:** Publicerad webbplats
+**Steg:**
+1. Öppna publik webbsida
+2. Fyll i namn, email, bocka GDPR-samtycke
+3. Klicka "Anmäl mig"
+**Förväntat resultat:** Bekräftelsesida visas med "Tack för din anmälan!" och "Lägg till i kalender"-knapp. Deltagaren syns i admin-vyn med status "attending".
+**Status:** ☐ Ej testad
+
+### TC-15.6: Dubbel anmälan avvisas
+**Förutsättning:** Redan anmäld via webbplats
+**Steg:**
+1. Försök anmäla med samma email igen
+**Förväntat resultat:** Felmeddelande "Du är redan anmäld till detta event".
+**Status:** ☐ Ej testad
+
+### TC-15.7: Auto-waitlist vid full kapacitet
+**Förutsättning:** Event med max_participants = 1, 1 befintlig deltagare
+**Steg:**
+1. Anmäl ny deltagare via webbplats
+**Förväntat resultat:** Bekräftelsesida visar "Du står på väntelistan" med ⏳-ikon.
+**Status:** ☐ Ej testad
+
+### TC-15.8: Ej publicerad webbplats ger 404
+**Förutsättning:** Event med webbplats EJ publicerad
+**Steg:**
+1. Öppna `/stage/e/:slug`
+**Förväntat resultat:** Sidan visar "Sidan hittades inte" med felmeddelande.
+**Status:** ☐ Ej testad
+
+### TC-15.9: Kalenderknapp efter anmälan
+**Förutsättning:** Framgångsrik anmälan via webbplats
+**Steg:**
+1. Klicka "Lägg till i kalender" på bekräftelsesidan
+**Förväntat resultat:** ICS-fil laddas ner med korrekt eventdata (namn, datum, tid, plats).
+**Status:** ☐ Ej testad
+
+### TC-15.10: Responsiv design
+**Förutsättning:** Publicerad webbplats
+**Steg:**
+1. Öppna publik webbsida på mobil (eller Chrome DevTools mobile view)
+**Förväntat resultat:** Sidan anpassar sig — hero-text, inforutor och formulär stack vertikalt. Inga horisontella scrollbar.
 **Status:** ☐ Ej testad

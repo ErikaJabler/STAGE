@@ -700,6 +700,45 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ---
 
+## Session 15: Eventwebbplats
+**Datum:** 2026-02-23
+**Status:** DONE
+
+### Deliverables
+- [x] `migrations/0007_event_website.sql` — website_template, website_data (JSON), website_published på events-tabellen
+- [x] `packages/shared/src/types.ts` — Event utökad med 3 website-fält + WebsiteData interface
+- [x] `packages/shared/src/schemas.ts` — updateWebsiteSchema + publicRegisterSchema
+- [x] `backend/src/services/website.service.ts` — getWebsite, saveWebsite, getPublicEvent, register (med dubblett-kontroll + auto-waitlist)
+- [x] `backend/src/routes/website.ts` — GET/PUT /:id/website (auth), POST /:slug/register (publik)
+- [x] `backend/src/index.ts` — GET /api/public/events/:slug (publik), auth-middleware undantag för register-endpoint
+- [x] `frontend/src/components/features/settings/WebsitePanel.tsx` — template-väljare (Hero + Info, Hero + Program + Plats), fält, publicera-toggle, preview-länk
+- [x] `frontend/src/pages/PublicEvent.tsx` — publik eventwebbsida med hero, eventinfo, programtidslinje, platssektion, anmälningsformulär (GDPR-samtycke), bekräftelsesida, ICS-kalenderknapp. Consid branding (Burgundy/Raspberry Red/Beige).
+- [x] `frontend/src/hooks/useWebsite.ts` — useWebsite + useSaveWebsite hooks
+- [x] `frontend/src/api/client.ts` — websiteApi (get, save, register)
+- [x] `frontend/src/App.tsx` — route /e/:slug → PublicEvent
+- [x] `frontend/src/components/features/settings/SettingsTab.tsx` — WebsitePanel integrerad
+- [x] 2 webbplatsmallar:
+  1. **Hero + Info** — hero-sektion, eventinfo, anmälningsformulär
+  2. **Hero + Program + Plats** — hero, programtidslinje, platsbeskrivning, anmälningsformulär
+- [x] `backend/src/services/__tests__/website.service.test.ts` — 6 nya tester (get/save, public event, register, dubblett, auto-waitlist)
+- [x] 9 befintliga testfiler uppdaterade med website-kolumner i EVENTS_SQL
+- [x] Alla 92 tester passerar (86 befintliga + 6 nya)
+- [x] SAD.md, TESTPLAN.md, SESSION-GUIDE.md uppdaterade
+
+### Avvikelser från plan
+- Template 3 (Offentlig sektor) ej implementerad — 2 templates räcker för första iteration
+- `/stage/e/:slug` prefix (ej /e/:slug) — enklast med befintligt SPA-fallback
+
+### Anteckningar
+- Routing: `/stage/e/:slug` — publik webbsida renderas som React-route, eventdata hämtas via GET /api/public/events/:slug
+- Auth-middleware har undantag för POST .../:slug/register (matchar c.req.path.endsWith("/register"))
+- Registrering sätter gdpr_consent_at + GDPR-samtycke krävs via Zod-schema
+- Auto-waitlist via befintlig WaitlistService.shouldWaitlist()
+- ICS-kalenderknapp på bekräftelsesida (klientsidegenererad, likadant som RSVP-sidan)
+- Migration 0007 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0007_event_website.sql`
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
@@ -710,3 +749,4 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0004 | activities.sql | activities, email_queue | ✅ | ✅ |
 | 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |
 | 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
+| 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ❌ |

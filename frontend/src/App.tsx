@@ -10,6 +10,7 @@ import { CreateEvent } from './pages/CreateEvent';
 import { EditEvent } from './pages/EditEvent';
 import { RsvpPage } from './pages/RsvpPage';
 import { Login } from './pages/Login';
+import { PublicEvent } from './pages/PublicEvent';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ export default function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/rsvp/:token" element={<RsvpPage />} />
+                <Route path="/e/:slug" element={<PublicEvent />} />
                 <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
 
                 {/* Protected routes */}

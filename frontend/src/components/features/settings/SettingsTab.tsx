@@ -5,6 +5,7 @@ import { useUpdateEvent } from '../../../hooks/useEvents';
 import { imagesApi } from '../../../api/client';
 import { useToast } from '../../ui/Toast';
 import { PermissionsPanel } from './PermissionsPanel';
+import { WebsitePanel } from './WebsitePanel';
 import { DangerZone } from './DangerZone';
 
 interface Props {
@@ -19,6 +20,9 @@ export function SettingsTab({ event }: Props) {
       <VisibilitySection event={event} />
       <SenderSection event={event} />
       <GdprSection event={event} />
+      <div style={styles.section}>
+        <WebsitePanel event={event} />
+      </div>
       <div style={styles.section}>
         <PermissionsPanel eventId={event.id} />
       </div>

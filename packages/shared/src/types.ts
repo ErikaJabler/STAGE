@@ -21,6 +21,9 @@ export interface Event {
   sender_mailbox: string | null;
   gdpr_consent_text: string | null;
   image_url: string | null;
+  website_template: string | null;
+  website_data: string | null;
+  website_published: number;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -49,6 +52,15 @@ export interface Participant {
 
 export interface EventWithCount extends Event {
   participant_count: number;
+}
+
+export interface WebsiteData {
+  hero_title?: string;
+  hero_subtitle?: string;
+  program_items?: { time: string; title: string; description?: string }[];
+  venue_description?: string;
+  venue_address?: string;
+  custom_fields?: { label: string; required: boolean }[];
 }
 
 export interface Mailing {

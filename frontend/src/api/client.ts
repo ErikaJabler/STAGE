@@ -357,4 +357,66 @@ export const templatesApi = {
   list: () => request<EmailTemplate[]>("/templates"),
 };
 
+/** Website API */
+export interface WebsiteConfig {
+  template: string | null;
+  data: {
+    hero_title?: string;
+    hero_subtitle?: string;
+    program_items?: { time: string; title: string; description?: string }[];
+    venue_description?: string;
+    venue_address?: string;
+    custom_fields?: { label: string; required: boolean }[];
+  } | null;
+  published: boolean;
+}
+
+export interface UpdateWebsitePayload {
+  template?: string;
+  data?: WebsiteConfig["data"];
+  published?: boolean;
+}
+
+export interface PublicRegisterPayload {
+  name: string;
+  email: string;
+  company?: string | null;
+  category?: string;
+  dietary_notes?: string | null;
+  plus_one_name?: string | null;
+  plus_one_email?: string | null;
+  gdpr_consent: boolean;
+}
+
+export interface RegisterResult {
+  ok: boolean;
+  status: string;
+  waitlisted?: boolean;
+  error?: string;
+}
+
+export const websiteApi = {
+  get: (eventId: number) =>
+    request<WebsiteConfig>(`/events/${eventId}/website`),
+
+  save: (eventId: number, data: UpdateWebsitePayload) =>
+    request<WebsiteConfig>(`/events/${eventId}/website`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  register: async (slug: string, data: PublicRegisterPayload): Promise<RegisterResult> => {
+    const res = await fetch(`${BASE_URL}/events/${slug}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const body = await res.json() as RegisterResult & { error?: string };
+    if (!res.ok) {
+      throw new ApiError(res.status, body.error ? [body.error] : undefined);
+    }
+    return body;
+  },
+};
+
 export { ApiError };

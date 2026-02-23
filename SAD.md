@@ -89,6 +89,10 @@ Integrationer:
 | GET | `/api/rsvp/:token` | Hämta deltagarinfo + eventinfo (publik) | 4 |
 | POST | `/api/rsvp/:token/respond` | Svara attending/declined (publik) | 4 |
 | POST | `/api/rsvp/:token/cancel` | Avboka deltagande (publik) | 4 |
+| GET | `/api/events/:id/website` | Hämta webbplatskonfiguration (viewer+) | 15 |
+| PUT | `/api/events/:id/website` | Spara webbplatskonfiguration (editor+) | 15 |
+| GET | `/api/public/events/:slug` | Hämta publik eventdata för webbplats (publik) | 15 |
+| POST | `/api/events/:slug/register` | Publik anmälan via webbplats (publik) | 15 |
 
 ## Databasschema
 
@@ -115,6 +119,9 @@ Integrationer:
 | sender_mailbox | TEXT | Avsändaradress för mail |
 | gdpr_consent_text | TEXT | GDPR-samtyckestext |
 | image_url | TEXT | Hero-bild (R2-URL) |
+| website_template | TEXT | Webbplatsmall (hero-info/hero-program-plats) (migration 0007) |
+| website_data | TEXT | JSON med webbplatsdata (hero, program, plats) (migration 0007) |
+| website_published | INTEGER NOT NULL | Publicerad (0/1) (migration 0007) |
 | created_by | TEXT NOT NULL | Skaparens email |
 | created_at | TEXT NOT NULL | Skapades |
 | updated_at | TEXT NOT NULL | Senast ändrad |
@@ -226,8 +233,8 @@ Integrationer:
 
 **Roller:** `owner` (full kontroll + hantera behörigheter), `editor` (redigera event/deltagare/utskick), `viewer` (enbart läsåtkomst).
 
-**Skyddade routes:** Alla `/api/events/*`, `POST /api/images` kräver auth.
-**Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`, `GET /api/images/*` (UUID-baserade nycklar, cache-headers).
+**Skyddade routes:** Alla `/api/events/*` (utom `POST .../register`), `POST /api/images` kräver auth.
+**Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`, `GET /api/images/*`, `GET /api/public/events/:slug`, `POST /api/events/:slug/register`.
 
 **Auto-owner:** Vid skapande av event sätts skaparen automatiskt som owner.
 
@@ -260,6 +267,7 @@ Integrationer:
 | ImageService | `backend/src/services/image.service.ts` | Bilduppladdning till R2, validering (typ/storlek), servering |
 | PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter |
 | ActivityService | `backend/src/services/activity.service.ts` | Aktivitetsloggning per event (log, logMailingCreated, logParticipantAdded, etc.) |
+| WebsiteService | `backend/src/services/website.service.ts` | Webbplats CRUD, publik eventdata, registrering via webbformulär |
 
 **Emailflöde vid utskick (session 11 — template-renderer + email-kö, utökat session 14 med GrapeJS):**
 1. Hämtar mottagare baserat på `recipient_filter`
@@ -316,6 +324,8 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 | `reorderSchema` | Omsortera väntelista: queue_position (positivt heltal) |
 | `loginSchema` | Inloggning: email + name |
 | `addPermissionSchema` | Lägg till behörighet: email + name + role (owner/editor/viewer) |
+| `updateWebsiteSchema` | Uppdatera webbplats: template, data (JSON), published |
+| `publicRegisterSchema` | Publik registrering: name, email, company, category, dietary, gdpr_consent |
 
 **Flöde:** Route → `parseBody(schema, body)` → ZodError fångas av `errorHandler` → 400 med `{ error, details }`.
 
@@ -323,7 +333,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
-- **Antal:** 86 tester (10 testfiler)
+- **Antal:** 92 tester (11 testfiler)
 
 ### Teststruktur
 
@@ -339,6 +349,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 | Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts` | 14 | ParticipantService, CSV |
 | Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts` | 8 | PermissionService, roller |
 | Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts` | 5 | ActivityService, loggning |
+| Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts` | 6 | WebsiteService, CRUD, registrering |
 
 ### E2E-integrationstester (session 13b)
 
