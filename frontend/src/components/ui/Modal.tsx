@@ -1,5 +1,4 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 
 interface ModalProps {
   open: boolean;
@@ -39,7 +38,7 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
     }
   };
 
-  return createPortal(
+  return (
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
@@ -57,8 +56,7 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
         <div style={styles.body}>{children}</div>
         {footer && <div style={styles.footer}>{footer}</div>}
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
 

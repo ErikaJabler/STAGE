@@ -59,6 +59,7 @@ export function CreateMailingModal({ eventId, open, onClose }: {
       setSelectedTemplate(templateId);
       setForm((prev) => ({ ...prev, subject: template.defaultSubject, body: template.body }));
       setErrors({});
+      setEditMode('form');
     }
   }
 
@@ -164,6 +165,7 @@ export function CreateMailingModal({ eventId, open, onClose }: {
             initialHtml={undefined}
             onSave={handleEditorSave}
             onCancel={() => setEditMode(null)}
+            onError={(msg) => toast(msg, 'error')}
           />
         </Suspense>
       </div>

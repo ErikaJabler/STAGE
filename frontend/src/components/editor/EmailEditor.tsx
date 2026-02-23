@@ -19,9 +19,11 @@ export interface EmailEditorProps {
   onSave: (html: string, projectData: string) => void;
   /** Called when user cancels */
   onCancel: () => void;
+  /** Called on save errors */
+  onError?: (message: string) => void;
 }
 
-export default function EmailEditor({ initialHtml, initialProjectData, onSave, onCancel }: EmailEditorProps) {
+export default function EmailEditor({ initialHtml, initialProjectData, onSave, onCancel, onError }: EmailEditorProps) {
   const editorRef = useRef<Editor | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const brandConfig = getBrandEditorConfig();
@@ -62,13 +64,17 @@ export default function EmailEditor({ initialHtml, initialProjectData, onSave, o
 
   function handleSave() {
     const editor = editorRef.current;
-    if (!editor) return;
+    if (!editor) {
+      onError?.('Editorn har inte laddats klart ännu');
+      return;
+    }
 
-    const html = editor.getHtml();
-    const css = editor.getCss() || '';
+    try {
+      const html = editor.getHtml();
+      const css = editor.getCss() || '';
 
-    // Inline CSS for email compatibility
-    const fullHtml = `<!DOCTYPE html>
+      // Inline CSS for email compatibility
+      const fullHtml = `<!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="utf-8">
@@ -80,10 +86,13 @@ ${html}
 </body>
 </html>`;
 
-    const inlinedHtml = juice(fullHtml);
-    const projectData = JSON.stringify(editor.getProjectData());
+      const inlinedHtml = juice(fullHtml);
+      const projectData = JSON.stringify(editor.getProjectData());
 
-    onSave(inlinedHtml, projectData);
+      onSave(inlinedHtml, projectData);
+    } catch (err) {
+      onError?.(`Kunde inte spara: ${err instanceof Error ? err.message : 'Okänt fel'}`);
+    }
   }
 
   function handlePreviewToggle(mode: 'desktop' | 'mobile') {
