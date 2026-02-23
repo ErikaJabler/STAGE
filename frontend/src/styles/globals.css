@@ -129,7 +129,8 @@
   --z-topbar: 30;
   --z-modal-backdrop: 50;
   --z-modal: 60;
-  --z-toast: 70;
+  --z-fullscreen-editor: 2000;
+  --z-toast: 9999;
 }
 
 /* --- Reset & Base Styles --- */

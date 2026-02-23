@@ -396,7 +396,7 @@ const editorStyles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 2000,
+    zIndex: 'var(--z-fullscreen-editor)' as unknown as number,
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: '#f5f5f5',
