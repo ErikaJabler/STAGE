@@ -6,6 +6,7 @@ import { getFilterLabel, formatDateTime } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
 import { EyeIcon, SendIcon, MailEmptyIcon } from '../shared-icons';
 import { CreateMailingModal } from './CreateMailingModal';
+import { EditMailingModal } from './EditMailingModal';
 
 function TestMailIcon() {
   return (
@@ -27,8 +28,17 @@ function SendToNewIcon() {
   );
 }
 
+function EditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function MailingsTab({ eventId }: { eventId: number }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingMailing, setEditingMailing] = useState<Mailing | null>(null);
   const [previewMailing, setPreviewMailing] = useState<Mailing | null>(null);
   const { data: mailings, isLoading } = useMailings(eventId);
   const sendMailing = useSendMailing(eventId);
@@ -137,6 +147,15 @@ export function MailingsTab({ eventId }: { eventId: number }) {
                 </td>
                 <td style={sharedStyles.td}>
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                    {m.status === 'draft' && (
+                      <button
+                        onClick={() => setEditingMailing(m)}
+                        style={sharedStyles.actionBtn}
+                        title="Redigera"
+                      >
+                        <EditIcon />
+                      </button>
+                    )}
                     <button onClick={() => setPreviewMailing(m)} style={sharedStyles.actionBtn} title="Förhandsgranska">
                       <EyeIcon />
                     </button>
@@ -177,6 +196,15 @@ export function MailingsTab({ eventId }: { eventId: number }) {
       </div>
 
       <CreateMailingModal eventId={eventId} open={showCreateModal} onClose={() => setShowCreateModal(false)} />
+
+      {editingMailing && (
+        <EditMailingModal
+          eventId={eventId}
+          mailing={editingMailing}
+          open={!!editingMailing}
+          onClose={() => setEditingMailing(null)}
+        />
+      )}
 
       {/* Preview modal */}
       <Modal

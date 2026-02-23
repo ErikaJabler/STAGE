@@ -1,6 +1,6 @@
-import type { Event, Participant, Mailing, CreateMailingInput } from "@stage/shared";
+import type { Event, Participant, Mailing, CreateMailingInput, UpdateMailingInput } from "@stage/shared";
 
-export type { CreateMailingInput };
+export type { CreateMailingInput, UpdateMailingInput };
 
 /** List all mailings for an event */
 export async function listMailings(
@@ -61,6 +61,46 @@ export async function createMailing(
     .first<Mailing>();
 
   return mailing!;
+}
+
+/** Update a draft mailing (partial update) */
+export async function updateMailing(
+  db: D1Database,
+  id: number,
+  input: UpdateMailingInput
+): Promise<Mailing | null> {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  const updatable: (keyof UpdateMailingInput)[] = [
+    "subject",
+    "body",
+    "html_body",
+    "editor_data",
+    "recipient_filter",
+  ];
+
+  for (const key of updatable) {
+    if (key in input) {
+      fields.push(`${key} = ?`);
+      values.push(input[key] ?? null);
+    }
+  }
+
+  if (fields.length === 0) {
+    return getMailingById(db, id);
+  }
+
+  values.push(id);
+
+  await db
+    .prepare(
+      `UPDATE mailings SET ${fields.join(", ")} WHERE id = ? AND status = 'draft'`
+    )
+    .bind(...values)
+    .run();
+
+  return getMailingById(db, id);
 }
 
 /** Mark a mailing as sent */

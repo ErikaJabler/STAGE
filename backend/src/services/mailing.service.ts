@@ -1,8 +1,9 @@
-import type { Mailing, Event } from "@stage/shared";
+import type { Mailing, Event, UpdateMailingInput } from "@stage/shared";
 import {
   listMailings,
   getMailingById,
   createMailing,
+  updateMailing,
   markMailingSent,
   getMailingRecipients,
   getNewMailingRecipients,
@@ -19,6 +20,23 @@ export const MailingService = {
 
   create(db: D1Database, eventId: number, input: CreateMailingInput): Promise<Mailing> {
     return createMailing(db, eventId, input);
+  },
+
+  /** Update a draft mailing */
+  async update(
+    db: D1Database,
+    eventId: number,
+    mailingId: number,
+    input: UpdateMailingInput
+  ): Promise<Mailing | null> {
+    const mailing = await getMailingById(db, mailingId);
+    if (!mailing || mailing.event_id !== eventId) {
+      return null;
+    }
+    if (mailing.status !== "draft") {
+      throw new Error("Bara utkast kan redigeras");
+    }
+    return updateMailing(db, mailingId, input);
   },
 
   /** Enqueue all emails for a mailing (processed by Cron Trigger) */

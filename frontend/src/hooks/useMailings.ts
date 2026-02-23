@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { mailingsApi, type CreateMailingPayload } from '../api/client';
+import { mailingsApi, type CreateMailingPayload, type UpdateMailingPayload } from '../api/client';
 
 const MAILINGS_KEY = (eventId: number) => ['events', eventId, 'mailings'];
 
@@ -17,6 +17,18 @@ export function useCreateMailing(eventId: number) {
   return useMutation({
     mutationFn: (data: CreateMailingPayload) =>
       mailingsApi.create(eventId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: MAILINGS_KEY(eventId) });
+    },
+  });
+}
+
+export function useUpdateMailing(eventId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ mailingId, data }: { mailingId: number; data: UpdateMailingPayload }) =>
+      mailingsApi.update(eventId, mailingId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MAILINGS_KEY(eventId) });
     },

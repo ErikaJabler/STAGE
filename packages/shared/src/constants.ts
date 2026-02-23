@@ -64,6 +64,7 @@ export type Role = (typeof ROLE)[keyof typeof ROLE];
 export const ACTIVITY_TYPE = {
   MAILING_SENT: "mailing_sent",
   MAILING_CREATED: "mailing_created",
+  MAILING_UPDATED: "mailing_updated",
   PARTICIPANT_ADDED: "participant_added",
   PARTICIPANT_REMOVED: "participant_removed",
   PARTICIPANT_STATUS_CHANGED: "participant_status_changed",

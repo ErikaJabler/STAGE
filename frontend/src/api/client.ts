@@ -205,6 +205,12 @@ export const mailingsApi = {
       body: JSON.stringify(data),
     }),
 
+  update: (eventId: number, mailingId: number, data: UpdateMailingPayload) =>
+    request<Mailing>(`/events/${eventId}/mailings/${mailingId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
   send: (eventId: number, mailingId: number) =>
     request<SendMailingResult>(`/events/${eventId}/mailings/${mailingId}/send`, {
       method: "POST",
@@ -224,6 +230,14 @@ export const mailingsApi = {
 export interface CreateMailingPayload {
   subject: string;
   body: string;
+  html_body?: string | null;
+  editor_data?: string | null;
+  recipient_filter?: string;
+}
+
+export interface UpdateMailingPayload {
+  subject?: string;
+  body?: string;
   html_body?: string | null;
   editor_data?: string | null;
   recipient_filter?: string;

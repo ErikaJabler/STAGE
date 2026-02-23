@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env, AuthVariables } from "../bindings";
-import { createMailingSchema } from "@stage/shared";
+import { createMailingSchema, updateMailingSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
 import { getEventById } from "../db/queries";
 import { MailingService } from "../services/mailing.service";
@@ -52,6 +52,38 @@ mailings.post("/", async (c) => {
   const mailing = await MailingService.create(c.env.DB, eventId, input);
   await ActivityService.logMailingCreated(c.env.DB, eventId, input.subject, user.email);
   return c.json(mailing, 201);
+});
+
+/** PUT /api/events/:eventId/mailings/:mid — Update a draft mailing (editor+) */
+mailings.put("/:mid", async (c) => {
+  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
+  if (error) return c.json({ error }, status);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
+    return c.json({ error: "Åtkomst nekad" }, 403);
+  }
+
+  const mid = Number(c.req.param("mid"));
+  if (!Number.isFinite(mid) || mid < 1) {
+    return c.json({ error: "Ogiltigt utskicks-ID" }, 400);
+  }
+
+  const body = await c.req.json();
+  const input = parseBody(updateMailingSchema, body);
+
+  try {
+    const mailing = await MailingService.update(c.env.DB, eventId, mid, input);
+    if (!mailing) {
+      return c.json({ error: "Utskick hittades inte" }, 404);
+    }
+
+    await ActivityService.log(c.env.DB, eventId, "mailing_updated", `Utskick redigerat: "${mailing.subject}"`, user.email);
+    return c.json(mailing);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Kunde inte uppdatera utskicket";
+    return c.json({ error: message }, 400);
+  }
 });
 
 /** POST /api/events/:eventId/mailings/:mid/send — Send a mailing (editor+) */

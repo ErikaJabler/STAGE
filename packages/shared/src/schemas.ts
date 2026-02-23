@@ -110,6 +110,16 @@ export const createMailingSchema = z.object({
 
 export type CreateMailingInput = z.infer<typeof createMailingSchema>;
 
+export const updateMailingSchema = z.object({
+  subject: z.string().min(1, "subject krävs").optional(),
+  body: z.string().min(1, "body krävs").optional(),
+  html_body: z.string().nullish(),
+  editor_data: z.string().nullish(),
+  recipient_filter: z.enum(recipientFilters).optional(),
+});
+
+export type UpdateMailingInput = z.infer<typeof updateMailingSchema>;
+
 /* ---- RSVP schema ---- */
 
 export const rsvpRespondSchema = z.object({
