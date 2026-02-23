@@ -85,8 +85,35 @@ export interface User {
   email: string;
   name: string;
   token: string;
+  is_admin: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface AdminDashboardData {
+  total_events: number;
+  active_events: number;
+  historical_events: number;
+  total_participants: number;
+  participants_by_category: Record<string, number>;
+  upcoming_events: Array<EventWithCount & { days_until: number }>;
+  recent_mailings: Array<{
+    id: number;
+    event_id: number;
+    event_name: string;
+    subject: string;
+    status: string;
+    sent_at: string | null;
+    created_at: string;
+  }>;
+}
+
+export interface EventConflict {
+  id: number;
+  name: string;
+  date: string;
+  time: string;
+  location: string;
 }
 
 export interface EventPermission {

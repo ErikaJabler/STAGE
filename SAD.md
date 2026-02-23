@@ -93,6 +93,9 @@ Integrationer:
 | PUT | `/api/events/:id/website` | Spara webbplatskonfiguration (editor+) | 15 |
 | GET | `/api/public/events/:slug` | Hämta publik eventdata för webbplats (publik) | 15 |
 | POST | `/api/events/:slug/register` | Publik anmälan via webbplats (publik) | 15 |
+| GET | `/api/events/conflicts` | Krockkontroll (datum + plats) | 17 |
+| GET | `/api/admin/dashboard` | Admin dashboard-data (admin) | 17 |
+| GET | `/api/admin/events` | Alla events oavsett behörighet (admin) | 17 |
 
 ## Databasschema
 
@@ -162,13 +165,14 @@ Integrationer:
 | sent_at | TEXT | Tidpunkt för utskick |
 | created_at | TEXT NOT NULL | Skapades |
 
-### users (migration 0003)
+### users (migration 0003 + 0008)
 | Kolumn | Typ | Beskrivning |
 |---|---|---|
 | id | INTEGER PK | Auto-increment |
 | email | TEXT NOT NULL UNIQUE | Användarens email |
 | name | TEXT NOT NULL | Användarens namn |
 | token | TEXT NOT NULL UNIQUE | Auth-token |
+| is_admin | INTEGER NOT NULL | Global admin-roll (0/1) (migration 0008) |
 | created_at | TEXT NOT NULL | Skapades |
 | updated_at | TEXT NOT NULL | Senast ändrad |
 
@@ -229,11 +233,14 @@ Integrationer:
 | AuthProvider interface | `backend/src/middleware/auth.ts` | Abstrakt `resolveUser(token, db)` |
 | tokenAuthProvider | `backend/src/middleware/auth.ts` | D1-baserad token-lookup |
 | authMiddleware | `backend/src/middleware/auth.ts` | Hono middleware: `X-Auth-Token` → `c.var.user` |
-| PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll: canView, canEdit, isOwner |
+| PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll: canView, canEdit, isOwner, isAdmin |
+| AdminService | `backend/src/services/admin.service.ts` | Cross-event dashboard, krockkontroll (session 17) |
+| TemplateLockService | `backend/src/services/template-lock.service.ts` | Låsta zoner per malltyp (session 17) |
 
 **Roller:** `owner` (full kontroll + hantera behörigheter), `editor` (redigera event/deltagare/utskick), `viewer` (enbart läsåtkomst).
+**Global admin-roll:** `is_admin` (migration 0008) — ser alla events, access till admin-dashboard, canView/canEdit alla events utan explicit behörighet.
 
-**Skyddade routes:** Alla `/api/events/*` (utom `POST .../register`), `POST /api/images` kräver auth.
+**Skyddade routes:** Alla `/api/events/*` (utom `POST .../register`), `POST /api/images`, `/api/admin/*` kräver auth.
 **Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`, `GET /api/images/*`, `GET /api/public/events/:slug`, `POST /api/events/:slug/register`.
 
 **Auto-owner:** Vid skapande av event sätts skaparen automatiskt som owner.

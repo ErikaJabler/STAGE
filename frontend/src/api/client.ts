@@ -1,4 +1,4 @@
-import type { Event, EventWithCount, Participant, Mailing, Activity } from "@stage/shared";
+import type { Event, EventWithCount, Participant, Mailing, Activity, AdminDashboardData, EventConflict } from "@stage/shared";
 
 const BASE_URL = "/stage/api";
 const TOKEN_KEY = 'stage_auth_token';
@@ -435,6 +435,21 @@ export const websiteApi = {
       throw new ApiError(res.status, body.error ? [body.error] : undefined);
     }
     return body;
+  },
+};
+
+/** Admin API */
+export const adminApi = {
+  dashboard: () => request<AdminDashboardData>("/admin/dashboard"),
+  events: () => request<EventWithCount[]>("/admin/events"),
+};
+
+/** Conflicts API */
+export const conflictsApi = {
+  check: (date: string, location: string, excludeId?: number) => {
+    const params = new URLSearchParams({ date, location });
+    if (excludeId) params.set("excludeId", String(excludeId));
+    return request<{ conflicts: EventConflict[] }>(`/events/conflicts?${params}`);
   },
 };
 

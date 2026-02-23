@@ -12,6 +12,7 @@ import permissions from "./routes/permissions";
 import activities from "./routes/activities";
 import search from "./routes/search";
 import website from "./routes/website";
+import admin from "./routes/admin";
 import { WebsiteService } from "./services/website.service";
 import { processQueue } from "./services/email/send-queue";
 import { templates, getTemplate, renderText, buildEmailHtml } from "./services/email";
@@ -56,6 +57,7 @@ app.use("/stage/api/images/*", async (c, next) => {
   if (c.req.method === "GET") return next();
   return authMiddleware(c, next);
 });
+app.use("/stage/api/admin/*", authMiddleware);
 app.use("/stage/api/search/*", authMiddleware);
 app.use("/stage/api/templates/*", authMiddleware);
 
@@ -65,6 +67,7 @@ app.route("/stage/api/events/:eventId/mailings", mailings);
 app.route("/stage/api/events/:eventId/permissions", permissions);
 app.route("/stage/api/events/:eventId/activities", activities);
 app.route("/stage/api/events", website);
+app.route("/stage/api/admin", admin);
 app.route("/stage/api/images", images);
 app.route("/stage/api/search", search);
 

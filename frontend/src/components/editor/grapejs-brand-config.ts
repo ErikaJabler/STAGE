@@ -51,6 +51,71 @@ export const CONTENT_STYLE = {
   width: '100%',
 } as const;
 
+/**
+ * Lock branded components (header/footer) in a GrapeJS editor.
+ * Finds components with data-locked-header or data-locked-footer attributes
+ * and makes them non-editable, non-draggable, non-removable.
+ */
+export function lockBrandComponents(editor: import('grapesjs').Editor) {
+  // Small delay to ensure components are fully loaded
+  setTimeout(() => {
+    const wrapper = editor.getWrapper();
+    if (!wrapper) return;
+
+    // Recursive function to find and lock components by attribute
+    function lockByAttribute(component: import('grapesjs').Component, attr: string, label: string) {
+      const attributes = component.getAttributes();
+      if (attributes[attr] !== undefined) {
+        component.set({
+          selectable: false,
+          hoverable: false,
+          draggable: false,
+          droppable: false,
+          removable: false,
+          copyable: false,
+          editable: false,
+          layerable: true,
+          toolbar: [],
+        } as Record<string, unknown>);
+        // Set a custom name in the layer panel
+        component.set('custom-name', label);
+        // Also lock all children
+        component.components().forEach((child: import('grapesjs').Component) => {
+          lockRecursive(child);
+        });
+        return true;
+      }
+      return false;
+    }
+
+    function lockRecursive(component: import('grapesjs').Component) {
+      component.set({
+        selectable: false,
+        hoverable: false,
+        draggable: false,
+        droppable: false,
+        removable: false,
+        copyable: false,
+        editable: false,
+        toolbar: [],
+      } as Record<string, unknown>);
+      component.components().forEach((child: import('grapesjs').Component) => {
+        lockRecursive(child);
+      });
+    }
+
+    function findAndLock(component: import('grapesjs').Component) {
+      lockByAttribute(component, 'data-locked-header', 'Consid Header (låst)');
+      lockByAttribute(component, 'data-locked-footer', 'Footer (låst)');
+      component.components().forEach((child: import('grapesjs').Component) => {
+        findAndLock(child);
+      });
+    }
+
+    findAndLock(wrapper);
+  }, 200);
+}
+
 /** GrapeJS editor configuration with brand constraints */
 export function getBrandEditorConfig() {
   return {

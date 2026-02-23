@@ -5,7 +5,7 @@
 import { useRef, useCallback, useState } from 'react';
 import grapesjs, { type Editor } from 'grapesjs';
 import GjsEditor from '@grapesjs/react';
-import { getBrandEditorConfig } from './grapejs-brand-config';
+import { getBrandEditorConfig, lockBrandComponents } from './grapejs-brand-config';
 import { registerPageBlocks } from './grapejs-page-preset';
 import { imagesApi } from '../../api/client';
 
@@ -46,6 +46,9 @@ export default function PageEditor({ initialHtml, initialProjectData, onSave, on
     } else {
       editor.setComponents('<div style="padding:40px; text-align:center; color:#A99B94;">Dra block hit för att börja bygga din sida</div>');
     }
+
+    // Lock header/footer (Consid brand enforcement)
+    lockBrandComponents(editor);
   }, [initialHtml, initialProjectData]);
 
   function handleSave() {

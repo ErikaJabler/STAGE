@@ -4,6 +4,7 @@ interface AuthUser {
   id: number;
   email: string;
   name: string;
+  is_admin: boolean;
 }
 
 interface AuthContextType {
@@ -30,7 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedUser = localStorage.getItem(USER_KEY);
     if (savedToken && savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        // Handle old stored users without is_admin
+        if (parsed.is_admin === undefined) parsed.is_admin = false;
+        setUser(parsed);
         setToken(savedToken);
       } catch {
         localStorage.removeItem(TOKEN_KEY);

@@ -24,7 +24,7 @@ auth.post("/login", async (c) => {
   }
 
   return c.json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, name: user.name, is_admin: user.is_admin === 1 },
     token: user.token,
   });
 });
@@ -42,7 +42,7 @@ auth.get("/me", async (c) => {
   }
 
   return c.json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, name: user.name, is_admin: user.is_admin === 1 },
   });
 });
 

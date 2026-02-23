@@ -5,9 +5,29 @@ import { parseBody } from "../utils/validation";
 import { EventService, generateICS } from "../services/event.service";
 import { PermissionService } from "../services/permission.service";
 import { ActivityService } from "../services/activity.service";
+import { AdminService } from "../services/admin.service";
 import { listEventsForUser } from "../db/event.queries";
 
 const events = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+/** GET /api/events/conflicts — Check for overlapping events (same date + location) */
+events.get("/conflicts", async (c) => {
+  const date = c.req.query("date");
+  const location = c.req.query("location");
+  const excludeId = c.req.query("excludeId");
+
+  if (!date || !location) {
+    return c.json({ error: "date och location krävs" }, 400);
+  }
+
+  const conflicts = await AdminService.checkConflicts(
+    c.env.DB,
+    date,
+    location,
+    excludeId ? Number(excludeId) : undefined
+  );
+  return c.json({ conflicts });
+});
 
 /** GET /api/events — List events user has access to */
 events.get("/", async (c) => {

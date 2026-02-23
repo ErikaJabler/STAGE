@@ -5,23 +5,32 @@ import {
   addPermission,
   removePermission,
 } from "../db/permission.queries";
-import { getOrCreateUser } from "../db/user.queries";
+import { getOrCreateUser, isAdminUser } from "../db/user.queries";
 
 export const PermissionService = {
+  /** Check if user has global admin role */
+  async isAdmin(db: D1Database, userId: number): Promise<boolean> {
+    return isAdminUser(db, userId);
+  },
+
   /** Get the role a user has on an event, or null if no permission */
   async getRole(db: D1Database, userId: number, eventId: number): Promise<Role | null> {
     const perm = await getPermission(db, userId, eventId);
     return perm ? perm.role : null;
   },
 
-  /** Check if user can view an event (any role) */
+  /** Check if user can view an event (any role, or admin) */
   async canView(db: D1Database, userId: number, eventId: number): Promise<boolean> {
+    const admin = await this.isAdmin(db, userId);
+    if (admin) return true;
     const role = await this.getRole(db, userId, eventId);
     return role !== null;
   },
 
-  /** Check if user can edit an event (owner or editor) */
+  /** Check if user can edit an event (owner, editor, or admin) */
   async canEdit(db: D1Database, userId: number, eventId: number): Promise<boolean> {
+    const admin = await this.isAdmin(db, userId);
+    if (admin) return true;
     const role = await this.getRole(db, userId, eventId);
     return role === "owner" || role === "editor";
   },

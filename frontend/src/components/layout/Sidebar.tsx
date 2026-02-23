@@ -6,9 +6,17 @@ const navItems = [
   { to: '/', label: 'Översikt', icon: OverviewIcon },
 ];
 
+const adminNavItems = [
+  { to: '/admin', label: 'Admin', icon: AdminIcon },
+];
+
 export function Sidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  const allItems = user?.is_admin
+    ? [...navItems, ...adminNavItems]
+    : navItems;
 
   return (
     <aside style={styles.sidebar}>
@@ -17,7 +25,7 @@ export function Sidebar() {
       </div>
 
       <nav style={styles.nav}>
-        {navItems.map((item) => {
+        {allItems.map((item) => {
           const isActive = item.to === '/'
             ? location.pathname === '/'
             : location.pathname.startsWith(item.to);
@@ -41,7 +49,10 @@ export function Sidebar() {
       <div style={styles.footer}>
         {user && (
           <div style={styles.userInfo}>
-            <div style={styles.userName}>{user.name}</div>
+            <div style={styles.userName}>
+              {user.name}
+              {user.is_admin && <span style={styles.adminBadge}>Admin</span>}
+            </div>
             <div style={styles.userEmail}>{user.email}</div>
           </div>
         )}
@@ -60,6 +71,15 @@ function OverviewIcon() {
       <rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
       <rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
       <rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function AdminIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 2L3 6v6c0 3.5 3 6.5 7 8 4-1.5 7-4.5 7-8V6l-7-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -114,6 +134,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 'var(--font-size-sm)',
     color: 'rgba(255, 255, 255, 0.85)',
     fontWeight: 500,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
   },
   userEmail: {
     fontSize: 'var(--font-size-xs)',
@@ -131,5 +154,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 'var(--font-size-xs)',
     cursor: 'pointer',
     width: '100%',
+  },
+  adminBadge: {
+    fontSize: '10px',
+    backgroundColor: 'var(--color-light-orange)',
+    color: 'var(--color-black)',
+    padding: '1px 6px',
+    borderRadius: '8px',
+    fontWeight: 600,
   },
 };

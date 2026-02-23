@@ -63,7 +63,10 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
-## Session 17-18: Fas 2 (resterande)
-Följer `docs/IMPLEMENTATION-PLAN.md` exakt:
-- **17:** Systemadmin + brand-kontroll
-- **18:** Test, polish, deploy Fas 2
+## Session 17: Systemadmin + brand-kontroll ✅ DONE
+**Levererat:** Migration 0008 (is_admin). AdminService (dashboard-aggregat, krockkontroll). Admin guard + routes (GET /dashboard, GET /events). Conflicts endpoint (GET /conflicts). AdminDashboard-sida (statistikkort, kommande events, senaste utskick, alla events). RequireAdmin guard. Sidebar admin-länk + badge. Krockkontroll i EventForm (datum+plats, varning med "Skapa ändå"). GrapeJS header/footer-låsning (data-locked-attribut + lockBrandComponents). 9 nya tester (101 totalt).
+
+---
+
+## Session 18: Test, polish, deploy Fas 2
+Följer `docs/IMPLEMENTATION-PLAN.md` exakt.

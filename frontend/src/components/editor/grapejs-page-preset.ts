@@ -23,7 +23,7 @@ export function registerPageBlocks(editor: Editor) {
     label: 'Hero',
     category: CATEGORY_PAGE,
     media: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="2" y="4" width="36" height="32" rx="3" fill="#701131"/><text x="20" y="22" text-anchor="middle" fill="#FFF" font-size="9" font-weight="600">HERO</text></svg>`,
-    content: `<header style="background-color:#701131; padding:60px 24px; text-align:center; color:#FFFFFF;">
+    content: `<header data-locked-header style="background-color:#701131; padding:60px 24px; text-align:center; color:#FFFFFF;">
   <div style="max-width:700px; margin:0 auto;">
     <div style="font-size:14px; font-weight:600; letter-spacing:2px; text-transform:uppercase; opacity:0.8; margin-bottom:16px; font-family:${FONT};">Stage</div>
     <h1 style="font-family:${FONT}; font-size:2.5rem; font-weight:600; margin:0 0 12px; line-height:1.15; color:#FFFFFF;">Eventets rubrik</h1>
@@ -133,7 +133,7 @@ export function registerPageBlocks(editor: Editor) {
     label: 'Footer',
     category: CATEGORY_PAGE,
     media: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="2" y="28" width="36" height="8" rx="2" fill="#701131" opacity="0.3"/><rect x="14" y="30" width="12" height="4" rx="1" fill="#701131"/></svg>`,
-    content: `<footer style="text-align:center; padding:24px; font-family:${FONT}; font-size:0.75rem; color:#A99B94;">
+    content: `<footer data-locked-footer style="text-align:center; padding:24px; font-family:${FONT}; font-size:0.75rem; color:#A99B94;">
   Powered by Stage — Consid
 </footer>`,
   });
@@ -233,7 +233,7 @@ export function buildInitialPageHtml(
     ? `background:linear-gradient(rgba(112,17,49,0.65), rgba(112,17,49,0.85)), url(${event.image_url}) center/cover; padding:60px 24px; text-align:center; color:#FFFFFF;`
     : `background-color:#701131; padding:60px 24px; text-align:center; color:#FFFFFF;`;
 
-  let html = `<header style="${heroStyle}">
+  let html = `<header data-locked-header style="${heroStyle}">
   <div style="max-width:700px; margin:0 auto;">
     <div style="font-family:${FONT}; font-size:14px; font-weight:600; letter-spacing:2px; text-transform:uppercase; opacity:0.8; margin-bottom:16px; color:#FFFFFF;">Stage</div>
     <h1 style="font-family:${FONT}; font-size:2.5rem; font-weight:600; margin:0 0 12px; line-height:1.15; color:#FFFFFF;">${esc(heroTitle)}</h1>
@@ -313,9 +313,9 @@ export function buildInitialPageHtml(
   </div>
 </section>`;
 
-  // Footer
+  // Footer (locked — brand)
   html += `
-<footer style="text-align:center; padding:24px; font-family:${FONT}; font-size:0.75rem; color:#A99B94;">
+<footer data-locked-footer style="text-align:center; padding:24px; font-family:${FONT}; font-size:0.75rem; color:#A99B94;">
   Powered by Stage — Consid
 </footer>`;
 

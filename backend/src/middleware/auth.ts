@@ -15,7 +15,7 @@ export interface AuthProvider {
 export const tokenAuthProvider: AuthProvider = {
   async resolveUser(token: string, db: D1Database): Promise<User | null> {
     const row = await db
-      .prepare("SELECT id, email, name, token, created_at, updated_at FROM users WHERE token = ?")
+      .prepare("SELECT id, email, name, token, is_admin, created_at, updated_at FROM users WHERE token = ?")
       .bind(token)
       .first();
     return row ? (row as unknown as User) : null;

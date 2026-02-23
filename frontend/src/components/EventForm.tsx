@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button, Input } from './ui';
 import type { CreateEventPayload, UpdateEventPayload } from '../api/client';
-import type { EventWithCount } from '@stage/shared';
+import { conflictsApi } from '../api/client';
+import type { EventWithCount, EventConflict } from '@stage/shared';
 import { EVENT_STATUS, EVENT_TYPE, VISIBILITY } from '@stage/shared';
 
 interface EventFormProps {
@@ -55,6 +56,9 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [conflicts, setConflicts] = useState<EventConflict[]>([]);
+  const [showConflictWarning, setShowConflictWarning] = useState(false);
+  const [checkingConflicts, setCheckingConflicts] = useState(false);
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -94,15 +98,8 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
     return errs;
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-
-    const payload: CreateEventPayload = {
+  function buildPayload(): CreateEventPayload {
+    return {
       name: form.name.trim(),
       date: form.date,
       time: form.time,
@@ -119,8 +116,44 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
       max_participants: form.max_participants ? Number(form.max_participants) : null,
       overbooking_limit: Number(form.overbooking_limit) || 0,
     };
+  }
 
-    onSubmit(payload);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+
+    // Check for conflicts before submitting
+    if (form.date && form.location.trim()) {
+      setCheckingConflicts(true);
+      try {
+        const result = await conflictsApi.check(
+          form.date,
+          form.location.trim(),
+          initialData?.id
+        );
+        if (result.conflicts.length > 0) {
+          setConflicts(result.conflicts);
+          setShowConflictWarning(true);
+          setCheckingConflicts(false);
+          return;
+        }
+      } catch {
+        // If conflict check fails, proceed anyway
+      }
+      setCheckingConflicts(false);
+    }
+
+    onSubmit(buildPayload());
+  }
+
+  function handleConfirmDespiteConflict() {
+    setShowConflictWarning(false);
+    setConflicts([]);
+    onSubmit(buildPayload());
   }
 
   return (
@@ -317,10 +350,39 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
         </div>
       </section>
 
+      {/* Conflict warning */}
+      {showConflictWarning && conflicts.length > 0 && (
+        <div style={styles.conflictWarning}>
+          <div style={styles.conflictTitle}>Potentiell krock upptäckt</div>
+          <p style={styles.conflictText}>
+            Det finns redan {conflicts.length === 1 ? 'ett event' : `${conflicts.length} events`} samma dag och plats:
+          </p>
+          <ul style={styles.conflictList}>
+            {conflicts.map((c) => (
+              <li key={c.id}>
+                <strong>{c.name}</strong> — {c.date} kl. {c.time}, {c.location}
+              </li>
+            ))}
+          </ul>
+          <div style={styles.conflictActions}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => { setShowConflictWarning(false); setConflicts([]); }}
+            >
+              Avbryt
+            </Button>
+            <Button type="button" variant="primary" onClick={handleConfirmDespiteConflict}>
+              Skapa ändå
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Submit */}
       <div style={styles.actions}>
-        <Button type="submit" variant="primary" size="lg" loading={loading}>
-          {submitLabel || (isEdit ? 'Spara ändringar' : 'Skapa event')}
+        <Button type="submit" variant="primary" size="lg" loading={loading || checkingConflicts}>
+          {checkingConflicts ? 'Kontrollerar krockar...' : (submitLabel || (isEdit ? 'Spara ändringar' : 'Skapa event'))}
         </Button>
       </div>
     </form>
@@ -385,6 +447,34 @@ const styles: Record<string, React.CSSProperties> = {
     resize: 'vertical' as const,
     outline: 'none',
     minHeight: '80px',
+  },
+  conflictWarning: {
+    backgroundColor: '#fff8e1',
+    border: '1px solid #ffcc02',
+    borderRadius: 'var(--radius-lg)',
+    padding: '16px 20px',
+  },
+  conflictTitle: {
+    fontWeight: 600,
+    fontSize: 'var(--font-size-md)',
+    color: '#8d6e00',
+    marginBottom: '6px',
+  },
+  conflictText: {
+    fontSize: 'var(--font-size-sm)',
+    color: '#6d5600',
+    margin: '0 0 8px 0',
+  },
+  conflictList: {
+    margin: '0 0 12px 0',
+    paddingLeft: '20px',
+    fontSize: 'var(--font-size-sm)',
+    color: '#6d5600',
+  },
+  conflictActions: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'flex-end',
   },
   actions: {
     display: 'flex',

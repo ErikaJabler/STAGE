@@ -139,8 +139,8 @@ export function getEmailCanvasHtml(bodyContent?: string): string {
   <tr>
     <td align="center" style="padding:32px 16px;">
       <table role="presentation" cellpadding="0" cellspacing="0" width="${CONTENT_STYLE.maxWidth}" style="max-width:${CONTENT_STYLE.maxWidth}; width:100%;">
-        <!-- Header -->
-        <tr>
+        <!-- Header (låst — Consid brand) -->
+        <tr data-locked-header>
           <td style="background-color:#701131; padding:24px 32px; border-radius:12px 12px 0 0;">
             <span style="font-family:${EMAIL_FONT_FAMILY}; font-size:18px; font-weight:600; color:#ffffff; letter-spacing:0.5px;">
               Stage
@@ -153,8 +153,8 @@ export function getEmailCanvasHtml(bodyContent?: string): string {
             ${content}
           </td>
         </tr>
-        <!-- Footer -->
-        <tr>
+        <!-- Footer (låst — unsubscribe + kontakt) -->
+        <tr data-locked-footer>
           <td style="background-color:#ffffff; padding:24px 32px 28px; border-radius:0 0 12px 12px;">
             <p style="font-family:${EMAIL_FONT_FAMILY}; font-size:12px; color:#9b9490; margin:0; border-top:1px solid #e8e0d8; padding-top:16px;">
               Detta mail skickades via Stage, Consids eventplattform.

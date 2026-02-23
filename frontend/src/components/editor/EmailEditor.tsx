@@ -5,7 +5,7 @@
 import { useRef, useCallback, useState } from 'react';
 import grapesjs, { type Editor } from 'grapesjs';
 import GjsEditor from '@grapesjs/react';
-import { getBrandEditorConfig } from './grapejs-brand-config';
+import { getBrandEditorConfig, lockBrandComponents } from './grapejs-brand-config';
 import { registerEmailBlocks, getEmailCanvasHtml } from './grapejs-email-preset';
 import { imagesApi } from '../../api/client';
 import juice from 'juice';
@@ -60,6 +60,9 @@ export default function EmailEditor({ initialHtml, initialProjectData, onSave, o
 
     // Set canvas size for email (600px max)
     editor.Canvas.getFrameEl()?.style.setProperty('max-width', '100%');
+
+    // Lock header/footer (Consid brand enforcement)
+    lockBrandComponents(editor);
   }, [initialHtml, initialProjectData]);
 
   function handleSave() {

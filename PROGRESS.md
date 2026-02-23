@@ -799,6 +799,59 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ---
 
+## Session 17: Systemadmin + brand-kontroll
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] `migrations/0008_admin_role.sql` — ALTER users: is_admin INTEGER NOT NULL DEFAULT 0
+- [x] `packages/shared/src/types.ts` — is_admin på User, nya AdminDashboardData + EventConflict interfaces
+- [x] `backend/src/db/user.queries.ts` — is_admin i SELECT, isAdminUser() funktion
+- [x] `backend/src/middleware/auth.ts` — is_admin i tokenAuthProvider SELECT
+- [x] `backend/src/services/permission.service.ts` — isAdmin(), canView/canEdit bypassa vid admin
+- [x] `backend/src/services/admin.service.ts` — listAllEvents, getDashboardData (aggregat), checkConflicts (datum+plats)
+- [x] `backend/src/routes/admin.ts` — admin guard middleware, GET /dashboard, GET /events
+- [x] `backend/src/routes/events.ts` — GET /conflicts endpoint (datum+plats+excludeId)
+- [x] `backend/src/services/template-lock.service.ts` — locked zone definitions
+- [x] `backend/src/routes/auth.ts` — is_admin i login och /me responses
+- [x] `backend/src/index.ts` — admin routes monterade med auth middleware
+- [x] `frontend/src/hooks/useAuth.tsx` — is_admin i AuthUser
+- [x] `frontend/src/api/client.ts` — adminApi (dashboard, events) + conflictsApi (check)
+- [x] `frontend/src/hooks/useAdmin.ts` — useAdminDashboard, useAdminEvents hooks
+- [x] `frontend/src/App.tsx` — RequireAdmin guard, /admin route
+- [x] `frontend/src/components/layout/Sidebar.tsx` — Admin-länk med sköldikon, Admin-badge
+- [x] `frontend/src/pages/AdminDashboard.tsx` — Statistikkort, kommande events, senaste utskick, alla events
+- [x] `frontend/src/components/EventForm.tsx` — Konfliktdetektering med varningsruta + "Skapa ändå"
+- [x] `frontend/src/components/editor/grapejs-brand-config.ts` — lockBrandComponents() för header/footer-låsning
+- [x] `frontend/src/components/editor/grapejs-email-preset.ts` — data-locked-header/footer attribut
+- [x] `frontend/src/components/editor/grapejs-page-preset.ts` — data-locked-header/footer attribut
+- [x] `frontend/src/components/editor/EmailEditor.tsx` — lockBrandComponents() anrop
+- [x] `frontend/src/components/editor/PageEditor.tsx` — lockBrandComponents() anrop
+- [x] `backend/src/services/__tests__/admin.service.test.ts` — 9 nya tester
+- [x] 6 befintliga testfiler uppdaterade med is_admin i USERS_SQL
+- [x] Alla 101 tester passerar (92 befintliga + 9 nya)
+- [x] SAD.md, TESTPLAN.md, SESSION-GUIDE.md uppdaterade
+
+### Avvikelser från plan
+- Mailbox-hantering (dropdown för sender_mailbox) skippades — redan implementerat i SettingsTab (session 12)
+- Konfliktdetektering baseras på datum + plats (inte datum + plats + tidsintervall)
+
+### Arkitekturbeslut
+| # | Beslut | Motivering | Session |
+|---|--------|-----------|---------|
+| 41 | is_admin kolumn på users (ej event_permissions) | Global roll, inte per-event — enklare modell | 17 |
+| 42 | Admin bypass i canView/canEdit | Admins behöver inte explicit event_permissions | 17 |
+| 43 | Konfliktdetektering klientsida med API | Frontend checkar API innan submit, visar varning, inte blockering | 17 |
+| 44 | GrapeJS locking via data-attribut | data-locked-header/footer attribut + rekursiv komponentlåsning | 17 |
+
+### Anteckningar
+- Migration 0008 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0008_admin_role.sql`
+- Admin-dashboard är en ren frontend-sida som anropar 2 API-endpoints (dashboard + events)
+- lockBrandComponents() använder setTimeout(200ms) för att säkerställa att GrapeJS-komponenter är fulladdade
+- Konfliktdetektering exkluderar aktuellt event via excludeId-parameter (relevant vid redigering)
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
@@ -810,3 +863,4 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |
 | 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
 | 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ❌ |
+| 0008 | admin_role.sql | (ALTER users: is_admin) | ✅ | ❌ |

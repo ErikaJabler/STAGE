@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 92 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, website.service, integration e2e)
-**Status:** ☑ Testad (session 15)
+**Förväntat resultat:** 101 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, website.service, admin.service, integration e2e)
+**Status:** ☑ Testad (session 17)
 
 ---
 
@@ -1120,3 +1120,76 @@
 2. Ladda upp en JPEG-bild (< 5 MB)
 **Förväntat resultat:** Bilden laddas upp till R2 och visas i blocket.
 **Status:** ☐ Ej testad
+
+---
+
+## Session 17: Systemadmin + brand-kontroll
+
+### TC-17.1: Admin-dashboard visas för admin-användare
+**Förutsättning:** Inloggad som admin (is_admin = 1)
+**Steg:**
+1. Logga in som admin-användare
+2. Klicka "Admin" i sidebar
+**Förväntat resultat:** Admin-dashboard visas med statistikkort (Totalt events, Aktiva events, Historiska events, Totalt deltagare), kommande events-tabell, senaste utskick-tabell, alla events-tabell
+**Status:** ☐ Ej testad
+
+### TC-17.2: Admin-länk dold för vanlig användare
+**Förutsättning:** Inloggad som vanlig användare (is_admin = 0)
+**Steg:**
+1. Logga in som vanlig användare
+2. Kontrollera sidebar
+**Förväntat resultat:** "Admin"-länk visas INTE i sidebar
+**Status:** ☐ Ej testad
+
+### TC-17.3: Admin API returnerar 403 för icke-admin
+**Steg:**
+1. `curl -H "X-Auth-Token: <vanlig-token>" https://mikwik.se/stage/api/admin/dashboard`
+**Förväntat resultat:** 403 `{ "error": "Administratörsåtkomst krävs" }`
+**Status:** ☐ Ej testad
+
+### TC-17.4: Admin kan se alla events oavsett behörighet
+**Förutsättning:** Inloggad som admin
+**Steg:**
+1. Navigera till Admin-dashboard
+2. Klicka på ett event i "Alla events"-tabellen
+**Förväntat resultat:** Admin kan se eventdetalj även utan explicit event_permissions-rad
+**Status:** ☐ Ej testad
+
+### TC-17.5: Konfliktdetektering vid skapande av event
+**Steg:**
+1. Logga in → "+ Nytt event"
+2. Fyll i datum och plats som matchar ett befintligt event
+3. Klicka "Skapa event"
+**Förväntat resultat:** Varningsruta visas med krockande events (namn, datum, plats). Knappar "Skapa ändå" och "Avbryt" visas
+**Status:** ☐ Ej testad
+
+### TC-17.6: Konfliktdetektering — inget krock
+**Steg:**
+1. Logga in → "+ Nytt event"
+2. Fyll i datum och plats som INTE matchar befintliga events
+3. Klicka "Skapa event"
+**Förväntat resultat:** Eventet skapas direkt utan varning
+**Status:** ☐ Ej testad
+
+### TC-17.7: GrapeJS — header/footer låst i mailredigerare
+**Förutsättning:** Visuell mailredigerare öppen
+**Steg:**
+1. Försök klicka på Consid-logotypen i headern
+2. Försök dra headern
+3. Försök klicka på unsubscribe-länken i footern
+**Förväntat resultat:** Header och footer är inte valbara, kan inte dras, kopieras eller redigeras
+**Status:** ☐ Ej testad
+
+### TC-17.8: GrapeJS — header/footer låst i webbsideredigerare
+**Förutsättning:** Visuell webbsideeditor öppen
+**Steg:**
+1. Försök klicka på hero-headern
+2. Försök dra footern
+**Förväntat resultat:** Header och footer är inte valbara, kan inte dras, kopieras eller redigeras
+**Status:** ☐ Ej testad
+
+### TC-17.9: Admin-tester (automatiska)
+**Steg:**
+1. Kör `npm run test`
+**Förväntat resultat:** 9 nya admin-tester passerar (listAllEvents, getDashboardData, checkConflicts ×3, isAdminUser ×2, PermissionService.isAdmin, admin canView/canEdit). Totalt 101 tester.
+**Status:** ☑ Testad (session 17)
