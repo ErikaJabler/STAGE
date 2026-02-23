@@ -291,23 +291,38 @@ Integrationer:
 - SPF: MX `send` + TXT `send` — verifierad
 - DMARC: TXT `_dmarc` — `v=DMARC1; p=none;`
 
-## GrapeJS WYSIWYG Editor (session 14)
+## GrapeJS WYSIWYG Editor (session 14 + 16)
 
-**Paket:** `grapesjs` + `@grapesjs/react` + `juice` (CSS-inlining)
+**Paket:** `grapesjs` + `@grapesjs/react` + `juice` (CSS-inlining, enbart email)
+
+### Email-editor (session 14)
 
 | Fil | Beskrivning |
 |---|---|
-| `frontend/src/components/editor/EmailEditor.tsx` | GrapeJS-wrapper (lazy-loaded), toolbar med desktop/mobil preview, R2-upload |
+| `frontend/src/components/editor/EmailEditor.tsx` | GrapeJS-wrapper för mail (lazy-loaded), toolbar med desktop/mobil preview, R2-upload |
 | `frontend/src/components/editor/grapejs-brand-config.ts` | Consid brand constraints: begränsad färgpalett (9 färger), typsnitt (Consid Sans), CTA-stil |
-| `frontend/src/components/editor/grapejs-email-preset.ts` | 7 email-block: text, rubrik, bild, CTA-knapp, avdelare, kolumner, mellanrum |
+| `frontend/src/components/editor/grapejs-email-preset.ts` | 7 email-block: text, rubrik, bild, CTA-knapp, avdelare, kolumner, mellanrum (table-layout) |
 
-**Brand-begränsningar:**
+### Webbsideeditor (session 16)
+
+| Fil | Beskrivning |
+|---|---|
+| `frontend/src/components/editor/PageEditor.tsx` | GrapeJS-wrapper för webbsidor (lazy-loaded), toolbar med desktop/mobil preview, R2-upload |
+| `frontend/src/components/editor/grapejs-page-preset.ts` | 14 webbsideblock: hero, eventinfo, program, plats, anmälningsformulär, footer + text, rubrik, bild, CTA, avdelare, kolumner, mellanrum (modern CSS/flexbox) + `buildInitialPageHtml()` |
+
+**Skillnad email vs webbsida:** Email-block använder table-layout (kompatibilitet med mailklienter), webbsideblock använder modern CSS (flexbox/grid).
+
+**Anmälningsformulär i custom pages:** GrapeJS-blocket "Anmälan" infogar en `data-page-register-form="true"` platshållare. PublicEvent.tsx använder `createPortal()` för att rendera React-formuläret in i denna platshållare.
+
+**Brand-begränsningar (delade):**
 - Färgväljare: bara #701131, #B5223F, #F49E88, #EFE6DD, #1C1C1C, #492A34, #A99B94, #EC6B6A, #FFFFFF
 - Typsnitt: bara Consid Sans (+ Arial/Helvetica fallbacks)
 - CTA-knapp: Raspberry Red #B5223F bakgrund, vit text (förinställt)
 - Bilduppladdning: max 5 MB, JPEG/PNG/WebP → R2
 
-**Flöde:** Användare väljer "Visuell editor" eller "Snabbredigering" → GrapeJS editor öppnas helskärm → dra-och-släpp block → spara → HTML inline-CSS via `juice` → sparas som `html_body` + `editor_data` i mailings.
+**Email-flöde:** Visuell editor → dra-och-släpp → spara → HTML inline-CSS via `juice` → sparas som `html_body` + `editor_data` i mailings.
+
+**Webbsideflöde:** Visuell editor → dra-och-släpp → spara → HTML + editor_data sparas i `website_data` JSON (fälten `page_html` + `page_editor_data`). PublicEvent renderar `page_html` direkt om det finns, annars template-baserad rendering.
 
 ## Validering (session 8b)
 

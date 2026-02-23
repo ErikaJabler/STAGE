@@ -763,6 +763,42 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ---
 
+## Session 16: GrapeJS webbplatsredigerare
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] `frontend/src/components/editor/PageEditor.tsx` — GrapeJS-wrapper för webbsidor (lazy-loaded, R2-bilduppladdning, desktop/mobil preview, spara HTML + editor_data)
+- [x] `frontend/src/components/editor/grapejs-page-preset.ts` — 14 webbsideblock: 6 webbsidespecifika (hero, eventinfo, program, plats, anmälningsformulär, footer) + 8 generella (text, rubrik, bild, CTA-knapp, avdelare, kolumner, mellanrum) + `buildInitialPageHtml()` för att generera startinnehåll från template + eventdata
+- [x] `frontend/src/components/features/settings/WebsitePanel.tsx` — "Visuell editor"-knapp med lazy-loaded PageEditor i fullskärm, "Anpassad sida"-badge, "Återställ till mall"-knapp, snabbredigerings-sektion behållen
+- [x] `frontend/src/pages/PublicEvent.tsx` — Om `page_html` finns → renderar GrapeJS-HTML direkt med `dangerouslySetInnerHTML`, React-anmälningsformulär portad in via `createPortal` i `data-page-register-form`-platshållaren, template-rendering som fallback
+- [x] `packages/shared/src/types.ts` — WebsiteData utökad med `page_html` + `page_editor_data`
+- [x] `packages/shared/src/schemas.ts` — updateWebsiteSchema utökat med `page_html` + `page_editor_data`
+- [x] Alla 92 tester passerar (inga nya tester — alla ändringar är frontend)
+- [x] Typecheck: enbart förväntade `cloudflare:test` TS2307-fel
+
+### Avvikelser från plan
+- Ingen ny migration behövdes — `page_html` + `page_editor_data` lagras i `website_data` JSON-kolumnen
+- Webbsideblock använder modern CSS (flexbox/grid) istf table-layout (separat från email-block som planen specificerade)
+- `buildInitialPageHtml()` genererar startinnehåll från befintlig template + eventdata, så editorn öppnas förpopulerad
+
+### Arkitekturbeslut
+| # | Beslut | Motivering | Session |
+|---|--------|-----------|---------|
+| 38 | page_html i website_data JSON | Ingen migration krävs, tillräckligt för JSON-fältlagring | 16 |
+| 39 | createPortal för formulär i custom HTML | React-formulär fungerar i GrapeJS-genererad HTML via DOM-platshållare | 16 |
+| 40 | Separata page-block vs email-block | Webbsidor använder modern CSS (flexbox), email kräver table-layout | 16 |
+
+### Anteckningar
+- PageEditor och EmailEditor delar `grapejs-brand-config.ts` (samma färgpalett, typsnitt, CTA-stil)
+- PageEditor lazy-laddas — påverkar ej initial bundle
+- Anmälningsformuläret i custom pages fungerar via `data-page-register-form` attribut i GrapeJS-HTML + React `createPortal`
+- Befintlig formulärdriven redigering behålls som "Snabbredigering" — kan användas parallellt med visuell editor
+- "Återställ till mall"-knappen tar bort `page_html`/`page_editor_data` och återgår till template-rendering
+- Frontend build: ~502KB JS, 4.2KB CSS (PageEditor lazy-loaded, ingen ökning av initial bundle)
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |

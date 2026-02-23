@@ -1031,3 +1031,92 @@
 1. Utför en åtgärd som triggar toast (t.ex. spara utan ämne)
 **Förväntat resultat:** Toast-notis visas synligt ovanpå editorn (z-index 9999 > editorns 2000).
 **Status:** ☑ Testad (bugfix 2026-02-23)
+
+---
+
+## Session 16: GrapeJS webbplatsredigerare
+
+### TC-16.1: "Visuell editor"-knapp i WebsitePanel
+**Förutsättning:** Inloggad, på eventets Inställningar-tab → Webbplats
+**Steg:**
+1. Välj en mall (Hero + Info eller Hero + Program + Plats)
+2. "Visuell editor"-kortet visas med "Öppna editor"-knapp
+3. Klicka "Öppna editor"
+**Förväntat resultat:** GrapeJS-editor öppnas i fullskärm med förpopulerat innehåll baserat på vald mall och eventdata (hero med eventnamn, infokort med datum/tid/plats/arrangör, anmälningsformulär-platshållare, footer).
+**Status:** ☐ Ej testad
+
+### TC-16.2: GrapeJS webbsideblock — drag-and-drop
+**Förutsättning:** Visuell webbsideeditor öppen
+**Steg:**
+1. Dra "Hero"-blocket från blockpanelen till canvas
+2. Dra "Eventinfo"-blocket till canvas
+3. Dra "Program"-blocket till canvas
+4. Dra "Plats"-blocket till canvas
+5. Dra "Anmälan"-blocket till canvas
+6. Dra "Footer"-blocket till canvas
+**Förväntat resultat:** Alla block placeras korrekt. Hero har burgundy bakgrund (#701131), CTA-knappar har Raspberry Red (#B5223F), beige bakgrund (#EFE6DD).
+**Status:** ☐ Ej testad
+
+### TC-16.3: GrapeJS — spara webbsida
+**Förutsättning:** Visuell webbsideeditor öppen med redigerat innehåll
+**Steg:**
+1. Redigera text och block
+2. Klicka "Spara webbsida"
+**Förväntat resultat:** Toast "Webbsida sparad". Editorn stängs. WebsitePanel visar "Anpassad sida"-badge.
+**Status:** ☐ Ej testad
+
+### TC-16.4: Publik sida renderar custom page_html
+**Förutsättning:** Event med sparad page_html och publicerad webbplats
+**Steg:**
+1. Öppna `/stage/e/:slug` i en annan webbläsare (ej inloggad)
+**Förväntat resultat:** Sidan renderar GrapeJS-genererad HTML (ej template-baserad). Layout, färger och typsnitt matchar det som skapades i editorn.
+**Status:** ☐ Ej testad
+
+### TC-16.5: Anmälningsformulär fungerar i custom page
+**Förutsättning:** Publicerad webbplats med custom page_html som innehåller anmälningsblock
+**Steg:**
+1. Öppna publik sida
+2. Fyll i namn, email, bocka GDPR-samtycke
+3. Klicka "Anmäl mig"
+**Förväntat resultat:** Bekräftelsesida visas. Deltagaren registreras i backend (POST /:slug/register).
+**Status:** ☐ Ej testad
+
+### TC-16.6: Återredigera sparad webbsida
+**Förutsättning:** Event med sparad page_html + page_editor_data
+**Steg:**
+1. Öppna Inställningar → Webbplats
+2. Klicka "Redigera sida" (ersätter "Öppna editor" för befintlig sida)
+**Förväntat resultat:** GrapeJS öppnas med allt befintligt innehåll laddat (via editor_data JSON).
+**Status:** ☐ Ej testad
+
+### TC-16.7: Återställ till mall
+**Förutsättning:** Event med sparad custom page_html
+**Steg:**
+1. Öppna Inställningar → Webbplats
+2. Klicka "Återställ till mall"
+**Förväntat resultat:** Toast "Återställd till mallbaserad sida". "Anpassad sida"-badge försvinner. Publik sida renderar template-baserad layout igen.
+**Status:** ☐ Ej testad
+
+### TC-16.8: Snabbredigering behålls vid custom page
+**Förutsättning:** Event med sparad custom page_html
+**Steg:**
+1. Öppna Inställningar → Webbplats
+2. Ändra hero-rubrik i snabbredigeringen → "Spara webbplats"
+**Förväntat resultat:** Info-notis visas: "Snabbredigering påverkar bara mallbaserad rendering. Använd visuella editorn för att ändra den anpassade sidan."
+**Status:** ☐ Ej testad
+
+### TC-16.9: Desktop/mobil preview i webbsideeditor
+**Förutsättning:** Visuell webbsideeditor öppen med innehåll
+**Steg:**
+1. Klicka mobil-ikonen i toolbar
+2. Klicka desktop-ikonen
+**Förväntat resultat:** Canvas ändrar bredd till 375px (mobil) resp 100% (desktop).
+**Status:** ☐ Ej testad
+
+### TC-16.10: Bilduppladdning i webbsideeditor
+**Förutsättning:** Visuell webbsideeditor öppen, bildblock tillagt
+**Steg:**
+1. Dubbelklicka på bildblocket
+2. Ladda upp en JPEG-bild (< 5 MB)
+**Förväntat resultat:** Bilden laddas upp till R2 och visas i blocket.
+**Status:** ☐ Ej testad

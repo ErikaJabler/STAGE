@@ -1,8 +1,11 @@
-import { useState, type CSSProperties } from 'react';
+import { useState, lazy, Suspense, type CSSProperties } from 'react';
 import type { EventWithCount, WebsiteData } from '@stage/shared';
 import { Button, Input } from '../../ui';
 import { useToast } from '../../ui/Toast';
 import { useWebsite, useSaveWebsite } from '../../../hooks/useWebsite';
+import { buildInitialPageHtml } from '../../editor/grapejs-page-preset';
+
+const PageEditor = lazy(() => import('../../editor/PageEditor'));
 
 interface Props {
   event: EventWithCount;
@@ -29,6 +32,7 @@ export function WebsitePanel({ event }: Props) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [websiteData, setWebsiteData] = useState<WebsiteData>({});
   const [initialized, setInitialized] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
 
   // Initialize state from server data
   if (website && !initialized) {
@@ -40,6 +44,7 @@ export function WebsitePanel({ event }: Props) {
   const published = website?.published ?? false;
   const slug = event.slug;
   const publicUrl = `${window.location.origin}/stage/e/${slug}`;
+  const hasCustomPage = !!websiteData.page_html;
 
   const handleSave = async () => {
     try {
@@ -72,12 +77,89 @@ export function WebsitePanel({ event }: Props) {
     }
   };
 
+  const handleOpenEditor = () => {
+    setShowEditor(true);
+  };
+
+  const handleEditorSave = async (html: string, projectData: string) => {
+    try {
+      const newData: WebsiteData = {
+        ...websiteData,
+        page_html: html,
+        page_editor_data: projectData,
+      };
+      await saveWebsite.mutateAsync({
+        eventId: event.id,
+        data: {
+          template: selectedTemplate ?? undefined,
+          data: newData,
+        },
+      });
+      setWebsiteData(newData);
+      setShowEditor(false);
+      toast('Webbsida sparad', 'success');
+    } catch {
+      toast('Kunde inte spara webbsida', 'error');
+    }
+  };
+
+  const handleEditorCancel = () => {
+    setShowEditor(false);
+  };
+
+  const handleEditorError = (message: string) => {
+    toast(message, 'error');
+  };
+
+  const handleResetToTemplate = async () => {
+    const newData: WebsiteData = { ...websiteData };
+    delete newData.page_html;
+    delete newData.page_editor_data;
+    try {
+      await saveWebsite.mutateAsync({
+        eventId: event.id,
+        data: {
+          template: selectedTemplate ?? undefined,
+          data: newData,
+        },
+      });
+      setWebsiteData(newData);
+      toast('Återställd till mallbaserad sida', 'success');
+    } catch {
+      toast('Kunde inte återställa', 'error');
+    }
+  };
+
   const setField = <K extends keyof WebsiteData>(key: K, value: WebsiteData[K]) => {
     setWebsiteData((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Build initial HTML for editor from current template + data
+  const getEditorInitialHtml = (): string | undefined => {
+    if (websiteData.page_html) return undefined; // Use project data instead
+    if (!selectedTemplate) return undefined;
+    return buildInitialPageHtml(selectedTemplate, event, websiteData);
+  };
+
   if (isLoading) {
     return <div style={styles.loading}>Laddar webbplatsinställningar...</div>;
+  }
+
+  // Fullscreen editor mode
+  if (showEditor) {
+    return (
+      <div style={styles.editorOverlay}>
+        <Suspense fallback={<div style={styles.editorLoading}>Laddar visuell editor...</div>}>
+          <PageEditor
+            initialHtml={getEditorInitialHtml()}
+            initialProjectData={websiteData.page_editor_data}
+            onSave={handleEditorSave}
+            onCancel={handleEditorCancel}
+            onError={handleEditorError}
+          />
+        </Suspense>
+      </div>
+    );
   }
 
   return (
@@ -105,11 +187,42 @@ export function WebsitePanel({ event }: Props) {
         ))}
       </div>
 
-      {/* Template-specific fields */}
+      {/* Visual editor button */}
+      {selectedTemplate && (
+        <div style={styles.editorSection}>
+          <div style={styles.editorCard}>
+            <div style={styles.editorCardContent}>
+              <div>
+                <div style={styles.editorCardTitle}>Visuell editor</div>
+                <div style={styles.editorCardDesc}>
+                  {hasCustomPage
+                    ? 'Sidan har redigerats visuellt. Klicka för att fortsätta redigera.'
+                    : 'Drag-and-drop editor för att anpassa sidans utseende och layout.'}
+                </div>
+              </div>
+              <div style={styles.editorCardActions}>
+                <Button variant="primary" onClick={handleOpenEditor}>
+                  {hasCustomPage ? 'Redigera sida' : 'Öppna editor'}
+                </Button>
+                {hasCustomPage && (
+                  <Button variant="ghost" size="sm" onClick={handleResetToTemplate}>
+                    Återställ till mall
+                  </Button>
+                )}
+              </div>
+            </div>
+            {hasCustomPage && (
+              <div style={styles.editorBadge}>Anpassad sida</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Template-specific fields (quick edit) */}
       {selectedTemplate && (
         <div style={styles.fieldsSection}>
           <div style={styles.sectionHeader}>
-            <h3 style={styles.sectionTitle}>Innehåll</h3>
+            <h3 style={styles.sectionTitle}>Snabbredigering</h3>
           </div>
 
           <Input
@@ -153,6 +266,12 @@ export function WebsitePanel({ event }: Props) {
                 />
               </div>
             </>
+          )}
+
+          {hasCustomPage && (
+            <div style={styles.quickEditNote}>
+              Snabbredigering påverkar bara mallbaserad rendering. Använd visuella editorn för att ändra den anpassade sidan.
+            </div>
           )}
         </div>
       )}
@@ -312,6 +431,52 @@ const styles: Record<string, CSSProperties> = {
     color: 'var(--color-text-muted)',
     lineHeight: 1.4,
   },
+  editorSection: {
+    marginBottom: '20px',
+  },
+  editorCard: {
+    position: 'relative',
+    padding: '16px',
+    border: '1.5px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
+    backgroundColor: 'var(--color-white)',
+  },
+  editorCardContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+  },
+  editorCardTitle: {
+    fontSize: 'var(--font-size-sm)',
+    fontWeight: 600,
+    color: 'var(--color-text-primary)',
+    marginBottom: '4px',
+  },
+  editorCardDesc: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-muted)',
+    lineHeight: 1.4,
+  },
+  editorCardActions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    flexShrink: 0,
+  },
+  editorBadge: {
+    position: 'absolute',
+    top: '-8px',
+    right: '12px',
+    padding: '2px 8px',
+    backgroundColor: '#701131',
+    color: '#FFFFFF',
+    fontSize: '10px',
+    fontWeight: 600,
+    borderRadius: '4px',
+    letterSpacing: '0.5px',
+    textTransform: 'uppercase',
+  },
   fieldsSection: {
     marginBottom: '20px',
   },
@@ -332,6 +497,15 @@ const styles: Record<string, CSSProperties> = {
     fontFamily: 'inherit',
     resize: 'vertical' as const,
     outline: 'none',
+  },
+  quickEditNote: {
+    marginTop: '12px',
+    padding: '10px 12px',
+    backgroundColor: 'rgba(112, 17, 49, 0.05)',
+    borderRadius: 'var(--radius-md)',
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-muted)',
+    lineHeight: 1.4,
   },
   programItem: {
     display: 'flex',
@@ -410,5 +584,24 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 500,
     textDecoration: 'none',
     wordBreak: 'break-all',
+  },
+  editorOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 2000,
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#f5f5f5',
+  },
+  editorLoading: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    fontSize: '14px',
+    color: '#A99B94',
   },
 };

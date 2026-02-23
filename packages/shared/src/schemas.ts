@@ -178,6 +178,8 @@ export const updateWebsiteSchema = z.object({
       label: z.string(),
       required: z.boolean(),
     })).optional(),
+    page_html: z.string().optional(),
+    page_editor_data: z.string().optional(),
   }).optional(),
   published: z.boolean().optional(),
 });

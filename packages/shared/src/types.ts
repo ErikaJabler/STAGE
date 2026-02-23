@@ -61,6 +61,10 @@ export interface WebsiteData {
   venue_description?: string;
   venue_address?: string;
   custom_fields?: { label: string; required: boolean }[];
+  /** Full HTML from GrapeJS page editor */
+  page_html?: string;
+  /** GrapeJS project JSON for re-editing */
+  page_editor_data?: string;
 }
 
 export interface Mailing {

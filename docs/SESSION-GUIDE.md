@@ -58,8 +58,12 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
-## Session 16-18: Fas 2 (resterande)
+## Session 16: GrapeJS webbplatsredigerare ✅ DONE
+**Levererat:** PageEditor.tsx (GrapeJS-wrapper för webbsidor, lazy-loaded). 14 webbsideblock (hero, eventinfo, program, plats, anmälningsformulär, footer + generella). buildInitialPageHtml() för förpopulerad editor. WebsitePanel med "Visuell editor"-knapp, "Anpassad sida"-badge, "Återställ till mall". PublicEvent renderar page_html med createPortal för React-formulär. 92 tester.
+
+---
+
+## Session 17-18: Fas 2 (resterande)
 Följer `docs/IMPLEMENTATION-PLAN.md` exakt:
-- **16:** GrapeJS webbplatsredigerare (valfri)
 - **17:** Systemadmin + brand-kontroll
 - **18:** Test, polish, deploy Fas 2

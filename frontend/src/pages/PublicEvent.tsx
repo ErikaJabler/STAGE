@@ -1,5 +1,6 @@
-import { useState, useEffect, type CSSProperties, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type CSSProperties, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import type { Event, WebsiteData } from '@stage/shared';
 import { websiteApi, type RegisterResult } from '../api/client';
 
@@ -24,6 +25,10 @@ export function PublicEvent() {
   const [regResult, setRegResult] = useState<RegisterResult | null>(null);
   const [formError, setFormError] = useState('');
 
+  // Custom page: ref for finding form placeholder
+  const customPageRef = useRef<HTMLDivElement>(null);
+  const [formPortalTarget, setFormPortalTarget] = useState<Element | null>(null);
+
   useEffect(() => {
     if (!slug) return;
     fetch(`/stage/api/public/events/${slug}`)
@@ -35,11 +40,21 @@ export function PublicEvent() {
         setEventData(data);
         setState('loaded');
       })
-      .catch((err) => {
+      .catch(() => {
         setState('error');
         setErrorMsg('Eventet hittades inte eller är inte publicerat.');
       });
   }, [slug]);
+
+  // Find the form placeholder in custom page HTML
+  useEffect(() => {
+    if (customPageRef.current) {
+      const placeholder = customPageRef.current.querySelector('[data-page-register-form]');
+      if (placeholder) {
+        setFormPortalTarget(placeholder);
+      }
+    }
+  }, [state, eventData]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -80,6 +95,74 @@ export function PublicEvent() {
   const event = eventData?.event;
   const websiteData = event?.website_data_parsed;
   const template = event?.website_template;
+  const hasCustomPage = !!websiteData?.page_html;
+
+  // Registration form component (shared between custom page and template page)
+  const registrationForm = event && (
+    state === 'registered' && regResult ? (
+      <div style={s.confirmationBox}>
+        <div style={s.confirmIcon}>
+          {regResult.waitlisted ? '⏳' : '🎉'}
+        </div>
+        <h2 style={s.confirmTitle}>
+          {regResult.waitlisted ? 'Du står på väntelistan' : 'Tack för din anmälan!'}
+        </h2>
+        <p style={s.confirmText}>
+          {regResult.waitlisted
+            ? 'Eventet är fullt just nu. Vi meddelar dig om en plats blir ledig.'
+            : `Vi ser fram emot att se dig den ${formatDate(event.date)}!`
+          }
+        </p>
+        {!regResult.waitlisted && (
+          <button onClick={() => downloadICS(event)} style={s.calendarBtn}>
+            📅 Lägg till i kalender
+          </button>
+        )}
+      </div>
+    ) : state === 'loaded' ? (
+      <form onSubmit={handleSubmit} style={s.form}>
+        <div style={s.formRow}>
+          <FormField label="Namn *" value={form.name} onChange={(v) => set('name', v)} placeholder="Ditt namn" />
+          <FormField label="E-post *" value={form.email} onChange={(v) => set('email', v)} placeholder="din@email.se" type="email" />
+        </div>
+        <div style={s.formRow}>
+          <FormField label="Företag" value={form.company} onChange={(v) => set('company', v)} placeholder="Ditt företag (valfritt)" />
+          <div style={s.formField}>
+            <label style={s.formLabel}>Kategori</label>
+            <select value={form.category} onChange={(e) => set('category', e.target.value)} style={s.formSelect}>
+              <option value="other">Annan</option>
+              <option value="internal">Intern (Consid)</option>
+              <option value="public_sector">Offentlig sektor</option>
+              <option value="private_sector">Privat sektor</option>
+              <option value="partner">Partner</option>
+            </select>
+          </div>
+        </div>
+        <FormField label="Allergier / kostpreferenser" value={form.dietary_notes} onChange={(v) => set('dietary_notes', v)} placeholder="T.ex. vegetarian, nötallergi..." />
+
+        <div style={s.gdprBox}>
+          <label style={s.gdprLabel}>
+            <input
+              type="checkbox"
+              checked={form.gdpr_consent}
+              onChange={(e) => set('gdpr_consent', e.target.checked)}
+              style={s.gdprCheckbox}
+            />
+            <span>
+              {event.gdpr_consent_text
+                ?? 'Jag samtycker till att mina personuppgifter behandlas i enlighet med GDPR för hantering av min anmälan till detta event.'}
+            </span>
+          </label>
+        </div>
+
+        {formError && <p style={s.formError}>{formError}</p>}
+
+        <button type="submit" disabled={submitting} style={s.submitBtn}>
+          {submitting ? 'Skickar...' : 'Anmäl mig'}
+        </button>
+      </form>
+    ) : null
+  );
 
   return (
     <div style={s.page}>
@@ -97,7 +180,20 @@ export function PublicEvent() {
         </div>
       )}
 
-      {(state === 'loaded' || state === 'registered') && event && (
+      {/* Custom page (GrapeJS-generated HTML) */}
+      {(state === 'loaded' || state === 'registered') && event && hasCustomPage && (
+        <>
+          <div
+            ref={customPageRef}
+            dangerouslySetInnerHTML={{ __html: websiteData!.page_html! }}
+          />
+          {/* Portal the React registration form into the placeholder */}
+          {formPortalTarget && registrationForm && createPortal(registrationForm, formPortalTarget)}
+        </>
+      )}
+
+      {/* Template-based page (fallback) */}
+      {(state === 'loaded' || state === 'registered') && event && !hasCustomPage && (
         <>
           {/* Hero Section */}
           <header style={{
@@ -169,75 +265,9 @@ export function PublicEvent() {
           )}
 
           {/* Registration Form / Confirmation */}
-          {state === 'registered' && regResult ? (
-            <section style={s.section}>
-              <div style={s.confirmationBox}>
-                <div style={s.confirmIcon}>
-                  {regResult.waitlisted ? '⏳' : '🎉'}
-                </div>
-                <h2 style={s.confirmTitle}>
-                  {regResult.waitlisted ? 'Du står på väntelistan' : 'Tack för din anmälan!'}
-                </h2>
-                <p style={s.confirmText}>
-                  {regResult.waitlisted
-                    ? 'Eventet är fullt just nu. Vi meddelar dig om en plats blir ledig.'
-                    : `Vi ser fram emot att se dig den ${formatDate(event.date)}!`
-                  }
-                </p>
-                {!regResult.waitlisted && (
-                  <button onClick={() => downloadICS(event)} style={s.calendarBtn}>
-                    📅 Lägg till i kalender
-                  </button>
-                )}
-              </div>
-            </section>
-          ) : state === 'loaded' ? (
-            <section style={s.section}>
-              <h2 style={s.sectionTitle}>Anmälan</h2>
-              <form onSubmit={handleSubmit} style={s.form}>
-                <div style={s.formRow}>
-                  <FormField label="Namn *" value={form.name} onChange={(v) => set('name', v)} placeholder="Ditt namn" />
-                  <FormField label="E-post *" value={form.email} onChange={(v) => set('email', v)} placeholder="din@email.se" type="email" />
-                </div>
-                <div style={s.formRow}>
-                  <FormField label="Företag" value={form.company} onChange={(v) => set('company', v)} placeholder="Ditt företag (valfritt)" />
-                  <div style={s.formField}>
-                    <label style={s.formLabel}>Kategori</label>
-                    <select value={form.category} onChange={(e) => set('category', e.target.value)} style={s.formSelect}>
-                      <option value="other">Annan</option>
-                      <option value="internal">Intern (Consid)</option>
-                      <option value="public_sector">Offentlig sektor</option>
-                      <option value="private_sector">Privat sektor</option>
-                      <option value="partner">Partner</option>
-                    </select>
-                  </div>
-                </div>
-                <FormField label="Allergier / kostpreferenser" value={form.dietary_notes} onChange={(v) => set('dietary_notes', v)} placeholder="T.ex. vegetarian, nötallergi..." />
-
-                {/* GDPR consent */}
-                <div style={s.gdprBox}>
-                  <label style={s.gdprLabel}>
-                    <input
-                      type="checkbox"
-                      checked={form.gdpr_consent}
-                      onChange={(e) => set('gdpr_consent', e.target.checked)}
-                      style={s.gdprCheckbox}
-                    />
-                    <span>
-                      {event.gdpr_consent_text
-                        ?? 'Jag samtycker till att mina personuppgifter behandlas i enlighet med GDPR för hantering av min anmälan till detta event.'}
-                    </span>
-                  </label>
-                </div>
-
-                {formError && <p style={s.formError}>{formError}</p>}
-
-                <button type="submit" disabled={submitting} style={s.submitBtn}>
-                  {submitting ? 'Skickar...' : 'Anmäl mig'}
-                </button>
-              </form>
-            </section>
-          ) : null}
+          <section style={s.section}>
+            {registrationForm}
+          </section>
 
           {/* Footer */}
           <footer style={s.footer}>
