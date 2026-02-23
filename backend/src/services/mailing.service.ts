@@ -10,7 +10,7 @@ import {
   getEventById,
   type CreateMailingInput,
 } from "../db/queries";
-import { buildMergeContext, renderEmail, renderText, createEmailProvider } from "./email";
+import { buildMergeContext, renderEmail, renderText, renderHtml, createEmailProvider } from "./email";
 import { enqueueEmails, recordSentEmails, getQueueStats } from "./email/send-queue";
 
 export const MailingService = {
@@ -73,9 +73,9 @@ export const MailingService = {
     const queueItems = recipients.map((recipient) => {
       const context = buildMergeContext(event, recipient, baseUrl);
       if (mailing.html_body) {
-        // GrapeJS-generated HTML: merge fields in html_body, use as-is
+        // GrapeJS-generated HTML: merge fields in html_body, HTML-escaped to prevent XSS
         const renderedSubject = renderText(mailing.subject, context);
-        const mergedHtml = renderText(mailing.html_body, context);
+        const mergedHtml = renderHtml(mailing.html_body, context);
         return {
           mailing_id: mailingId,
           event_id: eventId,
@@ -198,7 +198,7 @@ export const MailingService = {
       const context = buildMergeContext(event, recipient, baseUrl);
       if (mailing.html_body) {
         const renderedSubject = renderText(mailing.subject, context);
-        const mergedHtml = renderText(mailing.html_body, context);
+        const mergedHtml = renderHtml(mailing.html_body, context);
         return {
           mailing_id: mailingId,
           event_id: eventId,
@@ -295,7 +295,7 @@ export const MailingService = {
 
     if (mailing.html_body) {
       emailSubject = renderText(`[TEST] ${mailing.subject}`, fakeContext);
-      emailHtml = renderText(mailing.html_body, fakeContext);
+      emailHtml = renderHtml(mailing.html_body, fakeContext);
       emailText = renderText(mailing.body, fakeContext);
     } else {
       const rendered = renderEmail(mailing.body, `[TEST] ${mailing.subject}`, fakeContext, event);

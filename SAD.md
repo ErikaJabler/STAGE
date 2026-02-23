@@ -241,6 +241,8 @@ Integrationer:
 **Global admin-roll:** `is_admin` (migration 0008) — ser alla events, access till admin-dashboard, canView/canEdit alla events utan explicit behörighet.
 
 **Skyddade routes:** Alla `/api/events/*` (utom `POST .../register`), `POST /api/images`, `/api/admin/*` kräver auth.
+
+**XSS-skydd i email merge fields (session 18):** `renderHtml()` i `template-renderer.ts` HTML-escaper merge field-värden (namn, event, plats etc.) vid ersättning i GrapeJS-genererad HTML. URL-fält (rsvp_link, calendar_link) undantas. Förhindrar XSS om deltagarnamn innehåller HTML-tecken.
 **Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`, `GET /api/images/*`, `GET /api/public/events/:slug`, `POST /api/events/:slug/register`.
 
 **Auto-owner:** Vid skapande av event sätts skaparen automatiskt som owner.

@@ -70,10 +70,11 @@ export const AdminService = {
       .bind(today)
       .all<EventWithCount>();
 
+    const todayMs = new Date(today + "T00:00:00Z").getTime();
     const upcomingWithDays = upcoming.results.map((e) => ({
       ...e,
-      days_until: Math.ceil(
-        (new Date(e.date).getTime() - new Date(today).getTime()) / 86400000
+      days_until: Math.round(
+        (new Date(e.date + "T00:00:00Z").getTime() - todayMs) / 86400000
       ),
     }));
 

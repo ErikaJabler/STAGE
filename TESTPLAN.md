@@ -1193,3 +1193,54 @@
 1. Kör `npm run test`
 **Förväntat resultat:** 9 nya admin-tester passerar (listAllEvents, getDashboardData, checkConflicts ×3, isAdminUser ×2, PermissionService.isAdmin, admin canView/canEdit). Totalt 101 tester.
 **Status:** ☑ Testad (session 17)
+
+---
+
+## Session 18: Test, polish, deploy Fas 2
+
+### TC-18.1: XSS-skydd i GrapeJS-mail merge fields
+**Steg:**
+1. Skapa en deltagare med namn som innehåller `<script>alert('xss')</script>`
+2. Skapa ett GrapeJS-baserat utskick med `{{name}}` i brödtexten
+3. Skicka testmail
+**Förväntat resultat:** Deltagarens namn visas som text (HTML-escapeat), inget script körs. `<` och `>` ersätts med `&lt;` och `&gt;`
+**Status:** ☐ Ej testad (kräver manuell verifiering)
+
+### TC-18.2: Mobilresponsivt registreringsformulär
+**Steg:**
+1. Öppna en publicerad eventsida (t.ex. `/stage/e/test-event`) på mobil (< 530px bredd)
+2. Kontrollera att formulärfälten (Namn, E-post, Företag, Kategori) stackar vertikalt
+3. Fyll i formuläret och skicka
+**Förväntat resultat:** Alla fält visas på separata rader, inget överlapp. Formuläret är fullt användbart på telefon.
+**Status:** ☐ Ej testad
+
+### TC-18.3: Admin-dashboard days_until korrekt
+**Steg:**
+1. Logga in som admin, navigera till Admin-dashboard
+2. Kontrollera "Dagar kvar"-kolumnen för kommande events
+**Förväntat resultat:** Events idag visar "Idag", imorgon visar "1 dag", etc. Inga negativa värden.
+**Status:** ☐ Ej testad
+
+### TC-18.4: GrapeJS-mail renderar korrekt (manuellt)
+**Steg:**
+1. Skapa GrapeJS-baserat utskick med text, rubrik, bild, CTA-knapp
+2. Skicka testmail till sig själv
+3. Öppna i Gmail, Outlook och Apple Mail
+**Förväntat resultat:** Consid-branding (Burgundy header, beige bakgrund, Raspberry Red CTA-knapp). Bilder visas. Text är läsbar. Inga brutna layouts.
+**Status:** ☐ Ej testad (kräver live deploy + manuell verifiering)
+
+### TC-18.5: Webbplats desktop + mobil
+**Steg:**
+1. Publicera ett event med webbsida (template "Hero + Info" eller "Hero + Program + Plats")
+2. Öppna `/stage/e/<slug>` i desktop-webbläsare
+3. Öppna samma URL på mobil (eller DevTools mobilvy)
+4. Fyll i anmälningsformuläret, godkänn GDPR, skicka
+**Förväntat resultat:** Hero-sektion, eventinfo, programtidslinje, anmälningsformulär — allt visas korrekt på både desktop och mobil. Registrering fungerar.
+**Status:** ☐ Ej testad
+
+### TC-18.6: Admin-guard (403 för icke-admin)
+**Steg:**
+1. Logga in med ett icke-admin-konto
+2. Navigera direkt till `/stage/admin`
+**Förväntat resultat:** Sidan nekas åtkomst (redirect eller 403), inga admin-data visas
+**Status:** ☐ Ej testad

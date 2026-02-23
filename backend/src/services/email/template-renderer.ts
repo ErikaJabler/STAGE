@@ -72,6 +72,26 @@ export function renderText(text: string, context: MergeContext): string {
   return result;
 }
 
+/** Replace merge fields in HTML — escapes values to prevent XSS */
+export function renderHtml(html: string, context: MergeContext): string {
+  let result = html;
+  for (const [key, value] of Object.entries(context)) {
+    // URLs should not be escaped (href attributes need raw URLs)
+    const isUrl = key === "rsvp_link" || key === "calendar_link";
+    const safeValue = isUrl ? value : escapeHtmlChars(value);
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), safeValue);
+  }
+  return result;
+}
+
+function escapeHtmlChars(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /** Render a complete email (text + HTML) from template or custom body */
 export function renderEmail(
   body: string,

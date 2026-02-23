@@ -852,6 +852,29 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ---
 
+## Session 18: Test, polish, deploy Fas 2
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] **XSS-fix i GrapeJS-mail:** Ny `renderHtml()` funktion i template-renderer.ts som HTML-escaper merge field-värden (namn, event, plats etc.) innan de ersätts i HTML-kontext. URL-fält (rsvp_link, calendar_link) undantas för att href-attribut ska fungera. Alla `renderText(html_body, ...)` i mailing.service.ts ersatta med `renderHtml(html_body, ...)`.
+- [x] **Mobilresponsivt registreringsformulär:** PublicEvent.tsx formRow ändrad från `grid-template-columns: 1fr 1fr` → `flex-wrap: wrap` med `flex: 1 1 250px` per fält. Formuläret stackar automatiskt på skärmar < 530px.
+- [x] **Admin-dashboard days_until fix:** Explicit `T00:00:00Z` suffix på datumsträngar + `Math.round` istf `Math.ceil` för konsekvent tidszonshantering.
+- [x] Kodgranskning: GrapeJS mailrendering, webbplats, admin-dashboard
+- [x] Alla 101 tester passerar
+- [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
+
+### Avvikelser från plan
+- Deploy skippas i denna session — migrationer (0007 + 0008) redan körda på remote (markerade ✅ i migrationsloggen). Användaren kör `npm run build && npx wrangler deploy` manuellt.
+- Manuell mailrendering-test (Outlook/Gmail/Apple Mail) kräver live deploy — noterat som TC-18.4.
+
+### Anteckningar
+- Pre-existerande TS-varningar (TS2731, TS2339, TS2769) i queries + auth routes — kosmetiska, esbuild bygger utan problem
+- GrapeJS canvas laddar Inter-font istf Consid Sans — kosmetiskt (preview-only), påverkar ej slutresultatet
+- `dangerouslySetInnerHTML` för GrapeJS page_html är OK — bara autentiserade admins kan redigera, GrapeJS filtrerar scripts
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
@@ -862,5 +885,5 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0004 | activities.sql | activities, email_queue | ✅ | ✅ |
 | 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |
 | 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
-| 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ❌ |
-| 0008 | admin_role.sql | (ALTER users: is_admin) | ✅ | ❌ |
+| 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ✅ |
+| 0008 | admin_role.sql | (ALTER users: is_admin) | ✅ | ✅ |

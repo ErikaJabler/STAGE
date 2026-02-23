@@ -468,10 +468,11 @@ const s: Record<string, CSSProperties> = {
     borderRadius: '16px', boxShadow: '0 2px 12px rgba(28,28,28,0.06)',
   },
   formRow: {
-    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px',
+    display: 'flex', flexWrap: 'wrap', gap: '12px',
   },
   formField: {
     display: 'flex', flexDirection: 'column', gap: '4px',
+    flex: '1 1 250px', minWidth: 0,
   },
   formLabel: {
     fontSize: '0.8125rem', fontWeight: 500, color: '#492A34',
