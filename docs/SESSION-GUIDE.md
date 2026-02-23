@@ -53,6 +53,11 @@
 ## Session 15: Eventwebbplats ✅ DONE
 Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anmälningsformulär med GDPR-samtycke. WebsitePanel i Inställningar-tab. 6 nya tester (92 totalt).
 
+## Bugfix: Utskick mall → editor → spara ✅ DONE (2026-02-23)
+**Fixat:** Mall-klick → direkt till formulär, felhantering i visuell editors Spara-knapp, toast z-index höjt till 9999 (doldes bakom fullscreen-editor z-2000).
+
+---
+
 ## Session 16-18: Fas 2 (resterande)
 Följer `docs/IMPLEMENTATION-PLAN.md` exakt:
 - **16:** GrapeJS webbplatsredigerare (valfri)

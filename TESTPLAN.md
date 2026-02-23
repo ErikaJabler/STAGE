@@ -983,3 +983,51 @@
 1. Öppna publik webbsida på mobil (eller Chrome DevTools mobile view)
 **Förväntat resultat:** Sidan anpassar sig — hero-text, inforutor och formulär stack vertikalt. Inga horisontella scrollbar.
 **Status:** ☐ Ej testad
+
+---
+
+## Bugfixar: Utskick mall → editor → spara
+
+### TC-BF.1: Mall-klick → direkt till snabbredigering
+**Förutsättning:** Inloggad, på eventets Utskick-tab
+**Steg:**
+1. Klicka "+ Nytt utskick"
+2. Klicka på en mall (t.ex. "Save the Date")
+**Förväntat resultat:** Formuläret (snabbredigering) öppnas direkt med förfyllt ämne och brödtext från mallen. Användaren behöver inte klicka "Snabbredigering" separat.
+**Status:** ☑ Testad (bugfix 2026-02-23)
+
+### TC-BF.2: Mall → redigera → skapa utkast
+**Förutsättning:** Inloggad, på eventets Utskick-tab
+**Steg:**
+1. Klicka "+ Nytt utskick"
+2. Klicka på "Save the Date"-mallen
+3. Redigera ämne eller brödtext valfritt
+4. Klicka "Skapa utkast"
+**Förväntat resultat:** Utskick skapas och syns i utskickslistan med status "Utkast". Toast "Utskick skapat" visas.
+**Status:** ☑ Testad (bugfix 2026-02-23)
+
+### TC-BF.3: Visuell editor — spara mail fungerar
+**Förutsättning:** Inloggad, på eventets Utskick-tab
+**Steg:**
+1. Klicka "+ Nytt utskick"
+2. Klicka "Visuell editor"
+3. Fyll i ämne i topbar
+4. Redigera innehåll (dra in block, lägg till bild etc.)
+5. Klicka "Spara mail"
+**Förväntat resultat:** Utskick skapas. Toast "Utskick skapat med visuell editor" visas. Editorn stängs.
+**Status:** ☑ Testad (bugfix 2026-02-23)
+
+### TC-BF.4: Visuell editor — spara utan ämne visar felmeddelande
+**Förutsättning:** Inloggad, visuell editor öppen
+**Steg:**
+1. Lämna ämnesfältet i topbar tomt
+2. Klicka "Spara mail"
+**Förväntat resultat:** Toast-felmeddelande "Ange ett ämne innan du sparar" visas. Editorn förblir öppen. Inget utskick skapas.
+**Status:** ☑ Testad (bugfix 2026-02-23)
+
+### TC-BF.5: Toast-meddelanden synliga ovanpå fullscreen-editor
+**Förutsättning:** Visuell editor öppen (fullskärm)
+**Steg:**
+1. Utför en åtgärd som triggar toast (t.ex. spara utan ämne)
+**Förväntat resultat:** Toast-notis visas synligt ovanpå editorn (z-index 9999 > editorns 2000).
+**Status:** ☑ Testad (bugfix 2026-02-23)

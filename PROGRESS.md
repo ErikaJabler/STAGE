@@ -739,6 +739,30 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ---
 
+## Bugfixar: Utskick mall → editor → spara
+**Datum:** 2026-02-23
+**Status:** DONE
+
+### Deliverables
+- [x] Mall-klick → direkt till snabbredigering (`setEditMode('form')` efter mallval)
+- [x] Visuell editor: felhantering i `handleSave` (try-catch + `onError`-prop)
+- [x] Toast z-index höjt till 9999 (var 70, doldes bakom fullscreen-editor z-2000)
+- [x] Fullscreen-editor z-index via CSS-variabel (`--z-fullscreen-editor: 2000`)
+- [x] Modal.tsx: borttagen `createPortal` (befintlig ändring)
+
+### Rotorsak
+1. Mall-klick satte bara `selectedTemplate` + form-data — saknades `setEditMode('form')` → användaren fastnade i steg 1
+2. `handleSave()` i EmailEditor hade ingen felhantering — om GrapeJS/juice kastade, hände inget
+3. Toast z-index 70 < fullscreen-editor z-index 2000 → alla toast-meddelanden (felmeddelanden, bekräftelser) doldes bakom editorn
+
+### Filer ändrade
+- `frontend/src/components/features/email/CreateMailingModal.tsx`
+- `frontend/src/components/editor/EmailEditor.tsx`
+- `frontend/src/components/ui/Modal.tsx`
+- `frontend/src/styles/globals.css`
+
+---
+
 ## Migrations-logg
 
 | Migration | Fil | Tabeller | Lokal | Remote |
