@@ -48,7 +48,9 @@ Integrationer:
 | `backend/src/utils/escaping.ts` | `escapeHtml()` — delad HTML-escape (session 20a) |
 | `backend/src/utils/route-helpers.ts` | `parseIdParam()`, `requireEvent()` — delade route-hjälpare (session 20a) |
 | `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist, user, permission, search) |
-| `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email, settings) |
+| `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email, settings). Settings: SettingsTab orkestrerare + EventInfoSection, HeroImageSection, VisibilitySection (inkl. Sender/GDPR), DangerZone, WebsitePanel + WebsiteTemplateSelector, WebsiteFormFields |
+| `frontend/src/hooks/` | Custom hooks: TanStack Query hooks, useWebsiteForm (website state/handlers), useRsvpState (RSVP state-maskin + ICS) |
+| `frontend/src/pages/` | Sidkomponenter: RsvpPage orkestrerare + RsvpResponseForm, RsvpConfirmation, RsvpIcons |
 | `frontend/src/` | React-app (Vite) |
 | `packages/shared/src/` | Delade typer, konstanter + Zod-schemas |
 | `migrations/` | Inkrementella D1 SQL-filer |
@@ -374,7 +376,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
-- **Antal:** 148 tester (16 testfiler)
+- **Antal:** 148 tester (16 testfiler) — oförändrat efter session 21a (ren refaktorering)
 
 ### Teststruktur
 

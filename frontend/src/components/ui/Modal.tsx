@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useCallback, type ReactNode } from 'react';
 
 interface ModalProps {
   open: boolean;
@@ -11,16 +11,54 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children, footer, width = 480 }: ModalProps) {
   const backdropRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // Escape key closes modal
+  // Focus trap + Escape key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+
+    if (e.key === 'Tab' && contentRef.current) {
+      const focusable = contentRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  }, [open, handleKeyDown]);
+
+  // Focus first focusable element on open
+  useEffect(() => {
+    if (!open || !contentRef.current) return;
+    const focusable = contentRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length > 0) {
+      focusable[0].focus();
+    }
+  }, [open]);
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -43,12 +81,15 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
       ref={backdropRef}
       onClick={handleBackdropClick}
       style={styles.backdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
     >
-      <div style={{ ...styles.content, maxWidth: width }}>
+      <div ref={contentRef} style={{ ...styles.content, maxWidth: width }}>
         <div style={styles.header}>
           <h2 style={styles.title}>{title}</h2>
           <button onClick={onClose} style={styles.closeButton} aria-label="Stäng">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
@@ -96,8 +137,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32px',
-    height: '32px',
+    width: '44px',
+    height: '44px',
     borderRadius: 'var(--radius-md)',
     border: 'none',
     backgroundColor: 'transparent',

@@ -978,3 +978,38 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 - MailingService-tester skapar alla tabeller (events, participants, mailings, email_queue) i beforeAll
 - RsvpService-tester verifierar auto-waitlist och auto-promote via WaitlistService-integration
 - ConsoleEmailProvider används som fallback i alla tester (ingen RESEND_API_KEY)
+
+---
+
+## Session 21a: Frontend-refaktorering (SettingsTab + WebsitePanel + RsvpPage + a11y)
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] **SettingsTab.tsx** (561 → 44 rader): Extraherat `EventInfoSection.tsx` (245), `HeroImageSection.tsx` (133), `VisibilitySection.tsx` (222, inkl. SenderSection + GdprSection). SettingsTab är nu tunn orkestrerare.
+- [x] **WebsitePanel.tsx** (607 → 145 rader): Extraherat `WebsiteTemplateSelector.tsx` (185), `WebsiteFormFields.tsx` (242), `useWebsiteForm.ts` hook (131). ProgramEditor flyttad till WebsiteFormFields.
+- [x] **RsvpPage.tsx** (568 → 150 rader): Extraherat `RsvpResponseForm.tsx` (303), `RsvpConfirmation.tsx` (80), `RsvpIcons.tsx` (26), `useRsvpState.ts` hook (144, inkl. downloadICS + formatRsvpDate).
+- [x] **Accessibility:** Focus trap i Modal.tsx (Tab-fångst, auto-focus), role="dialog" + aria-modal. aria-label på clone-knapp i Overview.tsx. alt-text på hero-bild i RsvpPage + HeroImageSection. aria-hidden på dekorativa SVG-ikoner. Touch target 44px på clone-knapp och modal close-knapp. aria-label på toggle-knapp i VisibilitySection.
+- [x] Alla 148 tester passerar (inga nya — ren refaktorering)
+- [x] `npm run typecheck` grönt (enbart förväntade `cloudflare:test` TS2307-fel)
+- [x] Alla filer under 400 rader
+
+### Avvikelser från plan
+- `Overview.tsx` ligger i `frontend/src/pages/`, inte `frontend/src/components/features/events/` som planen angav
+- `DangerZone.tsx` existerade redan — verifierad som importerad
+- SenderSection + GdprSection placerade i VisibilitySection.tsx (nära relaterade, under 400 rader tillsammans)
+- RsvpIcons.tsx tillagd som delad ikonkomponent (används av RsvpResponseForm + RsvpConfirmation + RsvpPage)
+
+### Nya filer
+```
+frontend/src/components/features/settings/EventInfoSection.tsx      # 245 rader
+frontend/src/components/features/settings/HeroImageSection.tsx      # 133 rader
+frontend/src/components/features/settings/VisibilitySection.tsx     # 222 rader
+frontend/src/components/features/settings/WebsiteTemplateSelector.tsx # 185 rader
+frontend/src/components/features/settings/WebsiteFormFields.tsx     # 242 rader
+frontend/src/hooks/useWebsiteForm.ts                                # 131 rader
+frontend/src/pages/RsvpResponseForm.tsx                             # 303 rader
+frontend/src/pages/RsvpConfirmation.tsx                             # 80 rader
+frontend/src/pages/RsvpIcons.tsx                                    # 26 rader
+frontend/src/hooks/useRsvpState.ts                                  # 144 rader
+```

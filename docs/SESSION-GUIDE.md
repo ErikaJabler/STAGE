@@ -94,9 +94,14 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
-## Session 21: Frontend-refaktorering
-**Mål:** Bryt upp 7 filer >400 rader (SettingsTab, WebsitePanel, RsvpPage, PublicEvent, EventForm, CreateMailingModal, AdminDashboard). A11y-fixar (alt-text, aria-labels, focus trap, touch targets).
-**Filer:** 25+ filer (15 nya). **OBS:** Sannolikt delad i 21a + 21b.
+## Session 21a: Frontend-refaktorering (SettingsTab + WebsitePanel + RsvpPage + a11y) ✅ DONE
+**Levererat:** SettingsTab (561→44, 3 nya komponentfiler), WebsitePanel (607→145, 2 nya komponentfiler + hook), RsvpPage (568→150, 2 nya komponentfiler + ikonfil + hook). A11y: focus trap i Modal, aria-labels, alt-text, touch targets 44px. 10 nya filer. 148 tester (oförändrat).
+
+---
+
+## Session 21b: Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard)
+**Mål:** Bryt upp 4 filer >400 rader (PublicEvent, EventForm, CreateMailingModal, AdminDashboard).
+**Filer:** ~12 filer (8 nya).
 
 ---
 

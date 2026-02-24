@@ -80,7 +80,7 @@ function EventCard({ event }: { event: EventWithCount }) {
       <div style={styles.cardFooter}>
         <span style={styles.organizer}>{event.organizer}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button onClick={handleClone} style={styles.cloneBtn} title="Klona event" disabled={cloneEvent.isPending}>
+          <button onClick={handleClone} style={styles.cloneBtn} title="Klona event" aria-label="Klona event" disabled={cloneEvent.isPending}>
             <CopyIcon />
           </button>
           <TypeBadge type={event.type} />
@@ -295,8 +295,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '24px',
-    height: '24px',
+    width: '44px',
+    height: '44px',
     border: 'none',
     backgroundColor: 'transparent',
     color: 'var(--color-text-muted)',
