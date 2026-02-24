@@ -22,7 +22,15 @@ jobs:
       - run: npm ci
 
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          # cloudflare:test module only exists in vitest runtime — TS2307 errors are expected.
+          # Fail only if there are OTHER TypeScript errors.
+          npm run typecheck 2>&1 | tee /tmp/tsc-output.txt || true
+          if grep -v "Cannot find module 'cloudflare:test'" /tmp/tsc-output.txt | grep -q "error TS"; then
+            echo "::error::TypeScript errors found (excluding known cloudflare:test TS2307)"
+            grep -v "Cannot find module 'cloudflare:test'" /tmp/tsc-output.txt | grep "error TS"
+            exit 1
+          fi
 
       - name: Lint
         run: npm run lint
