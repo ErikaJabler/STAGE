@@ -654,4 +654,4 @@ Se `SAD.md` sektion "Databasschema" för alla 8 tabeller med kolumnbeskrivningar
 
 | Roll | Namn | Kommentar |
 |---|---|---|
-| Utvecklare (alla 18 sessioner) | Mikael Wikström | mikwik.se — Cloudflare-konto, Resend-konto, repo |
+| Utvecklare (alla 18 sessioner) | Mikael Wikman | mikwik.se — Cloudflare-konto, Resend-konto, repo |
