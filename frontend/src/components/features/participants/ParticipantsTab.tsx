@@ -7,6 +7,7 @@ import {
   useUpdateParticipant,
 } from '../../../hooks/useParticipants';
 import type { Participant } from '@stage/shared';
+import { downloadAuthenticatedFile } from '../../../api/client';
 import { sharedStyles } from '../shared-styles';
 import { UploadIcon, SearchIcon, DownloadIcon, PeopleEmptyIcon } from '../shared-icons';
 import { AddParticipantModal } from './AddParticipantModal';
@@ -160,7 +161,10 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
                 <button
                   style={styles.exportOption}
                   onClick={() => {
-                    window.open(`/stage/api/events/${eventId}/participants/export`, '_blank');
+                    downloadAuthenticatedFile(
+                      `/events/${eventId}/participants/export`,
+                      `deltagare-event-${eventId}.csv`,
+                    ).catch(() => toast('Kunde inte exportera', 'error'));
                     setShowExportMenu(false);
                   }}
                 >
@@ -169,10 +173,10 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
                 <button
                   style={styles.exportOption}
                   onClick={() => {
-                    window.open(
-                      `/stage/api/events/${eventId}/participants/export-catering`,
-                      '_blank',
-                    );
+                    downloadAuthenticatedFile(
+                      `/events/${eventId}/participants/export-catering`,
+                      `catering-event-${eventId}.csv`,
+                    ).catch(() => toast('Kunde inte exportera', 'error'));
                     setShowExportMenu(false);
                   }}
                 >

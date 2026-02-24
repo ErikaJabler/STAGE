@@ -47,6 +47,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Download a file with auth headers (for CSV exports opened via window.open) */
+export async function downloadAuthenticatedFile(path: string, filename: string) {
+  const res = await fetch(`${BASE_URL}${path}`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new ApiError(res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /** Event API */
 export const eventsApi = {
   list: () => request<EventWithCount[]>('/events'),
