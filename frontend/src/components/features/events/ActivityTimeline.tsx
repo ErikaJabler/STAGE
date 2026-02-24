@@ -15,7 +15,7 @@ const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
 };
 
 function formatTimeAgo(dateStr: string): string {
-  const date = new Date(dateStr + 'Z');
+  const date = new Date(dateStr.replace(' ', 'T') + 'Z');
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60_000);

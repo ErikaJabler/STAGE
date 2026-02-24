@@ -112,8 +112,10 @@ export function DashboardEventList({
                     </td>
                     <td style={styles.td}>
                       {m.sent_at
-                        ? new Date(m.sent_at).toLocaleDateString('sv-SE')
-                        : new Date(m.created_at).toLocaleDateString('sv-SE')}
+                        ? new Date(m.sent_at.replace(' ', 'T') + 'Z').toLocaleDateString('sv-SE')
+                        : new Date(m.created_at.replace(' ', 'T') + 'Z').toLocaleDateString(
+                            'sv-SE',
+                          )}
                     </td>
                   </tr>
                 ))}

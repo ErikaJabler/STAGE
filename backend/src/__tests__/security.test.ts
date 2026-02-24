@@ -26,9 +26,9 @@ async function fetchApp(path: string, init?: RequestInit) {
 }
 
 describe('Security: R2 path traversal', () => {
-  it('rejects path traversal in prefix (../../etc)', async () => {
-    const res = await fetchApp('/stage/api/images/../../etc/passwd');
-    // Hono may match or not match the route — either 400 or 404 is acceptable
+  it('rejects path traversal in prefix (..%2Fetc)', async () => {
+    // URL-encoded traversal to prevent URL normalization
+    const res = await fetchApp('/stage/api/images/..%2Fetc/passwd');
     expect([400, 404]).toContain(res.status);
   });
 

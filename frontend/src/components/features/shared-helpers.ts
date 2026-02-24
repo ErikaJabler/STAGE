@@ -65,7 +65,7 @@ export function formatDate(dateStr: string): string {
 }
 
 export function formatDateTime(isoStr: string): string {
-  const d = new Date(isoStr);
+  const d = new Date(isoStr.replace(' ', 'T') + (isoStr.includes('T') ? '' : 'Z'));
   return (
     d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }) +
     ' ' +
