@@ -99,9 +99,8 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
-## Session 21b: Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard)
-**Mål:** Bryt upp 4 filer >400 rader (PublicEvent, EventForm, CreateMailingModal, AdminDashboard).
-**Filer:** ~12 filer (8 nya).
+## Session 21b: Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard) ✅ DONE
+**Levererat:** PublicEvent (554→147, 2 nya komponentfiler), EventForm (484→387, 2 nya hooks), CreateMailingModal (447→342, 1 ny hook), AdminDashboard (418→87, 2 nya komponentfiler). 7 nya filer. 148 tester (oförändrat).
 
 ---
 

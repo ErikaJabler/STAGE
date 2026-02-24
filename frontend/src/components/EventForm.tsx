@@ -1,20 +1,16 @@
 import { useState } from 'react';
 import { Button, Input } from './ui';
 import type { CreateEventPayload, UpdateEventPayload } from '../api/client';
-import { conflictsApi } from '../api/client';
-import type { EventWithCount, EventConflict } from '@stage/shared';
+import type { EventWithCount } from '@stage/shared';
 import { EVENT_STATUS, EVENT_TYPE, VISIBILITY } from '@stage/shared';
+import { useEventFormValidation, type EventFormData } from '../hooks/useEventFormValidation';
+import { useConflictCheck } from '../hooks/useConflictCheck';
 
 interface EventFormProps {
-  /** If provided, form runs in edit mode with pre-populated values */
   initialData?: EventWithCount;
   onSubmit: (data: CreateEventPayload | UpdateEventPayload) => void;
   loading?: boolean;
   submitLabel?: string;
-}
-
-interface FormErrors {
-  [key: string]: string;
 }
 
 const typeLabels: Record<string, string> = {
@@ -37,7 +33,7 @@ const statusLabels: Record<string, string> = {
 export function EventForm({ initialData, onSubmit, loading, submitLabel }: EventFormProps) {
   const isEdit = !!initialData;
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<EventFormData>({
     name: initialData?.name ?? '',
     emoji: initialData?.emoji ?? '',
     date: initialData?.date ?? '',
@@ -55,105 +51,31 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
     overbooking_limit: initialData?.overbooking_limit?.toString() ?? '0',
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [conflicts, setConflicts] = useState<EventConflict[]>([]);
-  const [showConflictWarning, setShowConflictWarning] = useState(false);
-  const [checkingConflicts, setCheckingConflicts] = useState(false);
+  const { errors, setErrors, clearFieldError, validate, buildPayload } = useEventFormValidation();
+  const { conflicts, showConflictWarning, checkingConflicts, checkConflicts, dismissConflicts } = useConflictCheck();
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  }
-
-  function validate(): FormErrors {
-    const errs: FormErrors = {};
-
-    if (!form.name.trim()) errs.name = 'Namn krävs';
-    if (!form.date.trim()) errs.date = 'Datum krävs';
-    else if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date)) errs.date = 'Måste vara YYYY-MM-DD';
-    if (!form.time.trim()) errs.time = 'Tid krävs';
-    else if (!/^\d{2}:\d{2}$/.test(form.time)) errs.time = 'Måste vara HH:MM';
-    if (!form.location.trim()) errs.location = 'Plats krävs';
-    if (!form.organizer.trim()) errs.organizer = 'Arrangör krävs';
-    if (!form.organizer_email.trim()) errs.organizer_email = 'E-post krävs';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.organizer_email))
-      errs.organizer_email = 'Ogiltig e-postadress';
-
-    if (form.end_date && !/^\d{4}-\d{2}-\d{2}$/.test(form.end_date))
-      errs.end_date = 'Måste vara YYYY-MM-DD';
-    if (form.end_time && !/^\d{2}:\d{2}$/.test(form.end_time))
-      errs.end_time = 'Måste vara HH:MM';
-
-    if (form.max_participants) {
-      const n = Number(form.max_participants);
-      if (!Number.isFinite(n) || n < 1) errs.max_participants = 'Måste vara minst 1';
-    }
-
-    return errs;
-  }
-
-  function buildPayload(): CreateEventPayload {
-    return {
-      name: form.name.trim(),
-      date: form.date,
-      time: form.time,
-      location: form.location.trim(),
-      organizer: form.organizer.trim(),
-      organizer_email: form.organizer_email.trim(),
-      emoji: form.emoji || null,
-      end_date: form.end_date || null,
-      end_time: form.end_time || null,
-      description: form.description.trim() || null,
-      type: form.type,
-      status: form.status,
-      visibility: form.visibility,
-      max_participants: form.max_participants ? Number(form.max_participants) : null,
-      overbooking_limit: Number(form.overbooking_limit) || 0,
-    };
+    clearFieldError(field);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const errs = validate();
+    const errs = validate(form);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
 
-    // Check for conflicts before submitting
-    if (form.date && form.location.trim()) {
-      setCheckingConflicts(true);
-      try {
-        const result = await conflictsApi.check(
-          form.date,
-          form.location.trim(),
-          initialData?.id
-        );
-        if (result.conflicts.length > 0) {
-          setConflicts(result.conflicts);
-          setShowConflictWarning(true);
-          setCheckingConflicts(false);
-          return;
-        }
-      } catch {
-        // If conflict check fails, proceed anyway
-      }
-      setCheckingConflicts(false);
-    }
+    const hasConflicts = await checkConflicts(form.date, form.location, initialData?.id);
+    if (hasConflicts) return;
 
-    onSubmit(buildPayload());
+    onSubmit(buildPayload(form));
   }
 
   function handleConfirmDespiteConflict() {
-    setShowConflictWarning(false);
-    setConflicts([]);
-    onSubmit(buildPayload());
+    dismissConflicts();
+    onSubmit(buildPayload(form));
   }
 
   return (
@@ -365,11 +287,7 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
             ))}
           </ul>
           <div style={styles.conflictActions}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => { setShowConflictWarning(false); setConflicts([]); }}
-            >
+            <Button type="button" variant="secondary" onClick={dismissConflicts}>
               Avbryt
             </Button>
             <Button type="button" variant="primary" onClick={handleConfirmDespiteConflict}>
@@ -390,32 +308,17 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-    maxWidth: '720px',
-  },
+  form: { display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '720px' },
   section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    backgroundColor: 'var(--color-bg-card)',
-    borderRadius: 'var(--radius-lg)',
-    border: '1px solid var(--color-border)',
-    padding: '20px 24px',
+    display: 'flex', flexDirection: 'column', gap: '12px',
+    backgroundColor: 'var(--color-bg-card)', borderRadius: 'var(--radius-lg)',
+    border: '1px solid var(--color-border)', padding: '20px 24px',
   },
   sectionTitle: {
-    fontSize: 'var(--font-size-md)',
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    color: 'var(--color-text-primary)',
-    marginBottom: '4px',
+    fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)' as unknown as number,
+    color: 'var(--color-text-primary)', marginBottom: '4px',
   },
-  row: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'flex-start',
-  },
+  row: { display: 'flex', gap: '12px', alignItems: 'flex-start' },
   selectLabel: {
     fontSize: 'var(--font-size-sm)',
     fontWeight: 'var(--font-weight-medium)' as unknown as number,

@@ -1,13 +1,12 @@
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { Button, Input, Modal, useToast } from '../../ui';
 import { useCreateMailing } from '../../../hooks/useMailings';
 import { useTemplates } from '../../../hooks/useTemplates';
 import type { CreateMailingPayload } from '../../../api/client';
 import { sharedStyles } from '../shared-styles';
+import { useMailingForm } from '../../../hooks/useMailingForm';
 
 const EmailEditor = lazy(() => import('../../editor/EmailEditor'));
-
-type EditMode = null | 'form' | 'editor';
 
 export function CreateMailingModal({ eventId, open, onClose }: {
   eventId: number;
@@ -17,57 +16,14 @@ export function CreateMailingModal({ eventId, open, onClose }: {
   const { toast } = useToast();
   const createMailing = useCreateMailing(eventId);
   const { data: templates } = useTemplates();
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [editMode, setEditMode] = useState<EditMode>(null);
-  const [form, setForm] = useState({
-    subject: '',
-    body: '',
-    recipient_filter: 'all',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  function resetState() {
-    setSelectedTemplate(null);
-    setEditMode(null);
-    setForm({ subject: '', body: '', recipient_filter: 'all' });
-    setErrors({});
-  }
+  const {
+    form, errors, setErrors, editMode, setEditMode,
+    selectedTemplate, resetState, updateField, handleTemplateSelect, validate,
+  } = useMailingForm();
 
   function handleClose() {
     resetState();
     onClose();
-  }
-
-  function updateField(field: string, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  }
-
-  function handleTemplateSelect(templateId: string) {
-    if (selectedTemplate === templateId) {
-      setSelectedTemplate(null);
-      return;
-    }
-    const template = templates?.find((t) => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(templateId);
-      setForm((prev) => ({ ...prev, subject: template.defaultSubject, body: template.body }));
-      setErrors({});
-      setEditMode('form');
-    }
-  }
-
-  function validate() {
-    const errs: Record<string, string> = {};
-    if (!form.subject.trim()) errs.subject = 'Ämne krävs';
-    if (!form.body.trim()) errs.body = 'Meddelande krävs';
-    return errs;
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -94,7 +50,6 @@ export function CreateMailingModal({ eventId, open, onClose }: {
     });
   }
 
-  /** Called when the visual editor saves */
   function handleEditorSave(htmlBody: string, editorData: string) {
     if (!form.subject.trim()) {
       toast('Ange ett ämne innan du sparar', 'error');
@@ -125,7 +80,6 @@ export function CreateMailingModal({ eventId, open, onClose }: {
   if (editMode === 'editor') {
     return (
       <div style={editorStyles.fullscreen}>
-        {/* Ämne + filter bar above editor */}
         <div style={editorStyles.topBar}>
           <div style={editorStyles.topBarField}>
             <label style={editorStyles.topBarLabel}>Ämne</label>
@@ -199,7 +153,7 @@ export function CreateMailingModal({ eventId, open, onClose }: {
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => handleTemplateSelect(t.id)}
+                    onClick={() => handleTemplateSelect(t.id, templates)}
                     style={{
                       ...styles.templateCard,
                       ...(selectedTemplate === t.id ? styles.templateCardActive : {}),
@@ -216,22 +170,14 @@ export function CreateMailingModal({ eventId, open, onClose }: {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={sharedStyles.modalSelectLabel}>Välj redigeringsläge</label>
             <div style={styles.modeGrid}>
-              <button
-                type="button"
-                onClick={() => setEditMode('editor')}
-                style={styles.modeCard}
-              >
+              <button type="button" onClick={() => setEditMode('editor')} style={styles.modeCard}>
                 <span style={styles.modeIcon}><EditorIcon /></span>
                 <span style={styles.modeName}>Visuell editor</span>
                 <span style={styles.modeDesc}>
                   Dra-och-släpp block, bilder och knappar. Full kontroll över layout.
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={() => setEditMode('form')}
-                style={styles.modeCard}
-              >
+              <button type="button" onClick={() => setEditMode('form')} style={styles.modeCard}>
                 <span style={styles.modeIcon}><FormIcon /></span>
                 <span style={styles.modeName}>Snabbredigering</span>
                 <span style={styles.modeDesc}>
@@ -309,7 +255,6 @@ export function CreateMailingModal({ eventId, open, onClose }: {
 }
 
 /* ---- Icons ---- */
-
 function EditorIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -335,19 +280,13 @@ function FormIcon() {
 }
 
 /* ---- Styles ---- */
-
 const styles: Record<string, React.CSSProperties> = {
   templateGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' },
   templateCard: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '2px',
-    padding: '10px 12px',
-    borderRadius: 'var(--radius-md)',
-    border: '1.5px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-card)',
-    cursor: 'pointer',
-    textAlign: 'left' as const,
+    display: 'flex', flexDirection: 'column' as const, gap: '2px',
+    padding: '10px 12px', borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)',
+    cursor: 'pointer', textAlign: 'left' as const,
     transition: 'border-color var(--transition-fast), background-color var(--transition-fast)',
     fontFamily: 'inherit',
   },
@@ -359,16 +298,10 @@ const styles: Record<string, React.CSSProperties> = {
   templateDesc: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.3' },
   modeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   modeCard: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    gap: '8px',
-    padding: '20px 16px',
-    borderRadius: 'var(--radius-lg, 12px)',
-    border: '1.5px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-card)',
-    cursor: 'pointer',
-    textAlign: 'center' as const,
+    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px',
+    padding: '20px 16px', borderRadius: 'var(--radius-lg, 12px)',
+    border: '1.5px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)',
+    cursor: 'pointer', textAlign: 'center' as const,
     transition: 'border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast)',
     fontFamily: 'inherit',
   },
@@ -376,72 +309,34 @@ const styles: Record<string, React.CSSProperties> = {
   modeName: { fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--color-text-primary)' },
   modeDesc: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' },
   backLink: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '4px 0',
-    border: 'none',
-    backgroundColor: 'transparent',
-    color: 'var(--color-text-muted)',
-    cursor: 'pointer',
-    fontSize: 'var(--font-size-sm)',
-    fontFamily: 'inherit',
+    display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 0',
+    border: 'none', backgroundColor: 'transparent', color: 'var(--color-text-muted)',
+    cursor: 'pointer', fontSize: 'var(--font-size-sm)', fontFamily: 'inherit',
   },
 };
 
 const editorStyles: Record<string, React.CSSProperties> = {
   fullscreen: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
     zIndex: 'var(--z-fullscreen-editor)' as unknown as number,
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: '#f5f5f5',
+    display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5',
   },
   topBar: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '8px 16px',
-    backgroundColor: '#FFFFFF',
-    borderBottom: '1px solid #e8e0d8',
-    flexShrink: 0,
+    display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 16px',
+    backgroundColor: '#FFFFFF', borderBottom: '1px solid #e8e0d8', flexShrink: 0,
   },
-  topBarField: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  topBarLabel: {
-    fontSize: '13px',
-    fontWeight: 500,
-    color: '#6b6360',
-    whiteSpace: 'nowrap' as const,
-  },
+  topBarField: { display: 'flex', alignItems: 'center', gap: '6px' },
+  topBarLabel: { fontSize: '13px', fontWeight: 500, color: '#6b6360', whiteSpace: 'nowrap' as const },
   topBarInput: {
-    padding: '5px 10px',
-    border: '1px solid #e8e0d8',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontFamily: 'inherit',
-    minWidth: '240px',
+    padding: '5px 10px', border: '1px solid #e8e0d8', borderRadius: '6px',
+    fontSize: '13px', fontFamily: 'inherit', minWidth: '240px',
   },
   topBarSelect: {
-    padding: '5px 10px',
-    border: '1px solid #e8e0d8',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontFamily: 'inherit',
+    padding: '5px 10px', border: '1px solid #e8e0d8', borderRadius: '6px',
+    fontSize: '13px', fontFamily: 'inherit',
   },
   loading: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '15px',
-    color: '#6b6360',
+    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: '15px', color: '#6b6360',
   },
 };

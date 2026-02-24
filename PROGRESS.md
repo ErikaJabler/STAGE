@@ -900,7 +900,8 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 19 | Säkerhetsfixar (XSS, rate limiting, path traversal) | DONE |
 | 20a | Backend-refaktorering (20.1–20.4) | DONE |
 | 20b | Saknade tester (20.5–20.7) | DONE |
-| 21 | Frontend-refaktorering (7 filer >400 rader, a11y) | TODO |
+| 21a | Frontend-refaktorering (SettingsTab + WebsitePanel + RsvpPage + a11y) | DONE |
+| 21b | Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard) | DONE |
 | 22 | Developer Experience (CI/CD, linting, docs) | TODO |
 
 ---
@@ -1012,4 +1013,33 @@ frontend/src/pages/RsvpResponseForm.tsx                             # 303 rader
 frontend/src/pages/RsvpConfirmation.tsx                             # 80 rader
 frontend/src/pages/RsvpIcons.tsx                                    # 26 rader
 frontend/src/hooks/useRsvpState.ts                                  # 144 rader
+```
+
+---
+
+## Session 21b: Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard)
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] **PublicEvent.tsx** (554 → 147 rader): Extraherat `PublicRegistrationForm.tsx` (258, anmälningsformulär + GDPR + ICS), `PublicEventRenderer.tsx` (195, template-rendering med hero/info/program/plats). PublicEvent är nu orkestrerare med DOMPurify + createPortal-logik.
+- [x] **EventForm.tsx** (484 → 387 rader): Extraherat `useEventFormValidation.ts` hook (86, validate + buildPayload + clearFieldError), `useConflictCheck.ts` hook (49, krockkontroll med conflicts API). EventForm behåller layout.
+- [x] **CreateMailingModal.tsx** (447 → 342 rader): Extraherat `useMailingForm.ts` hook (79, formulärstate + mallval + validering + reset). Modal behåller UI + editor-vy.
+- [x] **AdminDashboard.tsx** (418 → 87 rader): Extraherat `DashboardStats.tsx` (96, statistikkort med kategorichips), `DashboardEventList.tsx` (269, kommande events + senaste utskick + alla events tabeller). AdminDashboard är tunn orkestrerare.
+- [x] Alla 148 tester passerar (inga nya — ren refaktorering)
+- [x] `npm run typecheck` grönt (enbart förväntade `cloudflare:test` TS2307-fel)
+- [x] Alla filer under 400 rader
+
+### Avvikelser från plan
+Inga avvikelser — alla 4 filer uppbrutna enligt plan.
+
+### Nya filer
+```
+frontend/src/pages/PublicRegistrationForm.tsx      # 258 rader
+frontend/src/pages/PublicEventRenderer.tsx          # 195 rader
+frontend/src/hooks/useEventFormValidation.ts        # 86 rader
+frontend/src/hooks/useConflictCheck.ts              # 49 rader
+frontend/src/hooks/useMailingForm.ts                # 79 rader
+frontend/src/pages/DashboardStats.tsx               # 96 rader
+frontend/src/pages/DashboardEventList.tsx           # 269 rader
 ```

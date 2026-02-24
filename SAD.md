@@ -49,8 +49,8 @@ Integrationer:
 | `backend/src/utils/route-helpers.ts` | `parseIdParam()`, `requireEvent()` — delade route-hjälpare (session 20a) |
 | `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist, user, permission, search) |
 | `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email, settings). Settings: SettingsTab orkestrerare + EventInfoSection, HeroImageSection, VisibilitySection (inkl. Sender/GDPR), DangerZone, WebsitePanel + WebsiteTemplateSelector, WebsiteFormFields |
-| `frontend/src/hooks/` | Custom hooks: TanStack Query hooks, useWebsiteForm (website state/handlers), useRsvpState (RSVP state-maskin + ICS) |
-| `frontend/src/pages/` | Sidkomponenter: RsvpPage orkestrerare + RsvpResponseForm, RsvpConfirmation, RsvpIcons |
+| `frontend/src/hooks/` | Custom hooks: TanStack Query hooks, useWebsiteForm (website state/handlers), useRsvpState (RSVP state-maskin + ICS), useEventFormValidation (validering + payload), useConflictCheck (krockkontroll), useMailingForm (mailing formulärstate) |
+| `frontend/src/pages/` | Sidkomponenter: RsvpPage orkestrerare + RsvpResponseForm, RsvpConfirmation, RsvpIcons. PublicEvent orkestrerare + PublicRegistrationForm, PublicEventRenderer. AdminDashboard orkestrerare + DashboardStats, DashboardEventList |
 | `frontend/src/` | React-app (Vite) |
 | `packages/shared/src/` | Delade typer, konstanter + Zod-schemas |
 | `migrations/` | Inkrementella D1 SQL-filer |
