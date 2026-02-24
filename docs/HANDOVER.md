@@ -1,7 +1,7 @@
 # Överlämningsdokument — Stage till produktion
 
 > **Senast uppdaterad:** 2026-02-24
-> **Repo:** https://github.com/mikwik/stage (privat)
+> **Repo:** https://github.com/ErikaJabler/STAGE
 > **Live (dev):** https://mikwik.se/stage/
 > **Målmiljö:** event.consid.se (eller annan Consid-ägd domän)
 
