@@ -1153,3 +1153,45 @@ frontend/src/hooks/useMailingForm.ts                # 79 rader
 frontend/src/pages/DashboardStats.tsx               # 96 rader
 frontend/src/pages/DashboardEventList.tsx           # 269 rader
 ```
+
+---
+
+## Session 22: Developer Experience (CI/CD, linting, docs)
+
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+
+- [x] **ESLint** flat config (`eslint.config.js`): `@typescript-eslint/no-explicit-any: error`, `@typescript-eslint/no-unused-vars: error`, `max-lines: [warn, 400]`
+- [x] **Prettier** (`.prettierrc`): single quotes, trailing commas, 2 spaces, 100 print width
+- [x] **EditorConfig** (`.editorconfig`): indent_style space, indent_size 2, LF, UTF-8
+- [x] **Autofix:** Prettier + ESLint körd på hela kodbasen, 11 oanvända imports/variabler borttagna
+- [x] **GitHub Actions CI** (`.github/workflows/ci.yml`): push + PR trigger → checkout → setup-node → npm ci → typecheck → lint → test
+- [x] **PR-template** (`.github/pull_request_template.md`): beskrivning, typ av ändring, checklista
+- [x] **Husky** pre-commit hook med lint-staged (eslint --fix + prettier)
+- [x] **README.md** utökad: prerequisites, steg-för-steg setup, alla kommandon, projektstruktur, troubleshooting
+- [x] **CONTRIBUTING.md**: git workflow, Conventional Commits, arkitekturregler, testmönster, kodgranskningschecklista
+- [x] **`.dev.vars.example`**: mall för miljövariabler
+- [x] **`.gitattributes`**: LF line endings, binärfiler
+- [x] **`engines`** i package.json: node >=20, npm >=10
+- [x] Alla 148 tester passerar
+- [x] `npm run typecheck` grönt (enbart förväntade `cloudflare:test` TS2307-fel)
+
+### Avvikelser från plan
+
+Inga avvikelser — alla 4 deluppgifter (22.1–22.4) levererade enligt plan.
+
+### Nya filer
+
+```
+eslint.config.js                        # ESLint flat config
+.prettierrc                             # Prettier-konfiguration
+.editorconfig                           # EditorConfig
+.gitattributes                          # Line endings + binärfiler
+.github/workflows/ci.yml               # GitHub Actions CI
+.github/pull_request_template.md        # PR-template
+.husky/pre-commit                       # Husky pre-commit hook
+CONTRIBUTING.md                         # Bidragsguide
+.dev.vars.example                       # Miljövariabel-mall
+```

@@ -424,3 +424,42 @@ Testar fullständiga flöden som korsar service-gränser:
 3. **Behörigheter** — owner/editor/viewer rollkontroll, 403 vid obehörig åtkomst
 4. **Email-kö + Cron** — >5 mottagare köas, processQueue() processar, ≤5 direkt
 5. **Klona event** — kopia med korrekt data, 0 deltagare, skaparen som owner
+
+---
+
+## Developer Experience (session 22)
+
+### Linting & Formatering
+
+| Verktyg | Konfigurationsfil | Beskrivning |
+|---------|-------------------|-------------|
+| ESLint 10 | `eslint.config.js` | Flat config, TypeScript-regler (`no-explicit-any`, `no-unused-vars`, `max-lines: 400`) |
+| Prettier 3.8 | `.prettierrc` | Single quotes, trailing commas, 2 spaces, 100 print width |
+| EditorConfig | `.editorconfig` | Indent space/2, LF, UTF-8 |
+
+### CI/CD
+
+- **GitHub Actions** (`.github/workflows/ci.yml`): Triggar på push/PR mot `main`. Steg: checkout → setup-node 20 → npm ci → typecheck → lint → test.
+- **PR-template** (`.github/pull_request_template.md`): Checklista med typecheck, lint, test, arkitekturregler.
+
+### Git hooks
+
+- **Husky** (`.husky/pre-commit`): Kör `lint-staged` vid varje commit.
+- **lint-staged** (konfigurerat i `package.json`): ESLint --fix + Prettier på staged `.ts`/`.tsx`-filer, Prettier på `.json`/`.css`/`.md`.
+
+### Övriga konfigurationsfiler
+
+| Fil | Syfte |
+|-----|-------|
+| `.gitattributes` | LF line endings, binärfilshantering |
+| `.dev.vars.example` | Mall för miljövariabler (Resend API-nyckel) |
+| `CONTRIBUTING.md` | Git workflow, commit-format, arkitekturregler, testmönster |
+
+### npm scripts (tillagda session 22)
+
+```bash
+npm run lint          # ESLint
+npm run lint:fix      # ESLint med autofix
+npm run format        # Prettier (skriv)
+npm run format:check  # Prettier (kontrollera)
+```
