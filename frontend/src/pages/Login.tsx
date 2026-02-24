@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Button, Input } from '../components/ui';
+import { ConsidLogo } from '../assets/ConsidLogo';
 
 export function Login() {
   const { login } = useAuth();
@@ -32,9 +33,12 @@ export function Login() {
     <div style={styles.wrapper}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <div style={styles.logoMark}>S</div>
+          <div style={styles.logoContainer}>
+            <ConsidLogo variant="full" color="white" height={28} />
+          </div>
+          <div style={styles.divider} />
           <h1 style={styles.title}>Stage</h1>
-          <p style={styles.subtitle}>Consid Eventplattform</p>
+          <p style={styles.subtitle}>Eventplattform</p>
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -80,7 +84,7 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'var(--color-bg-primary)',
+    backgroundColor: 'var(--color-burgundy)',
     padding: '24px',
   },
   card: {
@@ -89,30 +93,34 @@ const styles: Record<string, CSSProperties> = {
     padding: '48px 40px',
     width: '100%',
     maxWidth: '420px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
   },
   header: {
     textAlign: 'center' as const,
     marginBottom: '32px',
   },
-  logoMark: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '14px',
-    backgroundColor: 'var(--color-burgundy)',
-    color: 'var(--color-white)',
+  logoContainer: {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '24px',
-    fontWeight: 600,
-    marginBottom: '16px',
+    backgroundColor: 'var(--color-burgundy)',
+    borderRadius: '12px',
+    padding: '14px 24px',
+    marginBottom: '20px',
+  },
+  divider: {
+    width: '40px',
+    height: '3px',
+    backgroundColor: 'var(--color-light-orange)',
+    borderRadius: '2px',
+    margin: '0 auto 20px',
   },
   title: {
     fontSize: '28px',
     fontWeight: 600,
     color: 'var(--color-burgundy)',
     margin: '0 0 4px',
+    letterSpacing: '-0.02em',
   },
   subtitle: {
     fontSize: '14px',
