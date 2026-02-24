@@ -28,13 +28,28 @@ images.post("/", async (c) => {
   }
 });
 
+// Validation constants for path traversal protection
+const ALLOWED_PREFIXES = ["events"];
+const VALID_FILENAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|jpeg|png|webp|gif)$/;
+
 /** GET /api/images/:prefix/:filename — Serve an image from R2 */
 images.get("/:prefix/:filename", async (c) => {
   if (!c.env.IMAGES) {
     return c.json({ error: "Bildlagring (R2) är inte konfigurerad" }, 503);
   }
 
-  const key = `${c.req.param("prefix")}/${c.req.param("filename")}`;
+  const prefix = c.req.param("prefix");
+  const filename = c.req.param("filename");
+
+  // Path traversal protection
+  if (!ALLOWED_PREFIXES.includes(prefix)) {
+    return c.json({ error: "Ogiltigt prefix" }, 400);
+  }
+  if (!VALID_FILENAME.test(filename)) {
+    return c.json({ error: "Ogiltigt filnamn" }, 400);
+  }
+
+  const key = `${prefix}/${filename}`;
   const object = await ImageService.get(c.env.IMAGES, key);
 
   if (!object) {

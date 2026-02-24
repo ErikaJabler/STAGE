@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 101 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service, activity.service, website.service, admin.service, integration e2e)
-**Status:** ☑ Testad (session 17)
+**Förväntat resultat:** 113 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service inkl. admin-bypass, activity.service, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e)
+**Status:** ☑ Testad (session 19)
 
 ---
 
@@ -1244,3 +1244,52 @@
 2. Navigera direkt till `/stage/admin`
 **Förväntat resultat:** Sidan nekas åtkomst (redirect eller 403), inga admin-data visas
 **Status:** ☐ Ej testad
+
+---
+
+## Session 19: Säkerhetsfixar
+
+### TC-19.1: XSS-skydd i publik webbsida
+**Steg:**
+1. Skapa ett event med webbsida (visuell editor)
+2. Redigera `website_data` i databasen och injicera `<script>alert('XSS')</script>` i `page_html`
+3. Öppna den publika eventsidan (`/stage/e/<slug>`)
+**Förväntat resultat:** Ingen JavaScript exekveras. Script-taggen strippas av DOMPurify. Sidan renderas utan popup.
+**Status:** ☐ Ej testad
+
+### TC-19.2: R2 path traversal blockeras
+**Steg:**
+1. Försök hämta bild med ogiltigt prefix: `GET /stage/api/images/../../etc/passwd`
+2. Försök hämta bild med ogiltigt filnamn: `GET /stage/api/images/events/malicious-file.png`
+3. Försök hämta bild med giltigt UUID: `GET /stage/api/images/events/12345678-1234-1234-1234-123456789abc.png`
+**Förväntat resultat:** Steg 1-2 returnerar 400. Steg 3 returnerar 404 (eller 503 utan R2) men inte 400.
+**Status:** ☑ Automatiskt testad (5 tester i security.test.ts)
+
+### TC-19.3: Rate limiting på login
+**Steg:**
+1. Skicka 10 POST-förfrågningar till `/stage/api/auth/login` inom en minut
+2. Skicka en 11:e förfrågan
+**Förväntat resultat:** De första 10 lyckass (200). Den 11:e returnerar 429 med "För många förfrågningar" och `Retry-After`-header.
+**Status:** ☑ Automatiskt testad (2 tester i security.test.ts)
+
+### TC-19.4: Rate limiting på RSVP respond
+**Steg:**
+1. Skicka 5 POST-förfrågningar till `/stage/api/rsvp/:token/respond` inom en minut
+2. Skicka en 6:e förfrågan
+**Förväntat resultat:** Den 6:e returnerar 429.
+**Status:** ☑ Automatiskt testad (1 test i security.test.ts)
+
+### TC-19.5: Admin kan hantera behörigheter
+**Steg:**
+1. Logga in som admin (is_admin = 1)
+2. Gå till ett event ägt av annan användare
+3. Försök lägga till en behörighet
+**Förväntat resultat:** Admin kan lägga till och ta bort behörigheter (inte bara owner).
+**Status:** ☑ Automatiskt testad (2 tester i permission.service.test.ts)
+
+### TC-19.6: Ogiltig JSON i website_data kraschar inte
+**Steg:**
+1. Uppdatera `website_data` i events-tabellen till ogiltig JSON (t.ex. "not-json")
+2. Hämta eventets webbplats (`GET /stage/api/public/events/:slug`)
+**Förväntat resultat:** API returnerar eventet med `website_data_parsed: null`. Ingen krasch/500.
+**Status:** ☑ Automatiskt testad (2 tester i website.service.test.ts)

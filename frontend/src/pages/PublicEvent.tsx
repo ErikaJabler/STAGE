@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, type CSSProperties, type FormEvent } from 'react';
+import { useState, useEffect, useRef, useMemo, type CSSProperties, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import DOMPurify from 'dompurify';
 import type { Event, WebsiteData } from '@stage/shared';
 import { websiteApi, type RegisterResult } from '../api/client';
 
@@ -97,6 +98,15 @@ export function PublicEvent() {
   const template = event?.website_template;
   const hasCustomPage = !!websiteData?.page_html;
 
+  // Sanitize custom page HTML to prevent XSS
+  const sanitizedPageHtml = useMemo(() => {
+    if (!websiteData?.page_html) return '';
+    return DOMPurify.sanitize(websiteData.page_html, {
+      ADD_TAGS: ['style'],
+      ADD_ATTR: ['target', 'data-page-register-form'],
+    });
+  }, [websiteData?.page_html]);
+
   // Registration form component (shared between custom page and template page)
   const registrationForm = event && (
     state === 'registered' && regResult ? (
@@ -185,7 +195,7 @@ export function PublicEvent() {
         <>
           <div
             ref={customPageRef}
-            dangerouslySetInnerHTML={{ __html: websiteData!.page_html! }}
+            dangerouslySetInnerHTML={{ __html: sanitizedPageHtml }}
           />
           {/* Portal the React registration form into the placeholder */}
           {formPortalTarget && registrationForm && createPortal(registrationForm, formPortalTarget)}

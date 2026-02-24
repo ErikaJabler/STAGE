@@ -116,6 +116,33 @@ describe("PermissionService", () => {
     expect(perms.some((p) => p.role === "editor" && p.user_email === editor.email)).toBe(true);
   });
 
+  it("admin can view and edit any event without explicit permission", async () => {
+    const admin = await createUser(env.DB, `admin-${Date.now()}@test.se`, "Admin", crypto.randomUUID());
+    // Make user admin
+    await env.DB.prepare("UPDATE users SET is_admin = 1 WHERE id = ?").bind(admin.id).run();
+
+    const owner = await createUser(env.DB, `admin-test-owner-${Date.now()}@test.se`, "Owner", crypto.randomUUID());
+    const event = await EventService.create(env.DB, makeEvent());
+    await PermissionService.setOwner(env.DB, owner.id, event.id);
+
+    // Admin has no explicit permission on this event
+    expect(await PermissionService.getRole(env.DB, admin.id, event.id)).toBe(null);
+
+    // But admin can view and edit via isAdmin checks
+    expect(await PermissionService.canView(env.DB, admin.id, event.id)).toBe(true);
+    expect(await PermissionService.canEdit(env.DB, admin.id, event.id)).toBe(true);
+    expect(await PermissionService.isAdmin(env.DB, admin.id)).toBe(true);
+  });
+
+  it("non-admin without permission cannot access", async () => {
+    const user = await createUser(env.DB, `nonadmin-${Date.now()}@test.se`, "User", crypto.randomUUID());
+    const event = await EventService.create(env.DB, makeEvent());
+
+    expect(await PermissionService.isAdmin(env.DB, user.id)).toBe(false);
+    expect(await PermissionService.canView(env.DB, user.id, event.id)).toBe(false);
+    expect(await PermissionService.canEdit(env.DB, user.id, event.id)).toBe(false);
+  });
+
   it("addPermission upgrades role if permission exists", async () => {
     const user = await createUser(env.DB, `upgrade-${Date.now()}@test.se`, "Upgrade", crypto.randomUUID());
     const event = await EventService.create(env.DB, makeEvent());

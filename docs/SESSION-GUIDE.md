@@ -70,3 +70,32 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ## Session 18: Test, polish, deploy Fas 2 ✅ DONE
 **Levererat:** Kodgranskning av GrapeJS mailrendering, publik webbplats, admin-dashboard. 3 bugfixar: XSS-skydd i email merge fields (renderHtml()), mobilresponsivt registreringsformulär (flex-wrap), admin-dashboard days_until tidszonsfix. 6 nya manuella testfall. 101 tester. Docs uppdaterade.
+
+---
+
+# Fas 3: Refaktorering & Förvaltning
+
+> Fullständig plan: `docs/REFACTORING-PLAN.md`
+
+---
+
+## Session 19: Säkerhetsfixar ✅ DONE
+**Levererat:** DOMPurify XSS-skydd i PublicEvent. R2 path traversal-validering (prefix allowlist + UUID filename). D1-baserad rate limiter (auth/login 10/h, RSVP respond 5/min). Admin-bypass i permissions (owner || admin). JSON.parse try-catch i website.service. 12 nya tester (113 totalt). Migration 0009.
+
+---
+
+## Session 20: Backend-refaktorering + saknade tester
+**Mål:** Konsolidera duplicerade funktioner (escapeHtml, validateEvent, ID-validering), extrahera route-helpers, refaktorera mailing.service, flytta search-query till service. Tester för MailingService, RsvpService, template-renderer.
+**Filer:** 17 filer (6 nya). ~20 nya testfall. **OBS:** Kan behöva delas i 20a (refaktorering) + 20b (tester).
+
+---
+
+## Session 21: Frontend-refaktorering
+**Mål:** Bryt upp 7 filer >400 rader (SettingsTab, WebsitePanel, RsvpPage, PublicEvent, EventForm, CreateMailingModal, AdminDashboard). A11y-fixar (alt-text, aria-labels, focus trap, touch targets).
+**Filer:** 25+ filer (15 nya). **OBS:** Sannolikt delad i 21a + 21b.
+
+---
+
+## Session 22: Developer Experience
+**Mål:** ESLint + Prettier + EditorConfig, GitHub Actions CI, Husky pre-commit hooks, README-expansion, CONTRIBUTING.md, .dev.vars.example.
+**Filer:** 10 filer (8 nya konfigurationsfiler).

@@ -12,6 +12,8 @@
     "@grapesjs/react": "^2.0.0",
     "@stage/shared": "*",
     "@tanstack/react-query": "^5.90.21",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.3.1",
     "grapesjs": "^0.22.14",
     "juice": "^11.1.1",
     "react": "^19.0.0",

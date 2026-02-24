@@ -20,9 +20,18 @@ export const WebsiteService = {
 
     if (!event) return null;
 
+    let data: WebsiteData | null = null;
+    if (event.website_data) {
+      try {
+        data = JSON.parse(event.website_data);
+      } catch {
+        console.warn(`[WebsiteService] Invalid JSON in website_data for event ${eventId}`);
+      }
+    }
+
     return {
       template: event.website_template,
-      data: event.website_data ? JSON.parse(event.website_data) : null,
+      data,
       published: event.website_published === 1,
     };
   },
@@ -80,9 +89,18 @@ export const WebsiteService = {
     if (!event) return null;
     if (!event.website_published) return null;
 
+    let websiteDataParsed: WebsiteData | null = null;
+    if (event.website_data) {
+      try {
+        websiteDataParsed = JSON.parse(event.website_data as string);
+      } catch {
+        console.warn(`[WebsiteService] Invalid JSON in website_data for slug ${slug}`);
+      }
+    }
+
     return {
       ...event,
-      website_data_parsed: event.website_data ? JSON.parse(event.website_data as string) : null,
+      website_data_parsed: websiteDataParsed,
     };
   },
 

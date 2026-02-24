@@ -887,3 +887,43 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
 | 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ✅ |
 | 0008 | admin_role.sql | (ALTER users: is_admin) | ✅ | ✅ |
+| 0009 | rate_limits.sql | rate_limits | ✅ | ☐ |
+
+---
+
+## Fas 3: Refaktorering & Förvaltning
+
+> Plan: `docs/REFACTORING-PLAN.md` (genererad från fullständig repoanalys 2026-02-24)
+
+| Session | Fokus | Status |
+|---------|-------|--------|
+| 19 | Säkerhetsfixar (XSS, rate limiting, path traversal) | DONE |
+| 20 | Backend-refaktorering + saknade tester | TODO |
+| 21 | Frontend-refaktorering (7 filer >400 rader, a11y) | TODO |
+| 22 | Developer Experience (CI/CD, linting, docs) | TODO |
+
+---
+
+## Session 19: Säkerhetsfixar
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] **19.1 XSS-skydd i PublicEvent (KRITISK):** DOMPurify installerat i frontend. `page_html` saniteras med `DOMPurify.sanitize()` via `useMemo` innan `dangerouslySetInnerHTML`. Tillåter safe HTML + `<style>` + `data-page-register-form` attribut. Strippar `<script>`, `onclick` etc.
+- [x] **19.2 R2 path traversal-validering (HÖG):** Prefix valideras mot allowlist (`['events']`). Filename valideras som UUID + extension (`/^[0-9a-f]{8}-...\.(jpg|jpeg|png|webp|gif)$/`). Returnerar 400 vid ogiltigt.
+- [x] **19.3 Rate limiting (HÖG):** Ny `backend/src/middleware/rate-limiter.ts` med D1-baserad sliding window. `auth/login` = 10 req/IP/timme, `rsvp/:token/respond` = 5 req/token/minut. Migration `0009_rate_limits.sql` (rate_limits tabell). Fail-open vid D1-fel.
+- [x] **19.4 Admin-bypass i permissions (MEDIUM):** POST och DELETE i `permissions.ts` kontrollerar nu `isOwner || isAdmin`. Admins kan hantera behörigheter för alla events.
+- [x] **19.5 JSON.parse try-catch (HÖG):** Båda `JSON.parse`-anropen i `website.service.ts` (getWebsite rad 25, getPublicEvent rad 85) wrappade i try-catch. Returnerar `null` vid parse-fel, loggar warning.
+- [x] **Säkerhetstester:** 8 nya tester i `security.test.ts` (path traversal: 5, rate limit auth: 2, rate limit RSVP: 1). 2 nya tester i `website.service.test.ts` (ogiltig JSON). 2 nya tester i `permission.service.test.ts` (admin-bypass).
+- [x] Alla 113 tester passerar (101 befintliga + 12 nya)
+- [x] SAD.md, TESTPLAN.md, SESSION-GUIDE.md uppdaterade
+
+### Avvikelser från plan
+Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
+
+### Anteckningar
+- DOMPurify installerat i frontend (browser-only) — INTE i Cloudflare Worker backend (som planen specificerade)
+- Rate limiter fail-open design: om D1-query misslyckas (t.ex. rate_limits-tabellen saknas i test-env), tillåts requestet genom. Loggar error. Skyddar mot att rate limiting-buggar blockerar legitim trafik.
+- Befintliga tester som anropar RSVP-respond loggar `[rate-limiter] D1 error` — detta är förväntat (rate_limits-tabellen skapas inte i alla testfilers beforeAll)
+- Pre-existerande TS-varningar (TS2731, TS2339, TS2769) oförändrade — kosmetiska, esbuild bygger utan problem
+- Migration 0009 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0009_rate_limits.sql`

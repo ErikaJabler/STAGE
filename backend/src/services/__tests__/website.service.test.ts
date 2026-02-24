@@ -78,6 +78,38 @@ describe("WebsiteService", () => {
     });
   });
 
+  describe("getWebsite with invalid JSON", () => {
+    it("returns null data when website_data contains invalid JSON", async () => {
+      const event = await EventService.create(env.DB, makeEvent());
+
+      // Manually insert invalid JSON into the database
+      await env.DB
+        .prepare("UPDATE events SET website_data = ?, website_template = 'hero-info', website_published = 1 WHERE id = ?")
+        .bind("{invalid json!!!", event.id)
+        .run();
+
+      const result = await WebsiteService.getWebsite(env.DB, event.id);
+      expect(result).toBeTruthy();
+      expect(result!.data).toBeNull();
+      expect(result!.template).toBe("hero-info");
+    });
+  });
+
+  describe("getPublicEvent with invalid JSON", () => {
+    it("returns null website_data_parsed when JSON is corrupt", async () => {
+      const event = await EventService.create(env.DB, makeEvent());
+
+      await env.DB
+        .prepare("UPDATE events SET website_data = ?, website_published = 1 WHERE id = ?")
+        .bind("not-json", event.id)
+        .run();
+
+      const result = await WebsiteService.getPublicEvent(env.DB, event.slug);
+      expect(result).toBeTruthy();
+      expect(result!.website_data_parsed).toBeNull();
+    });
+  });
+
   describe("register", () => {
     it("registers a participant successfully", async () => {
       const event = await EventService.create(env.DB, makeEvent());

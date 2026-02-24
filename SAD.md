@@ -213,6 +213,13 @@ Integrationer:
 | created_at | TEXT NOT NULL | Skapades |
 | sent_at | TEXT | Skickades |
 
+### rate_limits (migration 0009)
+| Kolumn | Typ | Beskrivning |
+|---|---|---|
+| key | TEXT PK | Unik rate limit-nyckel (t.ex. "auth_login:192.168.1.1") |
+| window_start | INTEGER NOT NULL | Unix timestamp för fönstrets start |
+| count | INTEGER NOT NULL | Antal requests i aktuellt fönster |
+
 ## Deploy-flöde
 1. `npm run build` — bygger frontend (Vite) + backend (esbuild)
 2. `wrangler deploy` — deployer Worker med Assets
@@ -233,6 +240,9 @@ Integrationer:
 | AuthProvider interface | `backend/src/middleware/auth.ts` | Abstrakt `resolveUser(token, db)` |
 | tokenAuthProvider | `backend/src/middleware/auth.ts` | D1-baserad token-lookup |
 | authMiddleware | `backend/src/middleware/auth.ts` | Hono middleware: `X-Auth-Token` → `c.var.user` |
+| rateLimiter | `backend/src/middleware/rate-limiter.ts` | D1-baserad sliding window rate limiter (session 19) |
+| loginRateLimiter | `backend/src/middleware/rate-limiter.ts` | 10 req/IP/timme på auth/login (session 19) |
+| rsvpRespondRateLimiter | `backend/src/middleware/rate-limiter.ts` | 5 req/token/minut på RSVP respond (session 19) |
 | PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll: canView, canEdit, isOwner, isAdmin |
 | AdminService | `backend/src/services/admin.service.ts` | Cross-event dashboard, krockkontroll (session 17) |
 | TemplateLockService | `backend/src/services/template-lock.service.ts` | Låsta zoner per malltyp (session 17) |
@@ -243,6 +253,10 @@ Integrationer:
 **Skyddade routes:** Alla `/api/events/*` (utom `POST .../register`), `POST /api/images`, `/api/admin/*` kräver auth.
 
 **XSS-skydd i email merge fields (session 18):** `renderHtml()` i `template-renderer.ts` HTML-escaper merge field-värden (namn, event, plats etc.) vid ersättning i GrapeJS-genererad HTML. URL-fält (rsvp_link, calendar_link) undantas. Förhindrar XSS om deltagarnamn innehåller HTML-tecken.
+**XSS-skydd i publik webbplats (session 19):** `DOMPurify.sanitize()` i `PublicEvent.tsx` saniterar GrapeJS-genererad `page_html` innan rendering med `dangerouslySetInnerHTML`. Strippar `<script>`, `onclick` etc. Tillåter `<style>`, `target`, `data-page-register-form`.
+**R2 path traversal-skydd (session 19):** `images.ts` validerar prefix mot allowlist (`['events']`) och filename som UUID + extension. Blockerar `../../`-attacker.
+**Rate limiting (session 19):** D1-baserad sliding window i `rate-limiter.ts`. `auth/login` = 10 req/IP/timme, `rsvp/:token/respond` = 5 req/token/minut. Fail-open vid D1-fel. Returnerar 429 med `Retry-After`-header.
+**JSON.parse-skydd (session 19):** `website.service.ts` wrappade `JSON.parse` i try-catch — returnerar `null` vid korrupt data istf att krascha.
 **Publika routes:** `/api/health`, `/api/auth/*`, `/api/rsvp/*`, `GET /api/images/*`, `GET /api/public/events/:slug`, `POST /api/events/:slug/register`.
 
 **Auto-owner:** Vid skapande av event sätts skaparen automatiskt som owner.
@@ -357,7 +371,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
-- **Antal:** 92 tester (11 testfiler)
+- **Antal:** 113 tester (13 testfiler)
 
 ### Teststruktur
 
@@ -371,9 +385,10 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 | E2E-integration | `backend/src/__tests__/integration.test.ts` | 14 | Fullständiga flöden (session 13b) |
 | Service-enhetstester | `backend/src/services/__tests__/event.service.test.ts` | 10 | EventService, slug, ICS |
 | Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts` | 14 | ParticipantService, CSV |
-| Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts` | 8 | PermissionService, roller |
+| Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts` | 10 | PermissionService, roller, admin-bypass |
 | Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts` | 5 | ActivityService, loggning |
-| Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts` | 6 | WebsiteService, CRUD, registrering |
+| Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts` | 8 | WebsiteService, CRUD, registrering, ogiltig JSON |
+| Säkerhetstester | `backend/src/__tests__/security.test.ts` | 8 | Path traversal, rate limiting |
 
 ### E2E-integrationstester (session 13b)
 

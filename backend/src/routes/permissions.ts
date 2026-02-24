@@ -21,14 +21,15 @@ permissions.get("/", async (c) => {
   return c.json(perms);
 });
 
-/** POST /api/events/:eventId/permissions — add/update permission (owner only) */
+/** POST /api/events/:eventId/permissions — add/update permission (owner or admin) */
 permissions.post("/", async (c) => {
   const eventId = Number(c.req.param("eventId"));
   const user = c.var.user;
 
   const isOwner = await PermissionService.isOwner(c.env.DB, user.id, eventId);
-  if (!isOwner) {
-    return c.json({ error: "Bara ägaren kan hantera behörigheter" }, 403);
+  const isAdmin = await PermissionService.isAdmin(c.env.DB, user.id);
+  if (!isOwner && !isAdmin) {
+    return c.json({ error: "Bara ägaren eller admin kan hantera behörigheter" }, 403);
   }
 
   const body = await c.req.json();
@@ -39,15 +40,16 @@ permissions.post("/", async (c) => {
   return c.json(perm, 201);
 });
 
-/** DELETE /api/events/:eventId/permissions/:userId — remove permission (owner only) */
+/** DELETE /api/events/:eventId/permissions/:userId — remove permission (owner or admin) */
 permissions.delete("/:userId", async (c) => {
   const eventId = Number(c.req.param("eventId"));
   const userId = Number(c.req.param("userId"));
   const user = c.var.user;
 
   const isOwner = await PermissionService.isOwner(c.env.DB, user.id, eventId);
-  if (!isOwner) {
-    return c.json({ error: "Bara ägaren kan hantera behörigheter" }, 403);
+  const isAdmin = await PermissionService.isAdmin(c.env.DB, user.id);
+  if (!isOwner && !isAdmin) {
+    return c.json({ error: "Bara ägaren eller admin kan hantera behörigheter" }, 403);
   }
 
   // Prevent owner from removing themselves

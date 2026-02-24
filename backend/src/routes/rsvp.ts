@@ -3,6 +3,7 @@ import type { Env } from "../bindings";
 import { rsvpRespondSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
 import { RsvpService } from "../services/rsvp.service";
+import { rsvpRespondRateLimiter } from "../middleware/rate-limiter";
 
 const rsvp = new Hono<{ Bindings: Env }>();
 
@@ -41,7 +42,7 @@ rsvp.get("/:token", async (c) => {
 });
 
 /** POST /api/rsvp/:token/respond — Respond attending or declined */
-rsvp.post("/:token/respond", async (c) => {
+rsvp.post("/:token/respond", rsvpRespondRateLimiter, async (c) => {
   const token = c.req.param("token");
   const body = await c.req.json();
   const { status, dietary_notes, plus_one_name, plus_one_email } = parseBody(rsvpRespondSchema, body);
