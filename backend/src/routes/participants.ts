@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env, AuthVariables } from "../bindings";
 import { createParticipantSchema, updateParticipantSchema, reorderSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
-import { getEventById } from "../db/queries";
+import { parseIdParam, requireEvent } from "../utils/route-helpers";
 import { ParticipantService } from "../services/participant.service";
 import { WaitlistService } from "../services/waitlist.service";
 import { PermissionService } from "../services/permission.service";
@@ -10,23 +10,9 @@ import { ActivityService } from "../services/activity.service";
 
 const participants = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-/** Validate eventId param and check event exists */
-async function validateEvent(db: D1Database, eventIdStr: string) {
-  const eventId = Number(eventIdStr);
-  if (!Number.isFinite(eventId) || eventId < 1) {
-    return { error: "Ogiltigt event-ID", status: 400 as const, eventId: 0 };
-  }
-  const event = await getEventById(db, eventId);
-  if (!event) {
-    return { error: "Event hittades inte", status: 404 as const, eventId: 0 };
-  }
-  return { error: null, status: 200 as const, eventId };
-}
-
 /** GET /api/events/:eventId/participants — List all participants (viewer+) */
 participants.get("/", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canView(c.env.DB, user.id, eventId))) {
@@ -39,8 +25,7 @@ participants.get("/", async (c) => {
 
 /** POST /api/events/:eventId/participants — Add a participant (editor+) */
 participants.post("/", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
@@ -57,8 +42,7 @@ participants.post("/", async (c) => {
 
 /** POST /api/events/:eventId/participants/import — Bulk import from CSV (editor+) */
 participants.post("/import", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
@@ -87,18 +71,14 @@ participants.post("/import", async (c) => {
 
 /** PUT /api/events/:eventId/participants/:id — Update a participant (editor+) */
 participants.put("/:id", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
     return c.json({ error: "Åtkomst nekad" }, 403);
   }
 
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "deltagare-ID");
 
   const body = await c.req.json();
   const input = parseBody(updateParticipantSchema, body);
@@ -113,18 +93,14 @@ participants.put("/:id", async (c) => {
 
 /** PUT /api/events/:eventId/participants/:id/reorder — Update queue position (editor+) */
 participants.put("/:id/reorder", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
     return c.json({ error: "Åtkomst nekad" }, 403);
   }
 
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "deltagare-ID");
 
   const body = await c.req.json();
   const input = parseBody(reorderSchema, body);
@@ -139,8 +115,7 @@ participants.put("/:id/reorder", async (c) => {
 
 /** GET /api/events/:eventId/participants/export — Export participants as CSV (viewer+) */
 participants.get("/export", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canView(c.env.DB, user.id, eventId))) {
@@ -158,18 +133,14 @@ participants.get("/export", async (c) => {
 
 /** DELETE /api/events/:eventId/participants/:id — Remove a participant (editor+) */
 participants.delete("/:id", async (c) => {
-  const { error, status, eventId } = await validateEvent(c.env.DB, c.req.param("eventId") as string);
-  if (error) return c.json({ error }, status);
+  const { eventId } = await requireEvent(c.env.DB, c.req.param("eventId") as string);
 
   const user = c.var.user;
   if (!(await PermissionService.canEdit(c.env.DB, user.id, eventId))) {
     return c.json({ error: "Åtkomst nekad" }, 403);
   }
 
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt deltagare-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "deltagare-ID");
 
   // Fetch participant name before deletion for activity log
   const participants_list = await ParticipantService.list(c.env.DB, eventId);

@@ -1,3 +1,5 @@
+import { escapeHtml } from "../../utils/escaping";
+
 /** Build Consid-branded HTML email */
 export function buildEmailHtml(opts: {
   body: string;
@@ -109,10 +111,5 @@ export function buildEmailHtml(opts: {
 </html>`;
 }
 
-export function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+// Re-export for backward compatibility
+export { escapeHtml } from "../../utils/escaping";

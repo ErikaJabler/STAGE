@@ -84,9 +84,14 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
-## Session 20: Backend-refaktorering + saknade tester
-**Mål:** Konsolidera duplicerade funktioner (escapeHtml, validateEvent, ID-validering), extrahera route-helpers, refaktorera mailing.service, flytta search-query till service. Tester för MailingService, RsvpService, template-renderer.
-**Filer:** 17 filer (6 nya). ~20 nya testfall. **OBS:** Kan behöva delas i 20a (refaktorering) + 20b (tester).
+## Session 20a: Backend-refaktorering ✅ DONE
+**Levererat:** escapeHtml konsoliderad till utils/escaping.ts. Route-helpers (parseIdParam + requireEvent) eliminerar duplicerad validateEvent i 2 filer + standardiserar ID-validering i 5 route-filer. mailing.service.ts refaktorerad (buildQueueItem, sendEmailsDirect, DIRECT_SEND_THRESHOLD). Search-query flyttad till service-lager (SearchService + search.queries.ts). ~70 rader netto borttagna. 113 tester.
+
+---
+
+## Session 20b: Saknade tester
+**Mål:** Tester för MailingService (~8-10), RsvpService (~6-8), template-renderer (~5).
+**Filer:** 3 nya testfiler. ~20 nya testfall.
 
 ---
 

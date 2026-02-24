@@ -45,7 +45,9 @@ Integrationer:
 | `backend/src/middleware/auth.ts` | Auth-middleware + AuthProvider interface + token-provider |
 | `backend/src/middleware/error-handler.ts` | Global error-handler (ZodError → 400, övriga → 500) |
 | `backend/src/utils/validation.ts` | `parseBody()` — Zod-wrapper för request-validering |
-| `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist, user, permission) |
+| `backend/src/utils/escaping.ts` | `escapeHtml()` — delad HTML-escape (session 20a) |
+| `backend/src/utils/route-helpers.ts` | `parseIdParam()`, `requireEvent()` — delade route-hjälpare (session 20a) |
+| `backend/src/db/` | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist, user, permission, search) |
 | `frontend/src/components/features/` | Feature-komponenter per domän (events, participants, email, settings) |
 | `frontend/src/` | React-app (Vite) |
 | `packages/shared/src/` | Delade typer, konstanter + Zod-schemas |
@@ -285,8 +287,9 @@ Integrationer:
 | EventService | `backend/src/services/event.service.ts` | Slug-generering, ICS-generering, event CRUD, clone |
 | ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering |
 | WaitlistService | `backend/src/services/waitlist.service.ts` | shouldWaitlist, promoteNext, reorder |
-| MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk, sendTest |
+| MailingService | `backend/src/services/mailing.service.ts` | Utskickshantering, send med per-mottagare RSVP-länk, sendTest. Refaktorerad session 20a: buildQueueItem(), sendEmailsDirect(), DIRECT_SEND_THRESHOLD. |
 | RsvpService | `backend/src/services/rsvp.service.ts` | RSVP-svar, avbokning, auto-waitlist vid kapacitet |
+| SearchService | `backend/src/services/search.service.ts` | Sök events (namn, plats, arrangör), user-scoped (session 20a) |
 | ImageService | `backend/src/services/image.service.ts` | Bilduppladdning till R2, validering (typ/storlek), servering |
 | PermissionService | `backend/src/services/permission.service.ts` | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter |
 | ActivityService | `backend/src/services/activity.service.ts` | Aktivitetsloggning per event (log, logMailingCreated, logParticipantAdded, etc.) |

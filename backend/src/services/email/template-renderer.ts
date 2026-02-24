@@ -1,4 +1,5 @@
 import type { Event, Participant } from "@stage/shared";
+import { escapeHtml } from "../../utils/escaping";
 import { buildEmailHtml } from "./html-builder";
 import { saveTheDate } from "./templates/save-the-date";
 import { invitation } from "./templates/invitation";
@@ -78,18 +79,10 @@ export function renderHtml(html: string, context: MergeContext): string {
   for (const [key, value] of Object.entries(context)) {
     // URLs should not be escaped (href attributes need raw URLs)
     const isUrl = key === "rsvp_link" || key === "calendar_link";
-    const safeValue = isUrl ? value : escapeHtmlChars(value);
+    const safeValue = isUrl ? value : escapeHtml(value);
     result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), safeValue);
   }
   return result;
-}
-
-function escapeHtmlChars(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 /** Render a complete email (text + HTML) from template or custom body */

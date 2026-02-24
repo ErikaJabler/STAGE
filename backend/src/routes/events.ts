@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Env, AuthVariables } from "../bindings";
 import { createEventSchema, updateEventSchema } from "@stage/shared";
 import { parseBody } from "../utils/validation";
+import { parseIdParam } from "../utils/route-helpers";
 import { EventService, generateICS } from "../services/event.service";
 import { PermissionService } from "../services/permission.service";
 import { ActivityService } from "../services/activity.service";
@@ -38,10 +39,7 @@ events.get("/", async (c) => {
 
 /** GET /api/events/:id — Get single event (requires viewer+) */
 events.get("/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt event-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const canView = await PermissionService.canView(c.env.DB, user.id, id);
@@ -74,10 +72,7 @@ events.post("/", async (c) => {
 
 /** PUT /api/events/:id — Update event (requires editor+) */
 events.put("/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt event-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const canEdit = await PermissionService.canEdit(c.env.DB, user.id, id);
@@ -101,10 +96,7 @@ events.put("/:id", async (c) => {
 
 /** GET /api/events/:id/calendar.ics — Generate ICS (requires viewer+) */
 events.get("/:id/calendar.ics", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt event-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const canView = await PermissionService.canView(c.env.DB, user.id, id);
@@ -129,10 +121,7 @@ events.get("/:id/calendar.ics", async (c) => {
 
 /** POST /api/events/:id/clone — Clone event (requires editor+) */
 events.post("/:id/clone", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt event-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const canEdit = await PermissionService.canEdit(c.env.DB, user.id, id);
@@ -154,10 +143,7 @@ events.post("/:id/clone", async (c) => {
 
 /** DELETE /api/events/:id — Soft-delete event (requires owner) */
 events.delete("/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (!Number.isFinite(id) || id < 1) {
-    return c.json({ error: "Ogiltigt event-ID" }, 400);
-  }
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const isOwner = await PermissionService.isOwner(c.env.DB, user.id, id);

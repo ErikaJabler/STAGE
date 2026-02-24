@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Env, AuthVariables } from "../bindings";
+import { parseIdParam } from "../utils/route-helpers";
 import { PermissionService } from "../services/permission.service";
 import { ActivityService } from "../services/activity.service";
 
@@ -7,8 +8,7 @@ const activities = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /** GET / — list activities for an event */
 activities.get("/", async (c) => {
-  const eventId = Number(c.req.param("eventId"));
-  if (isNaN(eventId)) return c.json({ error: "Ogiltigt event-ID" }, 400);
+  const eventId = parseIdParam(c.req.param("eventId") as string, "event-ID");
 
   const user = c.get("user");
   const canView = await PermissionService.canView(c.env.DB, user.id, eventId);

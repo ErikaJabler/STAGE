@@ -887,7 +887,7 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
 | 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ✅ |
 | 0008 | admin_role.sql | (ALTER users: is_admin) | ✅ | ✅ |
-| 0009 | rate_limits.sql | rate_limits | ✅ | ☐ |
+| 0009 | rate_limits.sql | rate_limits | ✅ | ✅ |
 
 ---
 
@@ -898,7 +898,8 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | Session | Fokus | Status |
 |---------|-------|--------|
 | 19 | Säkerhetsfixar (XSS, rate limiting, path traversal) | DONE |
-| 20 | Backend-refaktorering + saknade tester | TODO |
+| 20a | Backend-refaktorering (20.1–20.4) | DONE |
+| 20b | Saknade tester (20.5–20.7) | TODO |
 | 21 | Frontend-refaktorering (7 filer >400 rader, a11y) | TODO |
 | 22 | Developer Experience (CI/CD, linting, docs) | TODO |
 
@@ -927,3 +928,29 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 - Befintliga tester som anropar RSVP-respond loggar `[rate-limiter] D1 error` — detta är förväntat (rate_limits-tabellen skapas inte i alla testfilers beforeAll)
 - Pre-existerande TS-varningar (TS2731, TS2339, TS2769) oförändrade — kosmetiska, esbuild bygger utan problem
 - Migration 0009 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0009_rate_limits.sql`
+
+---
+
+## Session 20a: Backend-refaktorering
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] **20.1 — escapeHtml-konsolidering:** Ny `backend/src/utils/escaping.ts` med gemensam `escapeHtml()`. Importerad i `html-builder.ts` och `template-renderer.ts`. Lokala kopior borttagna. Re-export i html-builder för bakåtkompatibilitet.
+- [x] **20.2 — Route-helpers:** Ny `backend/src/utils/route-helpers.ts` med `parseIdParam()` (kastar HTTPException 400) + `requireEvent()` (parse + event-exists, kastar 400/404). Duplicerad `validateEvent()` borttagen från `participants.ts` och `mailings.ts`. `isNaN(id)` ersatt med `parseIdParam` i `website.ts` och `activities.ts`. Alla ID-valideringar i `events.ts` ersatta med `parseIdParam`.
+- [x] **20.3 — mailing.service.ts refaktorering:** Extraherat `buildQueueItem()` (deduplicerat queue-item-byggande i `send()` + `sendToNew()`), `sendEmailsDirect()` (deduplicerat direct-send-loop i `sendDirect()` + `sendToNew()`), `DIRECT_SEND_THRESHOLD = 5` (namngiven magisk siffra). Borttagen `sendDirect()`-metod (ersatt av fristående `sendEmailsDirect()`). Netto: ~50 rader mindre.
+- [x] **20.4 — Search till service-lager:** SQL flyttad från `routes/search.ts` till ny `backend/src/db/search.queries.ts` + `backend/src/services/search.service.ts`. Route är nu tunn (parse → service → response).
+- [x] Alla 113 tester passerar
+- [x] `npm run typecheck` grönt (enbart förväntade `cloudflare:test` TS2307-fel)
+- [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
+
+### Avvikelser från plan
+- Session delad i 20a (refaktorering) + 20b (tester) per användarens instruktion
+- `validateEventAccess` (med permission-check) implementerades som `requireEvent` (utan permission-check) — permission-nivån varierar per route (canView/canEdit/isOwner) och hanteras bättre separat
+
+### Anteckningar
+- Route-helpers använder Hono HTTPException med JSON-body (`{ error: "..." }`) — matchande format som innan
+- Hono fångar HTTPException automatiskt innan custom error-handler → inga ändringar i error-handler.ts
+- Inga nya migrationer behövdes
+- Inga frontend-ändringar
+- Netto: ~70 rader borttagna (duplicering eliminerad)

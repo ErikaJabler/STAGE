@@ -3,14 +3,14 @@ import type { Env, AuthVariables } from "../bindings";
 import { WebsiteService } from "../services/website.service";
 import { parseBody } from "../utils/validation";
 import { updateWebsiteSchema, publicRegisterSchema } from "@stage/shared";
+import { parseIdParam } from "../utils/route-helpers";
 import { PermissionService } from "../services/permission.service";
 
 const website = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /** GET /api/events/:id/website — get website config (auth, editor+) */
 website.get("/:id/website", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (isNaN(id)) return c.json({ error: "Ogiltigt ID" }, 400);
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const canView = await PermissionService.canView(c.env.DB, user.id, id);
@@ -24,8 +24,7 @@ website.get("/:id/website", async (c) => {
 
 /** PUT /api/events/:id/website — save website config (auth, editor+) */
 website.put("/:id/website", async (c) => {
-  const id = Number(c.req.param("id"));
-  if (isNaN(id)) return c.json({ error: "Ogiltigt ID" }, 400);
+  const id = parseIdParam(c.req.param("id"), "event-ID");
 
   const user = c.var.user;
   const canEdit = await PermissionService.canEdit(c.env.DB, user.id, id);
