@@ -51,6 +51,7 @@ function makeParticipant(overrides: Partial<Participant> = {}): Participant {
     dietary_notes: null,
     plus_one_name: null,
     plus_one_email: null,
+    plus_one_dietary_notes: null,
     cancellation_token: 'abc-123-def',
     email_status: null,
     gdpr_consent_at: null,

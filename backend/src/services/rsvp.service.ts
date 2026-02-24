@@ -20,6 +20,7 @@ export const RsvpService = {
       dietary_notes?: string | null;
       plus_one_name?: string | null;
       plus_one_email?: string | null;
+      plus_one_dietary_notes?: string | null;
     },
   ): Promise<{
     ok: boolean;
@@ -48,6 +49,10 @@ export const RsvpService = {
       if (extra.plus_one_email !== undefined) {
         extraFields.push('plus_one_email = ?');
         extraValues.push(extra.plus_one_email ?? null);
+      }
+      if (extra.plus_one_dietary_notes !== undefined) {
+        extraFields.push('plus_one_dietary_notes = ?');
+        extraValues.push(extra.plus_one_dietary_notes ?? null);
       }
       if (extraFields.length > 0) {
         extraFields.push('updated_at = ?');

@@ -200,6 +200,7 @@ export interface CreateParticipantPayload {
   dietary_notes?: string | null;
   plus_one_name?: string | null;
   plus_one_email?: string | null;
+  plus_one_dietary_notes?: string | null;
 }
 
 export interface UpdateParticipantPayload {
@@ -213,6 +214,7 @@ export interface UpdateParticipantPayload {
   dietary_notes?: string | null;
   plus_one_name?: string | null;
   plus_one_email?: string | null;
+  plus_one_dietary_notes?: string | null;
 }
 
 /** Mailing API */
@@ -310,6 +312,7 @@ export interface RsvpInfo {
     dietary_notes: string | null;
     plus_one_name: string | null;
     plus_one_email: string | null;
+    plus_one_dietary_notes: string | null;
   };
   event: {
     name: string;
@@ -334,6 +337,7 @@ export interface RsvpRespondPayload {
   dietary_notes?: string | null;
   plus_one_name?: string | null;
   plus_one_email?: string | null;
+  plus_one_dietary_notes?: string | null;
 }
 
 export const rsvpApi = {
@@ -424,6 +428,7 @@ export interface PublicRegisterPayload {
   dietary_notes?: string | null;
   plus_one_name?: string | null;
   plus_one_email?: string | null;
+  plus_one_dietary_notes?: string | null;
   gdpr_consent: boolean;
 }
 

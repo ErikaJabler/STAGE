@@ -10,6 +10,8 @@ interface ExtraFieldsProps {
   setPlusOneName: (v: string) => void;
   plusOneEmail: string;
   setPlusOneEmail: (v: string) => void;
+  plusOneDietaryNotes: string;
+  setPlusOneDietaryNotes: (v: string) => void;
 }
 
 export function ExtraFieldsForm({
@@ -19,6 +21,8 @@ export function ExtraFieldsForm({
   setPlusOneName,
   plusOneEmail,
   setPlusOneEmail,
+  plusOneDietaryNotes,
+  setPlusOneDietaryNotes,
 }: ExtraFieldsProps) {
   const [showPlusOne, setShowPlusOne] = useState(!!(plusOneName || plusOneEmail));
 
@@ -56,11 +60,19 @@ export function ExtraFieldsForm({
             placeholder="Gästens e-post (valfritt)"
             style={s.fieldInput}
           />
+          <textarea
+            value={plusOneDietaryNotes}
+            onChange={(e) => setPlusOneDietaryNotes(e.target.value)}
+            placeholder="Gästens allergier / kostpreferenser"
+            style={s.fieldTextarea}
+            rows={2}
+          />
           <button
             onClick={() => {
               setShowPlusOne(false);
               setPlusOneName('');
               setPlusOneEmail('');
+              setPlusOneDietaryNotes('');
             }}
             style={s.removePlusOneBtn}
           >
@@ -82,6 +94,8 @@ interface ResponseFormProps {
   setPlusOneName: (v: string) => void;
   plusOneEmail: string;
   setPlusOneEmail: (v: string) => void;
+  plusOneDietaryNotes: string;
+  setPlusOneDietaryNotes: (v: string) => void;
   onRespond: (status: 'attending' | 'declined') => void;
   onStartCancel: () => void;
 }
@@ -96,6 +110,8 @@ export function RsvpResponseForm({
   setPlusOneName,
   plusOneEmail,
   setPlusOneEmail,
+  plusOneDietaryNotes,
+  setPlusOneDietaryNotes,
   onRespond,
   onStartCancel,
 }: ResponseFormProps) {
@@ -156,6 +172,8 @@ export function RsvpResponseForm({
             setPlusOneName={setPlusOneName}
             plusOneEmail={plusOneEmail}
             setPlusOneEmail={setPlusOneEmail}
+            plusOneDietaryNotes={plusOneDietaryNotes}
+            setPlusOneDietaryNotes={setPlusOneDietaryNotes}
           />
           <div style={s.buttonGroup}>
             <button
@@ -180,6 +198,8 @@ export function RsvpResponseForm({
             setPlusOneName={setPlusOneName}
             plusOneEmail={plusOneEmail}
             setPlusOneEmail={setPlusOneEmail}
+            plusOneDietaryNotes={plusOneDietaryNotes}
+            setPlusOneDietaryNotes={setPlusOneDietaryNotes}
           />
           <div style={s.buttonGroup}>
             <button
@@ -202,6 +222,8 @@ export function RsvpResponseForm({
             setPlusOneName={setPlusOneName}
             plusOneEmail={plusOneEmail}
             setPlusOneEmail={setPlusOneEmail}
+            plusOneDietaryNotes={plusOneDietaryNotes}
+            setPlusOneDietaryNotes={setPlusOneDietaryNotes}
           />
           <div style={s.buttonGroup}>
             <button

@@ -51,6 +51,7 @@ website.post('/:slug/register', async (c) => {
     dietary_notes: input.dietary_notes,
     plus_one_name: input.plus_one_name,
     plus_one_email: input.plus_one_email,
+    plus_one_dietary_notes: input.plus_one_dietary_notes,
   });
 
   if (!result.ok) {

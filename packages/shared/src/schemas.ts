@@ -115,6 +115,7 @@ export const createParticipantSchema = z.object({
     .string()
     .regex(emailPattern, 'plus_one_email måste vara en giltig emailadress')
     .nullish(),
+  plus_one_dietary_notes: z.string().nullish(),
 });
 
 export type CreateParticipantInput = z.infer<typeof createParticipantSchema>;
@@ -133,6 +134,7 @@ export const updateParticipantSchema = z.object({
     .string()
     .regex(emailPattern, 'plus_one_email måste vara en giltig emailadress')
     .nullish(),
+  plus_one_dietary_notes: z.string().nullish(),
 });
 
 export type UpdateParticipantInput = z.infer<typeof updateParticipantSchema>;
@@ -171,6 +173,7 @@ export const rsvpRespondSchema = z.object({
     .string()
     .regex(emailPattern, 'plus_one_email måste vara en giltig emailadress')
     .nullish(),
+  plus_one_dietary_notes: z.string().nullish(),
 });
 
 /* ---- Reorder schema ---- */
@@ -246,6 +249,7 @@ export const publicRegisterSchema = z.object({
   dietary_notes: z.string().nullish(),
   plus_one_name: z.string().nullish(),
   plus_one_email: z.string().regex(emailPattern, 'Ogiltig e-postadress för plusettgäst').nullish(),
+  plus_one_dietary_notes: z.string().nullish(),
   gdpr_consent: z.boolean().refine((v) => v === true, 'GDPR-samtycke krävs'),
 });
 

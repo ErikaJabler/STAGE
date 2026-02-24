@@ -21,6 +21,7 @@ export function useRsvpState(token: string | undefined) {
   const [dietaryNotes, setDietaryNotes] = useState('');
   const [plusOneName, setPlusOneName] = useState('');
   const [plusOneEmail, setPlusOneEmail] = useState('');
+  const [plusOneDietaryNotes, setPlusOneDietaryNotes] = useState('');
 
   useEffect(() => {
     if (!token) return;
@@ -31,6 +32,7 @@ export function useRsvpState(token: string | undefined) {
         setDietaryNotes(data.participant.dietary_notes ?? '');
         setPlusOneName(data.participant.plus_one_name ?? '');
         setPlusOneEmail(data.participant.plus_one_email ?? '');
+        setPlusOneDietaryNotes(data.participant.plus_one_dietary_notes ?? '');
         setState('loaded');
       })
       .catch(() => {
@@ -48,6 +50,7 @@ export function useRsvpState(token: string | undefined) {
         dietary_notes: dietaryNotes || null,
         plus_one_name: plusOneName || null,
         plus_one_email: plusOneEmail || null,
+        plus_one_dietary_notes: plusOneDietaryNotes || null,
       });
       setResponseName(result.name);
       setResponseStatus(result.status);
@@ -88,6 +91,8 @@ export function useRsvpState(token: string | undefined) {
     setPlusOneName,
     plusOneEmail,
     setPlusOneEmail,
+    plusOneDietaryNotes,
+    setPlusOneDietaryNotes,
     handleRespond,
     handleCancel,
   };

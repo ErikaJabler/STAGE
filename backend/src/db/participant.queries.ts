@@ -41,8 +41,8 @@ export async function createParticipant(
       `INSERT INTO participants (
         event_id, name, email, company, category, status,
         response_deadline, dietary_notes, plus_one_name, plus_one_email,
-        cancellation_token, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        plus_one_dietary_notes, cancellation_token, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       eventId,
@@ -55,6 +55,7 @@ export async function createParticipant(
       input.dietary_notes ?? null,
       input.plus_one_name ?? null,
       input.plus_one_email ?? null,
+      input.plus_one_dietary_notes ?? null,
       cancellationToken,
       now,
       now,
@@ -88,8 +89,8 @@ export async function bulkCreateParticipants(
         `INSERT INTO participants (
           event_id, name, email, company, category, status,
           response_deadline, dietary_notes, plus_one_name, plus_one_email,
-          cancellation_token, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          plus_one_dietary_notes, cancellation_token, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         eventId,
@@ -102,6 +103,7 @@ export async function bulkCreateParticipants(
         input.dietary_notes ?? null,
         input.plus_one_name ?? null,
         input.plus_one_email ?? null,
+        input.plus_one_dietary_notes ?? null,
         cancellationToken,
         now,
         now,
@@ -133,6 +135,7 @@ export async function updateParticipant(
     'dietary_notes',
     'plus_one_name',
     'plus_one_email',
+    'plus_one_dietary_notes',
   ];
 
   for (const key of updatable) {

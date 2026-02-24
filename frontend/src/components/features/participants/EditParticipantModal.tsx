@@ -28,6 +28,7 @@ export function EditParticipantModal({
     dietary_notes: participant.dietary_notes ?? '',
     plus_one_name: participant.plus_one_name ?? '',
     plus_one_email: participant.plus_one_email ?? '',
+    plus_one_dietary_notes: participant.plus_one_dietary_notes ?? '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -68,6 +69,7 @@ export function EditParticipantModal({
       dietary_notes: form.dietary_notes.trim() || null,
       plus_one_name: form.plus_one_name.trim() || null,
       plus_one_email: form.plus_one_email.trim() || null,
+      plus_one_dietary_notes: form.plus_one_dietary_notes.trim() || null,
     };
 
     updateParticipant.mutate(
@@ -170,6 +172,18 @@ export function EditParticipantModal({
           error={errors.plus_one_email}
           placeholder="anna@example.se"
         />
+        {form.plus_one_name.trim() && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={editStyles.textareaLabel}>Plus-one allergier / kost</label>
+            <textarea
+              value={form.plus_one_dietary_notes}
+              onChange={(e) => updateField('plus_one_dietary_notes', e.target.value)}
+              placeholder="Gästens allergier / kostpreferenser..."
+              rows={2}
+              style={editStyles.textarea}
+            />
+          </div>
+        )}
       </form>
     </Modal>
   );

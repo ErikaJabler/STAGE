@@ -64,6 +64,8 @@ export function RsvpPage() {
             setPlusOneName={rsvp.setPlusOneName}
             plusOneEmail={rsvp.plusOneEmail}
             setPlusOneEmail={rsvp.setPlusOneEmail}
+            plusOneDietaryNotes={rsvp.plusOneDietaryNotes}
+            setPlusOneDietaryNotes={rsvp.setPlusOneDietaryNotes}
             onRespond={rsvp.handleRespond}
             onStartCancel={() => rsvp.setState('confirm-cancel')}
           />

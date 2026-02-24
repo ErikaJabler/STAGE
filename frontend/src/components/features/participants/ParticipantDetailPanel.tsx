@@ -29,11 +29,6 @@ function getEmailStatusLabel(status: string) {
   }
 }
 
-function formatDateShort(isoStr: string): string {
-  const d = new Date(isoStr.replace(' ', 'T') + (isoStr.includes('T') ? '' : 'Z'));
-  return d.toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' });
-}
-
 export function ParticipantDetailPanel({
   eventId,
   participant,
@@ -51,23 +46,30 @@ export function ParticipantDetailPanel({
     <div style={styles.panel}>
       <div style={styles.detailGrid}>
         <div style={styles.detailColumn}>
-          <DetailItem label="Företag" value={participant.company || '—'} />
-          <DetailItem label="Kategori" value={getCategoryLabel(participant.category)} />
-          <DetailItem label="Allergier / Kost" value={participant.dietary_notes || '—'} />
+          {participant.company && <DetailItem label="Företag:" value={participant.company} />}
+          <DetailItem label="Kategori:" value={getCategoryLabel(participant.category)} />
+          {participant.dietary_notes && (
+            <DetailItem label="Allergier/Kost:" value={participant.dietary_notes} />
+          )}
         </div>
         <div style={styles.detailColumn}>
-          <DetailItem label="Plus-one" value={participant.plus_one_name || '—'} />
           {participant.plus_one_name && (
-            <DetailItem label="Plus-one e-post" value={participant.plus_one_email || '—'} />
+            <DetailItem label="Plus-one:" value={participant.plus_one_name} />
           )}
-          <DetailItem label="Tillagd" value={formatDateShort(participant.created_at)} />
+          {participant.plus_one_name && participant.plus_one_email && (
+            <DetailItem label="Plus-one e-post:" value={participant.plus_one_email} />
+          )}
+          {participant.plus_one_dietary_notes && (
+            <DetailItem label="Plus-one kost:" value={participant.plus_one_dietary_notes} />
+          )}
+          <DetailItem label="Tillagd:" value={formatDateTime(participant.created_at)} />
           {participant.status !== 'invited' && (
-            <DetailItem label="Senast ändrad" value={formatDateShort(participant.updated_at)} />
+            <DetailItem label="Senast ändrad:" value={formatDateTime(participant.updated_at)} />
           )}
           {participant.gdpr_consent_at && (
             <DetailItem
-              label="GDPR-samtycke"
-              value={formatDateShort(participant.gdpr_consent_at)}
+              label="GDPR-samtycke:"
+              value={formatDateTime(participant.gdpr_consent_at)}
             />
           )}
         </div>
@@ -117,38 +119,37 @@ function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div style={styles.detailItem}>
       <span style={styles.detailLabel}>{label}</span>
-      <span style={styles.detailValue}>{value}</span>
+      <span style={styles.detailValue}> {value}</span>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
   panel: {
-    padding: '16px 24px',
+    padding: '10px 16px',
     backgroundColor: 'var(--color-bg-primary)',
     borderTop: '1px solid var(--color-border)',
   },
   detailGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '12px 32px',
-    marginBottom: '16px',
+    gap: '6px 24px',
+    marginBottom: '12px',
   },
   detailColumn: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: '4px',
   },
   detailItem: {
     display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '2px',
+    flexDirection: 'row' as const,
+    alignItems: 'baseline',
   },
   detailLabel: {
     fontSize: 'var(--font-size-xs)',
     color: 'var(--color-text-muted)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap' as const,
   },
   detailValue: {
     fontSize: 'var(--font-size-sm)',

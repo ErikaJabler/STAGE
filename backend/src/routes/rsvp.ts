@@ -27,6 +27,7 @@ rsvp.get('/:token', async (c) => {
       dietary_notes: participant.dietary_notes,
       plus_one_name: participant.plus_one_name,
       plus_one_email: participant.plus_one_email,
+      plus_one_dietary_notes: participant.plus_one_dietary_notes,
     },
     event: {
       name: event.name,
@@ -45,15 +46,14 @@ rsvp.get('/:token', async (c) => {
 rsvp.post('/:token/respond', rsvpRespondRateLimiter, async (c) => {
   const token = c.req.param('token');
   const body = await c.req.json();
-  const { status, dietary_notes, plus_one_name, plus_one_email } = parseBody(
-    rsvpRespondSchema,
-    body,
-  );
+  const { status, dietary_notes, plus_one_name, plus_one_email, plus_one_dietary_notes } =
+    parseBody(rsvpRespondSchema, body);
 
   const result = await RsvpService.respond(c.env.DB, token, status, {
     dietary_notes,
     plus_one_name,
     plus_one_email,
+    plus_one_dietary_notes,
   });
 
   if (!result.ok) {

@@ -6,7 +6,7 @@ import { createParticipantSchema, updateParticipantSchema } from '@stage/shared'
 
 const EVENTS_SQL = `CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, emoji TEXT, slug TEXT NOT NULL UNIQUE, date TEXT NOT NULL, time TEXT NOT NULL, end_date TEXT, end_time TEXT, location TEXT NOT NULL, description TEXT, organizer TEXT NOT NULL, organizer_email TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'planning', type TEXT NOT NULL DEFAULT 'other', max_participants INTEGER, overbooking_limit INTEGER NOT NULL DEFAULT 0, visibility TEXT NOT NULL DEFAULT 'private', sender_mailbox TEXT, gdpr_consent_text TEXT, image_url TEXT, website_template TEXT, website_data TEXT, website_published INTEGER NOT NULL DEFAULT 0, created_by TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), deleted_at TEXT);`;
 
-const PARTICIPANTS_SQL = `CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT, category TEXT NOT NULL DEFAULT 'other', status TEXT NOT NULL DEFAULT 'invited', queue_position INTEGER, response_deadline TEXT, dietary_notes TEXT, plus_one_name TEXT, plus_one_email TEXT, cancellation_token TEXT NOT NULL UNIQUE, email_status TEXT, gdpr_consent_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE);`;
+const PARTICIPANTS_SQL = `CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT, category TEXT NOT NULL DEFAULT 'other', status TEXT NOT NULL DEFAULT 'invited', queue_position INTEGER, response_deadline TEXT, dietary_notes TEXT, plus_one_name TEXT, plus_one_email TEXT, plus_one_dietary_notes TEXT, cancellation_token TEXT NOT NULL UNIQUE, email_status TEXT, gdpr_consent_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE);`;
 
 const MAILINGS_SQL = `CREATE TABLE IF NOT EXISTS mailings (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, recipient_filter TEXT NOT NULL DEFAULT 'all', status TEXT NOT NULL DEFAULT 'draft', sent_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE);`;
 
@@ -299,7 +299,7 @@ describe('ParticipantService.exportCateringCSV', () => {
     // Header + 1 attending (invited/declined excluded)
     expect(lines).toHaveLength(2);
     expect(lines[0]).toBe(
-      'Namn,E-post,Företag,Status,Allergier/Kost,Plus-one namn,Plus-one e-post',
+      'Namn,Företag,Status,Allergier/Kost,Plus-one namn,Plus-one allergier/kost',
     );
     expect(lines[1]).toContain('Attending');
     expect(csv).not.toContain('Invited');
@@ -333,7 +333,7 @@ describe('ParticipantService.exportCateringCSV', () => {
     expect(attendingLine).toContain('Deltar');
   });
 
-  it('includes dietary_notes and plus_one fields', async () => {
+  it('includes dietary_notes and plus_one fields with short names', async () => {
     const eventId = await createTestEvent();
     const ts = Date.now();
 
@@ -345,12 +345,17 @@ describe('ParticipantService.exportCateringCSV', () => {
       dietary_notes: 'Glutenfri, nötallergi',
       plus_one_name: 'Partner Person',
       plus_one_email: 'partner@test.se',
+      plus_one_dietary_notes: 'Vegan',
     });
 
     const csv = await ParticipantService.exportCateringCSV(env.DB, eventId);
+    expect(csv).toContain('Food P.');
     expect(csv).toContain('Glutenfri');
-    expect(csv).toContain('Partner Person');
-    expect(csv).toContain('partner@test.se');
+    expect(csv).toContain('Partner P.');
+    expect(csv).toContain('Vegan');
+    // No email columns in catering CSV
+    expect(csv).not.toContain('partner@test.se');
+    expect(csv).not.toContain(`food-${ts}@test.se`);
   });
 
   it('handles CSV escaping correctly', async () => {
@@ -358,15 +363,15 @@ describe('ParticipantService.exportCateringCSV', () => {
     const ts = Date.now();
 
     await ParticipantService.create(env.DB, eventId, {
-      name: 'Svensson, Anna',
+      name: 'Anna Svensson',
       email: `esc-${ts}@test.se`,
       status: 'attending',
       dietary_notes: 'Laktos "fri"',
     });
 
     const csv = await ParticipantService.exportCateringCSV(env.DB, eventId);
-    // Name with comma should be quoted
-    expect(csv).toContain('"Svensson, Anna"');
+    // Short name: "Anna S."
+    expect(csv).toContain('Anna S.');
     // Dietary with quotes should be double-quoted
     expect(csv).toContain('"Laktos ""fri"""');
   });

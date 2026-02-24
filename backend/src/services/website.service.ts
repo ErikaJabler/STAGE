@@ -122,6 +122,7 @@ export const WebsiteService = {
       dietary_notes?: string | null;
       plus_one_name?: string | null;
       plus_one_email?: string | null;
+      plus_one_dietary_notes?: string | null;
     },
   ): Promise<{
     ok: boolean;
@@ -167,6 +168,7 @@ export const WebsiteService = {
       dietary_notes: input.dietary_notes,
       plus_one_name: input.plus_one_name,
       plus_one_email: input.plus_one_email,
+      plus_one_dietary_notes: input.plus_one_dietary_notes,
     };
 
     const participant = await createParticipant(db, event.id, participantInput);

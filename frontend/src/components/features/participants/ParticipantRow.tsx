@@ -4,15 +4,11 @@ import {
   getCategoryLabel,
   getParticipantStatusLabel,
   getParticipantStatusVariant,
+  formatDateTime,
 } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
 import { TrashIcon } from '../shared-icons';
 import { ParticipantDetailPanel } from './ParticipantDetailPanel';
-
-function formatDateShort(isoStr: string): string {
-  const d = new Date(isoStr.replace(' ', 'T') + (isoStr.includes('T') ? '' : 'Z'));
-  return d.toLocaleDateString('sv-SE');
-}
 
 export function ParticipantRow({
   participant: p,
@@ -37,7 +33,7 @@ export function ParticipantRow({
   onDeadlineChange: (val: string) => void;
   reorderPending: boolean;
 }) {
-  const hasDietary = !!p.dietary_notes;
+  const hasDietary = !!(p.dietary_notes || p.plus_one_dietary_notes);
   const hasPlusOne = !!p.plus_one_name;
 
   return (
@@ -59,7 +55,15 @@ export function ParticipantRow({
         <td style={{ ...sharedStyles.td, textAlign: 'center' }}>
           <span style={styles.infoIcons}>
             {hasDietary && (
-              <span title={`Kost: ${p.dietary_notes}`} style={styles.infoIcon}>
+              <span
+                title={[
+                  p.dietary_notes ? `Kost: ${p.dietary_notes}` : '',
+                  p.plus_one_dietary_notes ? `+1 kost: ${p.plus_one_dietary_notes}` : '',
+                ]
+                  .filter(Boolean)
+                  .join('\n')}
+                style={styles.infoIcon}
+              >
                 <DietaryIcon />
               </span>
             )}
@@ -75,7 +79,7 @@ export function ParticipantRow({
         </td>
         <td style={sharedStyles.td}>
           {p.status !== 'invited' ? (
-            <span style={styles.dateText}>{formatDateShort(p.updated_at)}</span>
+            <span style={styles.dateText}>{formatDateTime(p.updated_at)}</span>
           ) : (
             <span style={{ color: 'var(--color-text-muted)' }}>{'\u2014'}</span>
           )}

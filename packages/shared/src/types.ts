@@ -54,6 +54,7 @@ export interface Participant {
   dietary_notes: string | null;
   plus_one_name: string | null;
   plus_one_email: string | null;
+  plus_one_dietary_notes: string | null;
   email_status: string | null;
   gdpr_consent_at: string | null;
   created_at: string;

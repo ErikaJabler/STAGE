@@ -161,6 +161,13 @@ function escapeCSVField(value: string): string {
   return value;
 }
 
+/** "Klas Waldenfors" → "Klas W.", single name stays as-is */
+function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 1) return fullName.trim();
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 /* ---- Service ---- */
 
 export const ParticipantService = {
@@ -251,16 +258,15 @@ export const ParticipantService = {
     const relevant = participants.filter(
       (p) => p.status === 'attending' || p.status === 'waitlisted',
     );
-    const header = 'Namn,E-post,Företag,Status,Allergier/Kost,Plus-one namn,Plus-one e-post';
+    const header = 'Namn,Företag,Status,Allergier/Kost,Plus-one namn,Plus-one allergier/kost';
     const rows = relevant.map((p) => {
-      const name = escapeCSVField(p.name);
-      const email = escapeCSVField(p.email);
+      const name = escapeCSVField(shortName(p.name));
       const company = escapeCSVField(p.company ?? '');
       const status = p.status === 'attending' ? 'Deltar' : 'Väntelista';
       const dietary = escapeCSVField(p.dietary_notes ?? '');
-      const plusOneName = escapeCSVField(p.plus_one_name ?? '');
-      const plusOneEmail = escapeCSVField(p.plus_one_email ?? '');
-      return `${name},${email},${company},${status},${dietary},${plusOneName},${plusOneEmail}`;
+      const plusOneName = escapeCSVField(p.plus_one_name ? shortName(p.plus_one_name) : '');
+      const plusOneDietary = escapeCSVField(p.plus_one_dietary_notes ?? '');
+      return `${name},${company},${status},${dietary},${plusOneName},${plusOneDietary}`;
     });
     return [header, ...rows].join('\n');
   },
