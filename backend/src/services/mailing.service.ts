@@ -22,6 +22,14 @@ import { enqueueEmails, recordSentEmails, getQueueStats } from './email/send-que
 /** Max recipients for direct (synchronous) sending; larger batches go to the queue */
 const DIRECT_SEND_THRESHOLD = 5;
 
+/** Delay between sends to respect Resend rate-limit (2 emails/sec) */
+const SEND_DELAY_MS = 550;
+
+/** Max retries on rate-limit (429) responses */
+const MAX_RETRIES = 3;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 interface SendResult {
   mailing: Mailing | null;
   sent: number;
@@ -86,13 +94,29 @@ async function sendEmailsDirect(
   const errors: string[] = [];
   const sentItems: QueueItem[] = [];
 
-  for (const item of items) {
-    const result = await provider.send({
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    // Rate-limit delay between sends
+    if (i > 0) await sleep(SEND_DELAY_MS);
+
+    let result = await provider.send({
       to: item.to_email,
       subject: item.subject,
       body: item.plain_text,
       html: item.html,
     });
+
+    // Retry with exponential backoff on rate-limit (429)
+    for (let attempt = 1; result.retryable && attempt <= MAX_RETRIES; attempt++) {
+      await sleep(SEND_DELAY_MS * 2 ** attempt);
+      result = await provider.send({
+        to: item.to_email,
+        subject: item.subject,
+        body: item.plain_text,
+        html: item.html,
+      });
+    }
 
     if (result.success) {
       sent++;

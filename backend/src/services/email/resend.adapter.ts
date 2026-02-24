@@ -27,7 +27,8 @@ export class ResendProvider implements EmailProvider {
 
       if (!res.ok) {
         const err = await res.text();
-        return { success: false, error: err };
+        const retryable = res.status === 429;
+        return { success: false, error: err, retryable };
       }
 
       const data = (await res.json()) as { id: string };

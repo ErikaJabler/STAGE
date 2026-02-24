@@ -3,6 +3,14 @@ import { createEmailProvider } from './factory';
 
 const BATCH_SIZE = 20;
 
+/** Delay between sends to respect Resend rate-limit (2 emails/sec) */
+const SEND_DELAY_MS = 550;
+
+/** Max retries on rate-limit (429) responses */
+const MAX_RETRIES = 3;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /** Enqueue emails for a mailing (one row per recipient) */
 export async function enqueueEmails(
   db: D1Database,
@@ -99,13 +107,29 @@ export async function processQueue(
   let failed = 0;
   const now = new Date().toISOString();
 
-  for (const item of pending.results) {
-    const result = await provider.send({
+  for (let i = 0; i < pending.results.length; i++) {
+    const item = pending.results[i];
+
+    // Rate-limit delay between sends
+    if (i > 0) await sleep(SEND_DELAY_MS);
+
+    let result = await provider.send({
       to: item.to_email,
       subject: item.subject,
       body: item.plain_text,
       html: item.html,
     });
+
+    // Retry with exponential backoff on rate-limit (429)
+    for (let attempt = 1; result.retryable && attempt <= MAX_RETRIES; attempt++) {
+      await sleep(SEND_DELAY_MS * 2 ** attempt);
+      result = await provider.send({
+        to: item.to_email,
+        subject: item.subject,
+        body: item.plain_text,
+        html: item.html,
+      });
+    }
 
     if (result.success) {
       await db

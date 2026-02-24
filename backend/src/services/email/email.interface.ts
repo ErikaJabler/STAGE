@@ -12,6 +12,8 @@ export interface EmailResult {
   success: boolean;
   messageId?: string;
   error?: string;
+  /** True when the failure is transient (e.g. 429 rate-limit) and a retry may succeed */
+  retryable?: boolean;
 }
 
 export interface EmailProvider {
