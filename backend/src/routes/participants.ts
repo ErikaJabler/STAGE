@@ -131,6 +131,38 @@ participants.get('/export', async (c) => {
   });
 });
 
+/** GET /api/events/:eventId/participants/export-catering — Catering export CSV (viewer+) */
+participants.get('/export-catering', async (c) => {
+  const { eventId } = await requireEvent(c.env.DB, c.req.param('eventId') as string);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canView(c.env.DB, user.id, eventId))) {
+    return c.json({ error: 'Åtkomst nekad' }, 403);
+  }
+
+  const csv = await ParticipantService.exportCateringCSV(c.env.DB, eventId);
+  return new Response(csv, {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="catering-event-${eventId}.csv"`,
+    },
+  });
+});
+
+/** GET /api/events/:eventId/participants/:id/emails — Email history for participant (viewer+) */
+participants.get('/:id/emails', async (c) => {
+  const { eventId } = await requireEvent(c.env.DB, c.req.param('eventId') as string);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canView(c.env.DB, user.id, eventId))) {
+    return c.json({ error: 'Åtkomst nekad' }, 403);
+  }
+
+  const id = parseIdParam(c.req.param('id'), 'deltagare-ID');
+  const history = await ParticipantService.getEmailHistory(c.env.DB, eventId, id);
+  return c.json(history);
+});
+
 /** DELETE /api/events/:eventId/participants/:id — Remove a participant (editor+) */
 participants.delete('/:id', async (c) => {
   const { eventId } = await requireEvent(c.env.DB, c.req.param('eventId') as string);

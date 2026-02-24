@@ -163,3 +163,13 @@ export interface EmailQueueItem {
   created_at: string;
   sent_at: string | null;
 }
+
+export interface ParticipantEmailHistory {
+  id: number;
+  mailing_id: number;
+  subject: string;
+  status: EmailQueueStatus;
+  error: string | null;
+  created_at: string;
+  sent_at: string | null;
+}

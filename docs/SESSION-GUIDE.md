@@ -126,3 +126,9 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 ## Session 22: Developer Experience ✅ DONE
 
 **Levererat:** ESLint 10 flat config (no-explicit-any, no-unused-vars, max-lines 400). Prettier (single quotes, trailing commas). EditorConfig. Autofix på hela kodbasen (11 oanvända imports borttagna). GitHub Actions CI (typecheck → lint → test). PR-template. Husky + lint-staged pre-commit. README utökad (prerequisites, setup, troubleshooting). CONTRIBUTING.md (git workflow, Conventional Commits, arkitekturregler). .dev.vars.example. .gitattributes. 9 nya filer. 148 tester (oförändrat).
+
+---
+
+## Förbättrad deltagarhantering ✅ DONE
+
+**Levererat:** Expanderbara deltagarrader med detaljpanel (kostinfo, plus-one, mailhistorik, redigera-knapp). EditParticipantModal. Info-kolumn med ikoner (kost + plus-one). Ändrad-kolumn. Exportmeny (dropdown) med deltagarlista + cateringlista (CSV). Backend: email-historik-endpoint, cateringexport-endpoint, migration 0010 (index). 7 nya tester (155 totalt). 4 nya filer.

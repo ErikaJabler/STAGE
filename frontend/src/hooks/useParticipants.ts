@@ -72,6 +72,15 @@ export function useReorderParticipant(eventId: number) {
   });
 }
 
+/** Fetch email history for a single participant (lazy-loaded) */
+export function useParticipantEmailHistory(eventId: number, participantId: number | null) {
+  return useQuery({
+    queryKey: ['events', eventId, 'participants', participantId, 'emails'],
+    queryFn: () => participantsApi.emailHistory(eventId, participantId!),
+    enabled: participantId !== null,
+  });
+}
+
 /** Import participants from CSV */
 export function useImportParticipants(eventId: number) {
   const queryClient = useQueryClient();

@@ -41,8 +41,8 @@
 **Steg:**
 
 1. Kör `npm run test` i terminalen
-   **Förväntat resultat:** 148 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service inkl. admin-bypass, activity.service, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e, mailing.service inkl. send/sendToNew/sendTest, rsvp.service inkl. auto-waitlist+cancel+promote, template-renderer inkl. XSS-escape+merge fields)
-   **Status:** ☑ Testad (session 22 — 148 tester, oförändrat efter Prettier/ESLint autofix)
+   **Förväntat resultat:** 155 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service inkl. emailHistory+cateringCSV, permission.service inkl. admin-bypass, activity.service, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e, mailing.service inkl. send/sendToNew/sendTest, rsvp.service inkl. auto-waitlist+cancel+promote, template-renderer inkl. XSS-escape+merge fields)
+   **Status:** ☑ Testad (förbättrad deltagarhantering — 155 tester, +7 nya)
 
 ---
 
@@ -1637,4 +1637,84 @@
 1. Uppdatera `website_data` i events-tabellen till ogiltig JSON (t.ex. "not-json")
 2. Hämta eventets webbplats (`GET /stage/api/public/events/:slug`)
    **Förväntat resultat:** API returnerar eventet med `website_data_parsed: null`. Ingen krasch/500.
+   **Status:** ☑ Automatiskt testad (2 tester i website.service.test.ts)
+
+---
+
+## Förbättrad deltagarhantering (Email-historik, cateringexport, detaljpanel)
+
+### TC-DH.1: Expanderbar deltagarrad
+
+**Förutsättning:** Inloggad, event med minst 1 deltagare
+**Steg:**
+
+1. Öppna event → Deltagare-tab
+2. Klicka på en deltagarrad
+   **Förväntat resultat:** Detaljpanel expanderar under raden med: Företag, Kategori, Allergier/Kost, Plus-one, Plus-one e-post, Tillagd-datum, Senast ändrad-datum, GDPR-samtycke (om finns). Klicka igen → panelen stängs.
+   **Status:** ☐ Ej testad
+
+### TC-DH.2: Mailhistorik i detaljpanel
+
+**Förutsättning:** Inloggad, event med deltagare som fått mail
+**Steg:**
+
+1. Klicka på deltagaren i tabellen
+   **Förväntat resultat:** Detaljpanelen visar "Mailhistorik" med lista av utskick (ämnesrad, status-badge: Skickat/Misslyckades/Väntar, tidsstämpel). Deltagare utan utskick visar "Inga utskick".
+   **Status:** ☐ Ej testad
+
+### TC-DH.3: Info-kolumn med ikoner
+
+**Förutsättning:** Event med deltagare — minst en med dietary_notes, minst en med plus_one_name
+**Steg:**
+
+1. Öppna Deltagare-tab
+   **Förväntat resultat:** Info-kolumnen visar kostikon (gaffel) för deltagare med dietary_notes och +1-ikon (person+plus) för deltagare med plus_one_name. Tooltip visar detaljer. Deltagare utan båda visar "—".
+   **Status:** ☐ Ej testad
+
+### TC-DH.4: Ändrad-kolumn visar datum
+
+**Förutsättning:** Event med deltagare i olika statusar
+**Steg:**
+
+1. Öppna Deltagare-tab
+   **Förväntat resultat:** "Ändrad"-kolumnen visar `updated_at` som svenskt datum (YYYY-MM-DD) för deltagare med status != "invited". Deltagare med status "invited" visar "—".
+   **Status:** ☐ Ej testad
+
+### TC-DH.5: Redigera deltagare via detaljpanel
+
+**Förutsättning:** Inloggad med editor-behörighet
+**Steg:**
+
+1. Klicka på deltagare → detaljpanel öppnas
+2. Klicka "Redigera"
+3. Ändra Allergier/Kost till "Glutenfri"
+4. Klicka "Spara"
+   **Förväntat resultat:** Modal stängs, toast "Namn uppdaterades", Info-kolumnen visar kostikon.
+   **Status:** ☐ Ej testad
+
+### TC-DH.6: Exportera cateringlista (CSV)
+
+**Förutsättning:** Event med deltagare i status attending + waitlisted + declined
+**Steg:**
+
+1. Klicka "Exportera" → "Cateringlista (CSV)"
+   **Förväntat resultat:** CSV laddas ner med kolumner: Namn, E-post, Företag, Status, Allergier/Kost, Plus-one namn, Plus-one e-post. Bara attending och waitlisted inkluderas. Waitlisted visar "Väntelista" i Status-kolumnen. Declined/cancelled exkluderas.
+   **Status:** ☐ Ej testad
+
+### TC-DH.7: Exportmeny med två val
+
+**Förutsättning:** Inloggad, event med deltagare
+**Steg:**
+
+1. Klicka "Exportera" dropdown-knappen i Deltagare-tab
+   **Förväntat resultat:** Dropdown-meny visas med "Deltagarlista (CSV)" och "Cateringlista (CSV)". Klick utanför stänger menyn.
+   **Status:** ☐ Ej testad
+
+### TC-DH.8: Email-historik + cateringexport (automatiska tester)
+
+**Steg:**
+
+1. Kör `npm run test`
+   **Förväntat resultat:** 7 nya tester gröna: getEmailHistory (3 tester: med mail, utan mail, fel eventId), exportCateringCSV (4 tester: bara attending+waitlisted, väntelista-label, dietary/plus_one-fält, CSV-escaping). Totalt 155 tester.
+   **Status:** ☑ Testad (155 tester)
    **Status:** ☑ Automatiskt testad (2 tester i website.service.test.ts)

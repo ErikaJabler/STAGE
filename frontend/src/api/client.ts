@@ -6,6 +6,7 @@ import type {
   Activity,
   AdminDashboardData,
   EventConflict,
+  ParticipantEmailHistory,
 } from '@stage/shared';
 
 const BASE_URL = '/stage/api';
@@ -146,6 +147,9 @@ export const participantsApi = {
       method: 'PUT',
       body: JSON.stringify({ queue_position: queuePosition }),
     }),
+
+  emailHistory: (eventId: number, participantId: number) =>
+    request<ParticipantEmailHistory[]>(`/events/${eventId}/participants/${participantId}/emails`),
 
   import: async (eventId: number, file: File): Promise<ImportParticipantsResult> => {
     const formData = new FormData();

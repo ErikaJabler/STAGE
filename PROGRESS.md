@@ -978,6 +978,7 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0007      | event_website.sql               | (ALTER events: website_template, website_data, website_published) | ✅    | ✅     |
 | 0008      | admin_role.sql                  | (ALTER users: is_admin)                                           | ✅    | ✅     |
 | 0009      | rate_limits.sql                 | rate_limits                                                       | ✅    | ✅     |
+| 0010      | email_queue_recipient_index.sql | (INDEX email_queue: event_id, to_email)                           | ✅    | ❌     |
 
 ---
 
@@ -1195,3 +1196,50 @@ eslint.config.js                        # ESLint flat config
 CONTRIBUTING.md                         # Bidragsguide
 .dev.vars.example                       # Miljövariabel-mall
 ```
+
+---
+
+## Förbättrad deltagarhantering (Email-historik, cateringexport, detaljpanel)
+
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+
+- [x] `migrations/0010_email_queue_recipient_index.sql` — INDEX på email_queue(event_id, to_email) för snabb mailhistorik-lookup
+- [x] `packages/shared/src/types.ts` — Ny `ParticipantEmailHistory` interface
+- [x] `backend/src/db/participant.queries.ts` — Ny `getParticipantEmailHistory()` query
+- [x] `backend/src/services/participant.service.ts` — Nya metoder: `getEmailHistory()`, `exportCateringCSV()`
+- [x] `backend/src/routes/participants.ts` — Nya endpoints: `GET /export-catering`, `GET /:id/emails`
+- [x] `backend/src/services/__tests__/participant.service.test.ts` — 7 nya tester (getEmailHistory ×3, exportCateringCSV ×4)
+- [x] `frontend/src/api/client.ts` — `participantsApi.emailHistory()` + `UpdateParticipantPayload` export
+- [x] `frontend/src/hooks/useParticipants.ts` — `useParticipantEmailHistory()` hook (lazy-loading)
+- [x] `frontend/src/components/features/participants/EditParticipantModal.tsx` — Redigera deltagare (namn, email, företag, kategori, allergier, plus-one)
+- [x] `frontend/src/components/features/participants/ParticipantDetailPanel.tsx` — Expanderbar detaljpanel med kostinfo, plus-one, mailhistorik, "Redigera"-knapp
+- [x] `frontend/src/components/features/participants/ParticipantRow.tsx` — Extraherad tabellrad (Info-kolumn med ikoner, Ändrad-kolumn, expanderbar panel)
+- [x] `frontend/src/components/features/participants/ParticipantsTab.tsx` — Ny exportmeny (dropdown med deltagarlista + cateringlista), klickbara expanderbara rader, edit-modal
+- [x] 155 tester (148 + 7 nya), alla passerar
+- [x] `npm run typecheck` grönt (enbart förväntade cloudflare:test TS2307-fel)
+- [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
+
+### Avvikelser från plan
+
+- ParticipantsTab.tsx överskred 400-radersgräns (644 rader) → ParticipantRow.tsx extraherad (228 rader), ParticipantsTab reducerad till 403 rader
+- Inga andra avvikelser — alla planerade features implementerade
+
+### Nya filer
+
+```
+migrations/0010_email_queue_recipient_index.sql
+frontend/src/components/features/participants/EditParticipantModal.tsx
+frontend/src/components/features/participants/ParticipantDetailPanel.tsx
+frontend/src/components/features/participants/ParticipantRow.tsx
+```
+
+### Anteckningar
+
+- Cateringexport inkluderar bara `attending` + `waitlisted` (declined/cancelled exkluderas)
+- Waitlisted visas som "Väntelista" i CSV:ens Status-kolumn
+- Mailhistorik laddas lazy (bara vid expanderad rad) via `useParticipantEmailHistory`
+- `/export-catering` registrerad FÖRE `/:id`-routes i participants.ts (Hono route-ordning kritisk)
+- Migration 0010 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0010_email_queue_recipient_index.sql`

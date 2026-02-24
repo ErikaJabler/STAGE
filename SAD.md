@@ -60,48 +60,50 @@ Integrationer:
 
 ## API-endpoints
 
-| Metod  | Path                                        | Beskrivning                                       | Session |
-| ------ | ------------------------------------------- | ------------------------------------------------- | ------- |
-| GET    | `/api/health`                               | Hälsokontroll                                     | 0       |
-| GET    | `/api/events`                               | Lista alla events (med participant_count)         | 2       |
-| GET    | `/api/events/:id`                           | Hämta enskilt event                               | 2       |
-| POST   | `/api/events`                               | Skapa nytt event                                  | 2       |
-| PUT    | `/api/events/:id`                           | Uppdatera event (partiell)                        | 2       |
-| DELETE | `/api/events/:id`                           | Soft-delete event                                 | 2       |
-| GET    | `/api/events/:id/participants`              | Lista deltagare för event                         | 3       |
-| POST   | `/api/events/:id/participants`              | Lägg till deltagare                               | 3       |
-| PUT    | `/api/events/:id/participants/:pid`         | Uppdatera deltagare                               | 3       |
-| DELETE | `/api/events/:id/participants/:pid`         | Ta bort deltagare                                 | 3       |
-| POST   | `/api/events/:id/participants/import`       | CSV-import av deltagare                           | 6       |
-| PUT    | `/api/events/:id/participants/:pid/reorder` | Omordna väntlisteposition                         | 7       |
-| GET    | `/api/events/:id/calendar.ics`              | Ladda ner ICS-kalenderfil                         | 7       |
-| GET    | `/api/events/:id/mailings`                  | Lista utskick för event                           | 4       |
-| POST   | `/api/events/:id/mailings`                  | Skapa nytt utskick                                | 4       |
-| POST   | `/api/events/:id/mailings/:mid/send`        | Skicka utskick                                    | 4       |
-| GET    | `/api/events/:id/participants/export`       | Exportera deltagare som CSV                       | 9       |
-| POST   | `/api/images`                               | Ladda upp bild till R2 (multipart form-data)      | 9       |
-| GET    | `/api/images/:prefix/:filename`             | Hämta bild från R2                                | 9       |
-| POST   | `/api/auth/login`                           | Logga in (email + name → token)                   | 10      |
-| GET    | `/api/auth/me`                              | Hämta inloggad användare via token                | 10      |
-| GET    | `/api/events/:id/permissions`               | Lista behörigheter för event (viewer+)            | 10      |
-| POST   | `/api/events/:id/permissions`               | Lägg till/uppdatera behörighet (owner)            | 10      |
-| DELETE | `/api/events/:id/permissions/:userId`       | Ta bort behörighet (owner)                        | 10      |
-| GET    | `/api/events/:id/activities`                | Lista aktivitetslogg (viewer+)                    | 11      |
-| GET    | `/api/search?q=`                            | Sök events (namn, plats, arrangör)                | 11      |
-| GET    | `/api/templates`                            | Lista email-mallar (metadata)                     | 11      |
-| POST   | `/api/events/:id/clone`                     | Klona event (editor+)                             | 13a     |
-| POST   | `/api/events/:id/mailings/:mid/test`        | Skicka testmail till inloggad användare (editor+) | 13a     |
-| GET    | `/api/templates/:type/preview`              | Förhandsgranska renderad email-mall (auth)        | 13a     |
-| GET    | `/api/rsvp/:token`                          | Hämta deltagarinfo + eventinfo (publik)           | 4       |
-| POST   | `/api/rsvp/:token/respond`                  | Svara attending/declined (publik)                 | 4       |
-| POST   | `/api/rsvp/:token/cancel`                   | Avboka deltagande (publik)                        | 4       |
-| GET    | `/api/events/:id/website`                   | Hämta webbplatskonfiguration (viewer+)            | 15      |
-| PUT    | `/api/events/:id/website`                   | Spara webbplatskonfiguration (editor+)            | 15      |
-| GET    | `/api/public/events/:slug`                  | Hämta publik eventdata för webbplats (publik)     | 15      |
-| POST   | `/api/events/:slug/register`                | Publik anmälan via webbplats (publik)             | 15      |
-| GET    | `/api/events/conflicts`                     | Krockkontroll (datum + plats)                     | 17      |
-| GET    | `/api/admin/dashboard`                      | Admin dashboard-data (admin)                      | 17      |
-| GET    | `/api/admin/events`                         | Alla events oavsett behörighet (admin)            | 17      |
+| Metod  | Path                                           | Beskrivning                                            | Session |
+| ------ | ---------------------------------------------- | ------------------------------------------------------ | ------- |
+| GET    | `/api/health`                                  | Hälsokontroll                                          | 0       |
+| GET    | `/api/events`                                  | Lista alla events (med participant_count)              | 2       |
+| GET    | `/api/events/:id`                              | Hämta enskilt event                                    | 2       |
+| POST   | `/api/events`                                  | Skapa nytt event                                       | 2       |
+| PUT    | `/api/events/:id`                              | Uppdatera event (partiell)                             | 2       |
+| DELETE | `/api/events/:id`                              | Soft-delete event                                      | 2       |
+| GET    | `/api/events/:id/participants`                 | Lista deltagare för event                              | 3       |
+| POST   | `/api/events/:id/participants`                 | Lägg till deltagare                                    | 3       |
+| PUT    | `/api/events/:id/participants/:pid`            | Uppdatera deltagare                                    | 3       |
+| DELETE | `/api/events/:id/participants/:pid`            | Ta bort deltagare                                      | 3       |
+| POST   | `/api/events/:id/participants/import`          | CSV-import av deltagare                                | 6       |
+| PUT    | `/api/events/:id/participants/:pid/reorder`    | Omordna väntlisteposition                              | 7       |
+| GET    | `/api/events/:id/calendar.ics`                 | Ladda ner ICS-kalenderfil                              | 7       |
+| GET    | `/api/events/:id/mailings`                     | Lista utskick för event                                | 4       |
+| POST   | `/api/events/:id/mailings`                     | Skapa nytt utskick                                     | 4       |
+| POST   | `/api/events/:id/mailings/:mid/send`           | Skicka utskick                                         | 4       |
+| GET    | `/api/events/:id/participants/export`          | Exportera deltagare som CSV                            | 9       |
+| GET    | `/api/events/:id/participants/export-catering` | Exportera cateringlista som CSV (attending+waitlisted) | DH      |
+| GET    | `/api/events/:id/participants/:pid/emails`     | Hämta mailhistorik för deltagare                       | DH      |
+| POST   | `/api/images`                                  | Ladda upp bild till R2 (multipart form-data)           | 9       |
+| GET    | `/api/images/:prefix/:filename`                | Hämta bild från R2                                     | 9       |
+| POST   | `/api/auth/login`                              | Logga in (email + name → token)                        | 10      |
+| GET    | `/api/auth/me`                                 | Hämta inloggad användare via token                     | 10      |
+| GET    | `/api/events/:id/permissions`                  | Lista behörigheter för event (viewer+)                 | 10      |
+| POST   | `/api/events/:id/permissions`                  | Lägg till/uppdatera behörighet (owner)                 | 10      |
+| DELETE | `/api/events/:id/permissions/:userId`          | Ta bort behörighet (owner)                             | 10      |
+| GET    | `/api/events/:id/activities`                   | Lista aktivitetslogg (viewer+)                         | 11      |
+| GET    | `/api/search?q=`                               | Sök events (namn, plats, arrangör)                     | 11      |
+| GET    | `/api/templates`                               | Lista email-mallar (metadata)                          | 11      |
+| POST   | `/api/events/:id/clone`                        | Klona event (editor+)                                  | 13a     |
+| POST   | `/api/events/:id/mailings/:mid/test`           | Skicka testmail till inloggad användare (editor+)      | 13a     |
+| GET    | `/api/templates/:type/preview`                 | Förhandsgranska renderad email-mall (auth)             | 13a     |
+| GET    | `/api/rsvp/:token`                             | Hämta deltagarinfo + eventinfo (publik)                | 4       |
+| POST   | `/api/rsvp/:token/respond`                     | Svara attending/declined (publik)                      | 4       |
+| POST   | `/api/rsvp/:token/cancel`                      | Avboka deltagande (publik)                             | 4       |
+| GET    | `/api/events/:id/website`                      | Hämta webbplatskonfiguration (viewer+)                 | 15      |
+| PUT    | `/api/events/:id/website`                      | Spara webbplatskonfiguration (editor+)                 | 15      |
+| GET    | `/api/public/events/:slug`                     | Hämta publik eventdata för webbplats (publik)          | 15      |
+| POST   | `/api/events/:slug/register`                   | Publik anmälan via webbplats (publik)                  | 15      |
+| GET    | `/api/events/conflicts`                        | Krockkontroll (datum + plats)                          | 17      |
+| GET    | `/api/admin/dashboard`                         | Admin dashboard-data (admin)                           | 17      |
+| GET    | `/api/admin/events`                            | Alla events oavsett behörighet (admin)                 | 17      |
 
 ## Databasschema
 
@@ -234,6 +236,12 @@ Integrationer:
 | window_start | INTEGER NOT NULL | Unix timestamp för fönstrets start                      |
 | count        | INTEGER NOT NULL | Antal requests i aktuellt fönster                       |
 
+### Index (migration 0010)
+
+| Index                     | Tabell      | Kolumner           | Beskrivning                   |
+| ------------------------- | ----------- | ------------------ | ----------------------------- |
+| idx_email_queue_recipient | email_queue | event_id, to_email | Snabb lookup för mailhistorik |
+
 ## Deploy-flöde
 
 1. `npm run build` — bygger frontend (Vite) + backend (esbuild)
@@ -300,7 +308,7 @@ Integrationer:
 | Service            | Fil                                           | Beskrivning                                                                                                                                           |
 | ------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | EventService       | `backend/src/services/event.service.ts`       | Slug-generering, ICS-generering, event CRUD, clone                                                                                                    |
-| ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering                                                                                                    |
+| ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering, emailHistory, cateringCSV-export                                                                  |
 | WaitlistService    | `backend/src/services/waitlist.service.ts`    | shouldWaitlist, promoteNext, reorder                                                                                                                  |
 | MailingService     | `backend/src/services/mailing.service.ts`     | Utskickshantering, send med per-mottagare RSVP-länk, sendTest. Refaktorerad session 20a: buildQueueItem(), sendEmailsDirect(), DIRECT_SEND_THRESHOLD. |
 | RsvpService        | `backend/src/services/rsvp.service.ts`        | RSVP-svar, avbokning, auto-waitlist vid kapacitet                                                                                                     |
@@ -393,7 +401,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
-- **Antal:** 148 tester (16 testfiler) — oförändrat efter session 21a (ren refaktorering)
+- **Antal:** 155 tester (16 testfiler)
 
 ### Teststruktur
 
@@ -406,7 +414,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 | Route-integration    | `backend/src/__tests__/health.test.ts`                           | 1     | Health endpoint                                                          |
 | E2E-integration      | `backend/src/__tests__/integration.test.ts`                      | 14    | Fullständiga flöden (session 13b)                                        |
 | Service-enhetstester | `backend/src/services/__tests__/event.service.test.ts`           | 10    | EventService, slug, ICS                                                  |
-| Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts`     | 14    | ParticipantService, CSV                                                  |
+| Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts`     | 21    | ParticipantService, CSV, emailHistory, cateringCSV                       |
 | Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts`      | 10    | PermissionService, roller, admin-bypass                                  |
 | Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts`        | 5     | ActivityService, loggning                                                |
 | Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts`         | 8     | WebsiteService, CRUD, registrering, ogiltig JSON                         |
@@ -431,11 +439,11 @@ Testar fullständiga flöden som korsar service-gränser:
 
 ### Linting & Formatering
 
-| Verktyg | Konfigurationsfil | Beskrivning |
-|---------|-------------------|-------------|
-| ESLint 10 | `eslint.config.js` | Flat config, TypeScript-regler (`no-explicit-any`, `no-unused-vars`, `max-lines: 400`) |
-| Prettier 3.8 | `.prettierrc` | Single quotes, trailing commas, 2 spaces, 100 print width |
-| EditorConfig | `.editorconfig` | Indent space/2, LF, UTF-8 |
+| Verktyg      | Konfigurationsfil  | Beskrivning                                                                            |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------- |
+| ESLint 10    | `eslint.config.js` | Flat config, TypeScript-regler (`no-explicit-any`, `no-unused-vars`, `max-lines: 400`) |
+| Prettier 3.8 | `.prettierrc`      | Single quotes, trailing commas, 2 spaces, 100 print width                              |
+| EditorConfig | `.editorconfig`    | Indent space/2, LF, UTF-8                                                              |
 
 ### CI/CD
 
@@ -449,11 +457,11 @@ Testar fullständiga flöden som korsar service-gränser:
 
 ### Övriga konfigurationsfiler
 
-| Fil | Syfte |
-|-----|-------|
-| `.gitattributes` | LF line endings, binärfilshantering |
-| `.dev.vars.example` | Mall för miljövariabler (Resend API-nyckel) |
-| `CONTRIBUTING.md` | Git workflow, commit-format, arkitekturregler, testmönster |
+| Fil                 | Syfte                                                      |
+| ------------------- | ---------------------------------------------------------- |
+| `.gitattributes`    | LF line endings, binärfilshantering                        |
+| `.dev.vars.example` | Mall för miljövariabler (Resend API-nyckel)                |
+| `CONTRIBUTING.md`   | Git workflow, commit-format, arkitekturregler, testmönster |
 
 ### npm scripts (tillagda session 22)
 

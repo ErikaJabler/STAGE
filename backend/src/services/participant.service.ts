@@ -1,4 +1,9 @@
-import type { Participant, CreateParticipantInput, UpdateParticipantInput } from '@stage/shared';
+import type {
+  Participant,
+  CreateParticipantInput,
+  UpdateParticipantInput,
+  ParticipantEmailHistory,
+} from '@stage/shared';
 import {
   listParticipants,
   getParticipantById,
@@ -6,6 +11,7 @@ import {
   updateParticipant,
   deleteParticipant,
   getEventById,
+  getParticipantEmailHistory,
 } from '../db/queries';
 import { WaitlistService } from './waitlist.service';
 
@@ -226,6 +232,35 @@ export const ParticipantService = {
       const category = escapeCSVField(p.category);
       const status = escapeCSVField(p.status);
       return `${name},${email},${company},${category},${status}`;
+    });
+    return [header, ...rows].join('\n');
+  },
+
+  async getEmailHistory(
+    db: D1Database,
+    eventId: number,
+    participantId: number,
+  ): Promise<ParticipantEmailHistory[]> {
+    const participant = await getParticipantById(db, participantId);
+    if (!participant || participant.event_id !== eventId) return [];
+    return getParticipantEmailHistory(db, eventId, participant.email);
+  },
+
+  async exportCateringCSV(db: D1Database, eventId: number): Promise<string> {
+    const participants = await listParticipants(db, eventId);
+    const relevant = participants.filter(
+      (p) => p.status === 'attending' || p.status === 'waitlisted',
+    );
+    const header = 'Namn,E-post,Företag,Status,Allergier/Kost,Plus-one namn,Plus-one e-post';
+    const rows = relevant.map((p) => {
+      const name = escapeCSVField(p.name);
+      const email = escapeCSVField(p.email);
+      const company = escapeCSVField(p.company ?? '');
+      const status = p.status === 'attending' ? 'Deltar' : 'Väntelista';
+      const dietary = escapeCSVField(p.dietary_notes ?? '');
+      const plusOneName = escapeCSVField(p.plus_one_name ?? '');
+      const plusOneEmail = escapeCSVField(p.plus_one_email ?? '');
+      return `${name},${email},${company},${status},${dietary},${plusOneName},${plusOneEmail}`;
     });
     return [header, ...rows].join('\n');
   },

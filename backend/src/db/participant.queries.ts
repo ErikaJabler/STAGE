@@ -1,4 +1,9 @@
-import type { Participant, CreateParticipantInput, UpdateParticipantInput } from '@stage/shared';
+import type {
+  Participant,
+  CreateParticipantInput,
+  UpdateParticipantInput,
+  ParticipantEmailHistory,
+} from '@stage/shared';
 
 export type { CreateParticipantInput, UpdateParticipantInput };
 
@@ -151,6 +156,25 @@ export async function updateParticipant(
     .run();
 
   return getParticipantById(db, id);
+}
+
+/** Get email history for a participant by event + email */
+export async function getParticipantEmailHistory(
+  db: D1Database,
+  eventId: number,
+  email: string,
+): Promise<ParticipantEmailHistory[]> {
+  const result = await db
+    .prepare(
+      `SELECT id, mailing_id, subject, status, error, created_at, sent_at
+       FROM email_queue
+       WHERE event_id = ? AND to_email = ?
+       ORDER BY created_at DESC`,
+    )
+    .bind(eventId, email)
+    .all<ParticipantEmailHistory>();
+
+  return result.results;
 }
 
 /** Delete a participant (hard delete) */
