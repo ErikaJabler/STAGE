@@ -978,7 +978,7 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0007      | event_website.sql               | (ALTER events: website_template, website_data, website_published) | ✅    | ✅     |
 | 0008      | admin_role.sql                  | (ALTER users: is_admin)                                           | ✅    | ✅     |
 | 0009      | rate_limits.sql                 | rate_limits                                                       | ✅    | ✅     |
-| 0010      | email_queue_recipient_index.sql | (INDEX email_queue: event_id, to_email)                           | ✅    | ❌     |
+| 0010      | email_queue_recipient_index.sql | (INDEX email_queue: event_id, to_email)                           | ✅    | ✅     |
 
 ---
 
