@@ -1,15 +1,10 @@
-import type { Participant } from "@stage/shared";
-import { getParticipantById } from "./participant.queries";
+import type { Participant } from '@stage/shared';
+import { getParticipantById } from './participant.queries';
 
 /** Count participants with status "attending" for an event */
-export async function getAttendingCount(
-  db: D1Database,
-  eventId: number
-): Promise<number> {
+export async function getAttendingCount(db: D1Database, eventId: number): Promise<number> {
   const result = await db
-    .prepare(
-      "SELECT COUNT(*) as cnt FROM participants WHERE event_id = ? AND status = 'attending'"
-    )
+    .prepare("SELECT COUNT(*) as cnt FROM participants WHERE event_id = ? AND status = 'attending'")
     .bind(eventId)
     .first<{ cnt: number }>();
 
@@ -19,11 +14,11 @@ export async function getAttendingCount(
 /** Get next waitlisted participant (lowest queue_position) */
 export async function getNextWaitlisted(
   db: D1Database,
-  eventId: number
+  eventId: number,
 ): Promise<Participant | null> {
   const result = await db
     .prepare(
-      "SELECT * FROM participants WHERE event_id = ? AND status = 'waitlisted' ORDER BY queue_position ASC LIMIT 1"
+      "SELECT * FROM participants WHERE event_id = ? AND status = 'waitlisted' ORDER BY queue_position ASC LIMIT 1",
     )
     .bind(eventId)
     .first<Participant>();
@@ -32,14 +27,9 @@ export async function getNextWaitlisted(
 }
 
 /** Get max queue_position for an event */
-export async function getMaxQueuePosition(
-  db: D1Database,
-  eventId: number
-): Promise<number> {
+export async function getMaxQueuePosition(db: D1Database, eventId: number): Promise<number> {
   const result = await db
-    .prepare(
-      "SELECT MAX(queue_position) as max_pos FROM participants WHERE event_id = ?"
-    )
+    .prepare('SELECT MAX(queue_position) as max_pos FROM participants WHERE event_id = ?')
     .bind(eventId)
     .first<{ max_pos: number | null }>();
 
@@ -49,7 +39,7 @@ export async function getMaxQueuePosition(
 /** Promote next waitlisted participant to attending */
 export async function promoteFromWaitlist(
   db: D1Database,
-  eventId: number
+  eventId: number,
 ): Promise<Participant | null> {
   const next = await getNextWaitlisted(db, eventId);
   if (!next) return null;
@@ -57,7 +47,7 @@ export async function promoteFromWaitlist(
   const now = new Date().toISOString();
   await db
     .prepare(
-      "UPDATE participants SET status = 'attending', queue_position = NULL, updated_at = ? WHERE id = ?"
+      "UPDATE participants SET status = 'attending', queue_position = NULL, updated_at = ? WHERE id = ?",
     )
     .bind(now, next.id)
     .run();
@@ -66,12 +56,11 @@ export async function promoteFromWaitlist(
 }
 
 /** Check if event is at capacity (attending >= max_participants + overbooking_limit) */
-export async function shouldWaitlist(
-  db: D1Database,
-  eventId: number
-): Promise<boolean> {
+export async function shouldWaitlist(db: D1Database, eventId: number): Promise<boolean> {
   const event = await db
-    .prepare("SELECT max_participants, overbooking_limit FROM events WHERE id = ? AND deleted_at IS NULL")
+    .prepare(
+      'SELECT max_participants, overbooking_limit FROM events WHERE id = ? AND deleted_at IS NULL',
+    )
     .bind(eventId)
     .first<{ max_participants: number | null; overbooking_limit: number }>();
 

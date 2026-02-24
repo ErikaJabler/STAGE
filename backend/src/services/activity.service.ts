@@ -1,5 +1,5 @@
-import type { Activity, ActivityType } from "@stage/shared";
-import { listActivities, createActivity } from "../db/activity.queries";
+import type { Activity, ActivityType } from '@stage/shared';
+import { listActivities, createActivity } from '../db/activity.queries';
 
 export const ActivityService = {
   /** List activities for an event */
@@ -14,19 +14,14 @@ export const ActivityService = {
     type: ActivityType,
     description: string,
     createdBy?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<Activity> {
     return createActivity(db, eventId, type, description, createdBy, metadata);
   },
 
   /** Log mailing created */
-  logMailingCreated(
-    db: D1Database,
-    eventId: number,
-    subject: string,
-    createdBy?: string
-  ) {
-    return this.log(db, eventId, "mailing_created", `Utskick skapat: "${subject}"`, createdBy);
+  logMailingCreated(db: D1Database, eventId: number, subject: string, createdBy?: string) {
+    return this.log(db, eventId, 'mailing_created', `Utskick skapat: "${subject}"`, createdBy);
   },
 
   /** Log mailing sent */
@@ -35,15 +30,15 @@ export const ActivityService = {
     eventId: number,
     subject: string,
     recipientCount: number,
-    createdBy?: string
+    createdBy?: string,
   ) {
     return this.log(
       db,
       eventId,
-      "mailing_sent",
+      'mailing_sent',
       `Utskick skickat: "${subject}" till ${recipientCount} mottagare`,
       createdBy,
-      { recipientCount }
+      { recipientCount },
     );
   },
 
@@ -52,9 +47,15 @@ export const ActivityService = {
     db: D1Database,
     eventId: number,
     participantName: string,
-    createdBy?: string
+    createdBy?: string,
   ) {
-    return this.log(db, eventId, "participant_added", `Deltagare tillagd: ${participantName}`, createdBy);
+    return this.log(
+      db,
+      eventId,
+      'participant_added',
+      `Deltagare tillagd: ${participantName}`,
+      createdBy,
+    );
   },
 
   /** Log participant removed */
@@ -62,9 +63,15 @@ export const ActivityService = {
     db: D1Database,
     eventId: number,
     participantName: string,
-    createdBy?: string
+    createdBy?: string,
   ) {
-    return this.log(db, eventId, "participant_removed", `Deltagare borttagen: ${participantName}`, createdBy);
+    return this.log(
+      db,
+      eventId,
+      'participant_removed',
+      `Deltagare borttagen: ${participantName}`,
+      createdBy,
+    );
   },
 
   /** Log participant status changed */
@@ -74,49 +81,39 @@ export const ActivityService = {
     participantName: string,
     oldStatus: string,
     newStatus: string,
-    createdBy?: string
+    createdBy?: string,
   ) {
     return this.log(
       db,
       eventId,
-      "participant_status_changed",
+      'participant_status_changed',
       `${participantName}: ${oldStatus} → ${newStatus}`,
       createdBy,
-      { oldStatus, newStatus }
+      { oldStatus, newStatus },
     );
   },
 
   /** Log participants imported */
-  logParticipantImported(
-    db: D1Database,
-    eventId: number,
-    count: number,
-    createdBy?: string
-  ) {
+  logParticipantImported(db: D1Database, eventId: number, count: number, createdBy?: string) {
     return this.log(
       db,
       eventId,
-      "participant_imported",
+      'participant_imported',
       `${count} deltagare importerade via CSV`,
       createdBy,
-      { count }
+      { count },
     );
   },
 
   /** Log event updated */
-  logEventUpdated(
-    db: D1Database,
-    eventId: number,
-    fields: string[],
-    createdBy?: string
-  ) {
+  logEventUpdated(db: D1Database, eventId: number, fields: string[], createdBy?: string) {
     return this.log(
       db,
       eventId,
-      "event_updated",
-      `Event uppdaterat: ${fields.join(", ")}`,
+      'event_updated',
+      `Event uppdaterat: ${fields.join(', ')}`,
       createdBy,
-      { fields }
+      { fields },
     );
   },
 
@@ -126,31 +123,26 @@ export const ActivityService = {
     eventId: number,
     userEmail: string,
     role: string,
-    createdBy?: string
+    createdBy?: string,
   ) {
     return this.log(
       db,
       eventId,
-      "permission_added",
+      'permission_added',
       `Behörighet tillagd: ${userEmail} (${role})`,
       createdBy,
-      { userEmail, role }
+      { userEmail, role },
     );
   },
 
   /** Log permission removed */
-  logPermissionRemoved(
-    db: D1Database,
-    eventId: number,
-    userEmail: string,
-    createdBy?: string
-  ) {
+  logPermissionRemoved(db: D1Database, eventId: number, userEmail: string, createdBy?: string) {
     return this.log(
       db,
       eventId,
-      "permission_removed",
+      'permission_removed',
       `Behörighet borttagen: ${userEmail}`,
-      createdBy
+      createdBy,
     );
   },
 };

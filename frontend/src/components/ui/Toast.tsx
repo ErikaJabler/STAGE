@@ -39,13 +39,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div key={t.id} style={{ ...styles.toast, ...typeStyles[t.type] }}>
             <TypeIcon type={t.type} />
             <span style={styles.message}>{t.message}</span>
-            <button
-              onClick={() => removeToast(t.id)}
-              style={styles.dismiss}
-              aria-label="Stäng"
-            >
+            <button onClick={() => removeToast(t.id)} style={styles.dismiss} aria-label="Stäng">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path
+                  d="M3 3l8 8M11 3l-8 8"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -66,7 +67,13 @@ function TypeIcon({ type }: { type: ToastType }) {
     return (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="9" cy="9" r="8" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M5.5 9l2.5 2.5L12.5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M5.5 9l2.5 2.5L12.5 6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     );
   }

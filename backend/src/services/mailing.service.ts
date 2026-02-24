@@ -1,4 +1,4 @@
-import type { Mailing, Participant, Event, UpdateMailingInput } from "@stage/shared";
+import type { Mailing, Participant, Event, UpdateMailingInput } from '@stage/shared';
 import {
   listMailings,
   getMailingById,
@@ -9,9 +9,15 @@ import {
   getNewMailingRecipients,
   getEventById,
   type CreateMailingInput,
-} from "../db/queries";
-import { buildMergeContext, renderEmail, renderText, renderHtml, createEmailProvider } from "./email";
-import { enqueueEmails, recordSentEmails, getQueueStats } from "./email/send-queue";
+} from '../db/queries';
+import {
+  buildMergeContext,
+  renderEmail,
+  renderText,
+  renderHtml,
+  createEmailProvider,
+} from './email';
+import { enqueueEmails, recordSentEmails, getQueueStats } from './email/send-queue';
 
 /** Max recipients for direct (synchronous) sending; larger batches go to the queue */
 const DIRECT_SEND_THRESHOLD = 5;
@@ -39,7 +45,7 @@ function buildQueueItem(
   mailing: Mailing,
   recipient: Participant,
   event: Event,
-  baseUrl: string
+  baseUrl: string,
 ): QueueItem {
   const context = buildMergeContext(event, recipient, baseUrl);
 
@@ -72,7 +78,7 @@ function buildQueueItem(
 async function sendEmailsDirect(
   db: D1Database,
   items: QueueItem[],
-  apiKey?: string
+  apiKey?: string,
 ): Promise<{ sent: number; failed: number; errors: string[] }> {
   const provider = createEmailProvider(apiKey);
   let sent = 0;
@@ -121,14 +127,14 @@ export const MailingService = {
     db: D1Database,
     eventId: number,
     mailingId: number,
-    input: UpdateMailingInput
+    input: UpdateMailingInput,
   ): Promise<Mailing | null> {
     const mailing = await getMailingById(db, mailingId);
     if (!mailing || mailing.event_id !== eventId) {
       return null;
     }
-    if (mailing.status !== "draft") {
-      throw new Error("Bara utkast kan redigeras");
+    if (mailing.status !== 'draft') {
+      throw new Error('Bara utkast kan redigeras');
     }
     return updateMailing(db, mailingId, input);
   },
@@ -139,20 +145,20 @@ export const MailingService = {
     eventId: number,
     mailingId: number,
     apiKey?: string,
-    baseUrl = "https://mikwik.se"
+    baseUrl = 'https://mikwik.se',
   ): Promise<SendResult> {
     const mailing = await getMailingById(db, mailingId);
     if (!mailing || mailing.event_id !== eventId) {
-      return { mailing: null, sent: 0, failed: 0, total: 0, errors: ["Utskick hittades inte"] };
+      return { mailing: null, sent: 0, failed: 0, total: 0, errors: ['Utskick hittades inte'] };
     }
 
-    if (mailing.status === "sent") {
-      return { mailing, sent: 0, failed: 0, total: 0, errors: ["Utskicket har redan skickats"] };
+    if (mailing.status === 'sent') {
+      return { mailing, sent: 0, failed: 0, total: 0, errors: ['Utskicket har redan skickats'] };
     }
 
     const recipients = await getMailingRecipients(db, eventId, mailing.recipient_filter);
     if (recipients.length === 0) {
-      return { mailing, sent: 0, failed: 0, total: 0, errors: ["Inga mottagare matchar filtret"] };
+      return { mailing, sent: 0, failed: 0, total: 0, errors: ['Inga mottagare matchar filtret'] };
     }
 
     const event = (await getEventById(db, eventId))!;
@@ -178,18 +184,29 @@ export const MailingService = {
     eventId: number,
     mailingId: number,
     apiKey?: string,
-    baseUrl = "https://mikwik.se"
+    baseUrl = 'https://mikwik.se',
   ): Promise<SendResult> {
     const mailing = await getMailingById(db, mailingId);
     if (!mailing || mailing.event_id !== eventId) {
-      return { mailing: null, sent: 0, failed: 0, total: 0, errors: ["Utskick hittades inte"] };
+      return { mailing: null, sent: 0, failed: 0, total: 0, errors: ['Utskick hittades inte'] };
     }
 
-    if (mailing.status !== "sent") {
-      return { mailing, sent: 0, failed: 0, total: 0, errors: ["Utskicket måste vara skickat först"] };
+    if (mailing.status !== 'sent') {
+      return {
+        mailing,
+        sent: 0,
+        failed: 0,
+        total: 0,
+        errors: ['Utskicket måste vara skickat först'],
+      };
     }
 
-    const recipients = await getNewMailingRecipients(db, eventId, mailingId, mailing.recipient_filter);
+    const recipients = await getNewMailingRecipients(
+      db,
+      eventId,
+      mailingId,
+      mailing.recipient_filter,
+    );
     if (recipients.length === 0) {
       return { mailing, sent: 0, failed: 0, total: 0, errors: [] };
     }
@@ -215,11 +232,11 @@ export const MailingService = {
     testEmail: string,
     testName: string,
     apiKey?: string,
-    baseUrl = "https://mikwik.se"
+    baseUrl = 'https://mikwik.se',
   ): Promise<{ success: boolean; error?: string }> {
     const mailing = await getMailingById(db, mailingId);
     if (!mailing || mailing.event_id !== eventId) {
-      return { success: false, error: "Utskick hittades inte" };
+      return { success: false, error: 'Utskick hittades inte' };
     }
 
     const event = (await getEventById(db, eventId))!;

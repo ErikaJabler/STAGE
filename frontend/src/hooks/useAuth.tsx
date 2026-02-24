@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error((body as { error?: string }).error || 'Inloggning misslyckades');
     }
 
-    const data = await res.json() as { user: AuthUser; token: string };
+    const data = (await res.json()) as { user: AuthUser; token: string };
     setUser(data.user);
     setToken(data.token);
     localStorage.setItem(TOKEN_KEY, data.token);

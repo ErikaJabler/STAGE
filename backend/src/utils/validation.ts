@@ -1,4 +1,4 @@
-import { ZodSchema } from "zod";
+import { ZodSchema } from 'zod';
 
 /**
  * Parse input through a Zod schema.

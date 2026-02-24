@@ -1,16 +1,11 @@
-import type { Participant, CreateParticipantInput, UpdateParticipantInput } from "@stage/shared";
+import type { Participant, CreateParticipantInput, UpdateParticipantInput } from '@stage/shared';
 
 export type { CreateParticipantInput, UpdateParticipantInput };
 
 /** List all participants for an event */
-export async function listParticipants(
-  db: D1Database,
-  eventId: number
-): Promise<Participant[]> {
+export async function listParticipants(db: D1Database, eventId: number): Promise<Participant[]> {
   const result = await db
-    .prepare(
-      "SELECT * FROM participants WHERE event_id = ? ORDER BY created_at ASC"
-    )
+    .prepare('SELECT * FROM participants WHERE event_id = ? ORDER BY created_at ASC')
     .bind(eventId)
     .all<Participant>();
 
@@ -18,12 +13,9 @@ export async function listParticipants(
 }
 
 /** Get a single participant by ID */
-export async function getParticipantById(
-  db: D1Database,
-  id: number
-): Promise<Participant | null> {
+export async function getParticipantById(db: D1Database, id: number): Promise<Participant | null> {
   const result = await db
-    .prepare("SELECT * FROM participants WHERE id = ?")
+    .prepare('SELECT * FROM participants WHERE id = ?')
     .bind(id)
     .first<Participant>();
 
@@ -34,7 +26,7 @@ export async function getParticipantById(
 export async function createParticipant(
   db: D1Database,
   eventId: number,
-  input: CreateParticipantInput
+  input: CreateParticipantInput,
 ): Promise<Participant> {
   const now = new Date().toISOString();
   const cancellationToken = crypto.randomUUID();
@@ -45,28 +37,28 @@ export async function createParticipant(
         event_id, name, email, company, category, status,
         response_deadline, dietary_notes, plus_one_name, plus_one_email,
         cancellation_token, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       eventId,
       input.name,
       input.email,
       input.company ?? null,
-      input.category ?? "other",
-      input.status ?? "invited",
+      input.category ?? 'other',
+      input.status ?? 'invited',
       input.response_deadline ?? null,
       input.dietary_notes ?? null,
       input.plus_one_name ?? null,
       input.plus_one_email ?? null,
       cancellationToken,
       now,
-      now
+      now,
     )
     .run();
 
   const id = result.meta.last_row_id;
   const participant = await db
-    .prepare("SELECT * FROM participants WHERE id = ?")
+    .prepare('SELECT * FROM participants WHERE id = ?')
     .bind(id)
     .first<Participant>();
 
@@ -77,7 +69,7 @@ export async function createParticipant(
 export async function bulkCreateParticipants(
   db: D1Database,
   eventId: number,
-  inputs: CreateParticipantInput[]
+  inputs: CreateParticipantInput[],
 ): Promise<number> {
   const now = new Date().toISOString();
   let created = 0;
@@ -92,22 +84,22 @@ export async function bulkCreateParticipants(
           event_id, name, email, company, category, status,
           response_deadline, dietary_notes, plus_one_name, plus_one_email,
           cancellation_token, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         eventId,
         input.name,
         input.email,
         input.company ?? null,
-        input.category ?? "other",
-        input.status ?? "invited",
+        input.category ?? 'other',
+        input.status ?? 'invited',
         input.response_deadline ?? null,
         input.dietary_notes ?? null,
         input.plus_one_name ?? null,
         input.plus_one_email ?? null,
         cancellationToken,
         now,
-        now
+        now,
       )
       .run();
     created++;
@@ -120,22 +112,22 @@ export async function bulkCreateParticipants(
 export async function updateParticipant(
   db: D1Database,
   id: number,
-  input: UpdateParticipantInput
+  input: UpdateParticipantInput,
 ): Promise<Participant | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
 
   const updatable: (keyof UpdateParticipantInput)[] = [
-    "name",
-    "email",
-    "company",
-    "category",
-    "status",
-    "queue_position",
-    "response_deadline",
-    "dietary_notes",
-    "plus_one_name",
-    "plus_one_email",
+    'name',
+    'email',
+    'company',
+    'category',
+    'status',
+    'queue_position',
+    'response_deadline',
+    'dietary_notes',
+    'plus_one_name',
+    'plus_one_email',
   ];
 
   for (const key of updatable) {
@@ -149,14 +141,12 @@ export async function updateParticipant(
     return getParticipantById(db, id);
   }
 
-  fields.push("updated_at = ?");
+  fields.push('updated_at = ?');
   values.push(new Date().toISOString());
   values.push(id);
 
   await db
-    .prepare(
-      `UPDATE participants SET ${fields.join(", ")} WHERE id = ?`
-    )
+    .prepare(`UPDATE participants SET ${fields.join(', ')} WHERE id = ?`)
     .bind(...values)
     .run();
 
@@ -164,14 +154,8 @@ export async function updateParticipant(
 }
 
 /** Delete a participant (hard delete) */
-export async function deleteParticipant(
-  db: D1Database,
-  id: number
-): Promise<boolean> {
-  const result = await db
-    .prepare("DELETE FROM participants WHERE id = ?")
-    .bind(id)
-    .run();
+export async function deleteParticipant(db: D1Database, id: number): Promise<boolean> {
+  const result = await db.prepare('DELETE FROM participants WHERE id = ?').bind(id).run();
 
   return result.meta.changes > 0;
 }

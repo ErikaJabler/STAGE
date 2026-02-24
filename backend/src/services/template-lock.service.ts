@@ -17,7 +17,7 @@ export interface LockedZone {
   /** Human-readable label shown in editor */
   label: string;
   /** What type of lock */
-  lockType: "full";
+  lockType: 'full';
 }
 
 export interface TemplateLockConfig {
@@ -31,26 +31,26 @@ export const TemplateLockService = {
     return {
       email: [
         {
-          selector: "[data-locked-header]",
-          label: "Consid Header (låst)",
-          lockType: "full",
+          selector: '[data-locked-header]',
+          label: 'Consid Header (låst)',
+          lockType: 'full',
         },
         {
-          selector: "[data-locked-footer]",
-          label: "Footer — unsubscribe + kontakt (låst)",
-          lockType: "full",
+          selector: '[data-locked-footer]',
+          label: 'Footer — unsubscribe + kontakt (låst)',
+          lockType: 'full',
         },
       ],
       page: [
         {
-          selector: "[data-locked-header]",
-          label: "Consid Header (låst)",
-          lockType: "full",
+          selector: '[data-locked-header]',
+          label: 'Consid Header (låst)',
+          lockType: 'full',
         },
         {
-          selector: "[data-locked-footer]",
-          label: "Footer — kontaktinfo (låst)",
-          lockType: "full",
+          selector: '[data-locked-footer]',
+          label: 'Footer — kontaktinfo (låst)',
+          lockType: 'full',
         },
       ],
     };

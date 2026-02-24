@@ -64,15 +64,35 @@ export default function App() {
                 {/* Public routes */}
                 <Route path="/rsvp/:token" element={<RsvpPage />} />
                 <Route path="/e/:slug" element={<PublicEvent />} />
-                <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+                <Route
+                  path="/login"
+                  element={
+                    <GuestOnly>
+                      <Login />
+                    </GuestOnly>
+                  }
+                />
 
                 {/* Protected routes */}
-                <Route element={<RequireAuth><Layout /></RequireAuth>}>
+                <Route
+                  element={
+                    <RequireAuth>
+                      <Layout />
+                    </RequireAuth>
+                  }
+                >
                   <Route path="/" element={<Overview />} />
                   <Route path="/events/new" element={<CreateEvent />} />
                   <Route path="/events/:id" element={<EventDetail />} />
                   <Route path="/events/:id/edit" element={<EditEvent />} />
-                  <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                  <Route
+                    path="/admin"
+                    element={
+                      <RequireAdmin>
+                        <AdminDashboard />
+                      </RequireAdmin>
+                    }
+                  />
                 </Route>
               </Routes>
             </BrowserRouter>

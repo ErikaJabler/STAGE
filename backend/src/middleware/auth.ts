@@ -1,6 +1,6 @@
-import { createMiddleware } from "hono/factory";
-import type { Env, AuthVariables } from "../bindings";
-import type { User } from "@stage/shared";
+import { createMiddleware } from 'hono/factory';
+import type { Env, AuthVariables } from '../bindings';
+import type { User } from '@stage/shared';
 
 /**
  * AuthProvider interface — swap implementation for Azure AD later.
@@ -15,7 +15,9 @@ export interface AuthProvider {
 export const tokenAuthProvider: AuthProvider = {
   async resolveUser(token: string, db: D1Database): Promise<User | null> {
     const row = await db
-      .prepare("SELECT id, email, name, token, is_admin, created_at, updated_at FROM users WHERE token = ?")
+      .prepare(
+        'SELECT id, email, name, token, is_admin, created_at, updated_at FROM users WHERE token = ?',
+      )
       .bind(token)
       .first();
     return row ? (row as unknown as User) : null;
@@ -37,18 +39,18 @@ export const authMiddleware = createMiddleware<{
   Bindings: Env;
   Variables: AuthVariables;
 }>(async (c, next) => {
-  const token = c.req.header("X-Auth-Token");
+  const token = c.req.header('X-Auth-Token');
 
   if (!token) {
-    return c.json({ error: "Autentisering krävs" }, 401);
+    return c.json({ error: 'Autentisering krävs' }, 401);
   }
 
   const user = await currentProvider.resolveUser(token, c.env.DB);
 
   if (!user) {
-    return c.json({ error: "Ogiltig token" }, 401);
+    return c.json({ error: 'Ogiltig token' }, 401);
   }
 
-  c.set("user", user);
+  c.set('user', user);
   await next();
 });

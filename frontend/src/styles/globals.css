@@ -6,8 +6,9 @@
 /* --- Font Face: Consid Sans --- */
 @font-face {
   font-family: 'Consid Sans';
-  src: url('/fonts/ConsidSans-Regular.woff2') format('woff2'),
-       url('/fonts/ConsidSans-Regular.woff') format('woff');
+  src:
+    url('/fonts/ConsidSans-Regular.woff2') format('woff2'),
+    url('/fonts/ConsidSans-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -15,8 +16,9 @@
 
 @font-face {
   font-family: 'Consid Sans';
-  src: url('/fonts/ConsidSans-Medium.woff2') format('woff2'),
-       url('/fonts/ConsidSans-Medium.woff') format('woff');
+  src:
+    url('/fonts/ConsidSans-Medium.woff2') format('woff2'),
+    url('/fonts/ConsidSans-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -24,8 +26,9 @@
 
 @font-face {
   font-family: 'Consid Sans';
-  src: url('/fonts/ConsidSans-Semibold.woff2') format('woff2'),
-       url('/fonts/ConsidSans-Semibold.woff') format('woff');
+  src:
+    url('/fonts/ConsidSans-Semibold.woff2') format('woff2'),
+    url('/fonts/ConsidSans-Semibold.woff') format('woff');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -35,16 +38,16 @@
 :root {
   /* Main colors */
   --color-burgundy: #701131;
-  --color-raspberry-red: #B5223F;
-  --color-light-orange: #F49E88;
+  --color-raspberry-red: #b5223f;
+  --color-light-orange: #f49e88;
 
   /* Complementary colors */
-  --color-black: #1C1C1C;
-  --color-dark-purple: #492A34;
-  --color-greige: #A99B94;
-  --color-orange: #EC6B6A;
-  --color-beige: #EFE6DD;
-  --color-white: #FFFFFF;
+  --color-black: #1c1c1c;
+  --color-dark-purple: #492a34;
+  --color-greige: #a99b94;
+  --color-orange: #ec6b6a;
+  --color-beige: #efe6dd;
+  --color-white: #ffffff;
 
   /* Semantic aliases */
   --color-bg-primary: var(--color-beige);
@@ -63,10 +66,10 @@
   --color-border-strong: var(--color-greige);
 
   --color-accent: var(--color-raspberry-red);
-  --color-accent-hover: #9E1D36;
+  --color-accent-hover: #9e1d36;
   --color-highlight: var(--color-light-orange);
   --color-danger: var(--color-raspberry-red);
-  --color-success: #2D7A4F;
+  --color-success: #2d7a4f;
   --color-warning: var(--color-orange);
 
   /* Typography */
@@ -75,31 +78,31 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
-  --font-size-xs: 0.75rem;     /* 12px */
-  --font-size-sm: 0.8125rem;   /* 13px */
-  --font-size-base: 0.875rem;  /* 14px */
-  --font-size-md: 1rem;        /* 16px */
-  --font-size-lg: 1.125rem;    /* 18px */
-  --font-size-xl: 1.25rem;     /* 20px */
-  --font-size-2xl: 1.5rem;     /* 24px */
-  --font-size-3xl: 1.875rem;   /* 30px */
-  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.8125rem; /* 13px */
+  --font-size-base: 0.875rem; /* 14px */
+  --font-size-md: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
 
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
 
   /* Spacing */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
 
   /* Layout */
   --sidebar-width: 240px;
@@ -157,16 +160,29 @@ body {
   background-color: var(--color-bg-primary);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   color: var(--color-text-primary);
 }
 
-h1 { font-size: var(--font-size-3xl); }
-h2 { font-size: var(--font-size-2xl); }
-h3 { font-size: var(--font-size-xl); }
-h4 { font-size: var(--font-size-lg); }
+h1 {
+  font-size: var(--font-size-3xl);
+}
+h2 {
+  font-size: var(--font-size-2xl);
+}
+h3 {
+  font-size: var(--font-size-xl);
+}
+h4 {
+  font-size: var(--font-size-lg);
+}
 
 a {
   color: var(--color-accent);
@@ -182,7 +198,9 @@ button {
   cursor: pointer;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: inherit;
 }
@@ -230,6 +248,11 @@ img {
 
 /* --- Skeleton pulse --- */
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.15; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.15;
+  }
 }

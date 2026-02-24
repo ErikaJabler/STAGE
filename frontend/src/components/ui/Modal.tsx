@@ -14,34 +14,37 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Focus trap + Escape key
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-      return;
-    }
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
 
-    if (e.key === 'Tab' && contentRef.current) {
-      const focusable = contentRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
+      if (e.key === 'Tab' && contentRef.current) {
+        const focusable = contentRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
 
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
 
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
         }
       }
-    }
-  }, [onClose]);
+    },
+    [onClose],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -53,7 +56,7 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
   useEffect(() => {
     if (!open || !contentRef.current) return;
     const focusable = contentRef.current.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     );
     if (focusable.length > 0) {
       focusable[0].focus();
@@ -65,7 +68,9 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [open]);
 
   if (!open) return null;
@@ -90,7 +95,12 @@ export function Modal({ open, onClose, title, children, footer, width = 480 }: M
           <h2 style={styles.title}>{title}</h2>
           <button onClick={onClose} style={styles.closeButton} aria-label="Stäng">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M5 5l10 10M15 5L5 15"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>

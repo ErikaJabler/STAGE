@@ -141,9 +141,7 @@ export function getBrandEditorConfig() {
               property: 'font-family',
               label: 'Typsnitt',
               default: EMAIL_FONT_FAMILY,
-              options: [
-                { id: EMAIL_FONT_FAMILY, label: 'Consid Sans' },
-              ],
+              options: [{ id: EMAIL_FONT_FAMILY, label: 'Consid Sans' }],
             },
             {
               type: 'select' as const,
@@ -192,7 +190,12 @@ export function getBrandEditorConfig() {
           name: 'Bakgrund',
           open: false,
           properties: [
-            { type: 'color' as const, property: 'background-color', label: 'Bakgrundsfärg', default: '#FFFFFF' },
+            {
+              type: 'color' as const,
+              property: 'background-color',
+              label: 'Bakgrundsfärg',
+              default: '#FFFFFF',
+            },
           ],
         },
         {

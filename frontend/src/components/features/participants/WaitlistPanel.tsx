@@ -37,7 +37,7 @@ export function WaitlistPanel({ eventId, participants }: WaitlistPanelProps) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   if (waitlisted.length === 0) return null;
@@ -56,7 +56,7 @@ export function WaitlistPanel({ eventId, participants }: WaitlistPanelProps) {
 
     reorderParticipant.mutate(
       { id: active.id as number, queuePosition: targetPos },
-      { onError: () => toast('Kunde inte ändra köplats', 'error') }
+      { onError: () => toast('Kunde inte ändra köplats', 'error') },
     );
   }
 
@@ -82,13 +82,9 @@ export function WaitlistPanel({ eventId, participants }: WaitlistPanelProps) {
 }
 
 function SortableItem({ participant, isActive }: { participant: Participant; isActive: boolean }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: participant.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: participant.id,
+  });
 
   const style: React.CSSProperties = {
     ...styles.item,

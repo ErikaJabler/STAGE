@@ -52,7 +52,8 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
   });
 
   const { errors, setErrors, clearFieldError, validate, buildPayload } = useEventFormValidation();
-  const { conflicts, showConflictWarning, checkingConflicts, checkConflicts, dismissConflicts } = useConflictCheck();
+  const { conflicts, showConflictWarning, checkingConflicts, checkConflicts, dismissConflicts } =
+    useConflictCheck();
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -114,7 +115,9 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
               style={styles.select}
             >
               {Object.values(EVENT_TYPE).map((t) => (
-                <option key={t} value={t}>{typeLabels[t]}</option>
+                <option key={t} value={t}>
+                  {typeLabels[t]}
+                </option>
               ))}
             </select>
           </div>
@@ -126,7 +129,9 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
               style={styles.select}
             >
               {Object.values(EVENT_STATUS).map((s) => (
-                <option key={s} value={s}>{statusLabels[s]}</option>
+                <option key={s} value={s}>
+                  {statusLabels[s]}
+                </option>
               ))}
             </select>
           </div>
@@ -277,7 +282,8 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
         <div style={styles.conflictWarning}>
           <div style={styles.conflictTitle}>Potentiell krock upptäckt</div>
           <p style={styles.conflictText}>
-            Det finns redan {conflicts.length === 1 ? 'ett event' : `${conflicts.length} events`} samma dag och plats:
+            Det finns redan {conflicts.length === 1 ? 'ett event' : `${conflicts.length} events`}{' '}
+            samma dag och plats:
           </p>
           <ul style={styles.conflictList}>
             {conflicts.map((c) => (
@@ -300,7 +306,9 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
       {/* Submit */}
       <div style={styles.actions}>
         <Button type="submit" variant="primary" size="lg" loading={loading || checkingConflicts}>
-          {checkingConflicts ? 'Kontrollerar krockar...' : (submitLabel || (isEdit ? 'Spara ändringar' : 'Skapa event'))}
+          {checkingConflicts
+            ? 'Kontrollerar krockar...'
+            : submitLabel || (isEdit ? 'Spara ändringar' : 'Skapa event')}
         </Button>
       </div>
     </form>
@@ -310,13 +318,19 @@ export function EventForm({ initialData, onSubmit, loading, submitLabel }: Event
 const styles: Record<string, React.CSSProperties> = {
   form: { display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '720px' },
   section: {
-    display: 'flex', flexDirection: 'column', gap: '12px',
-    backgroundColor: 'var(--color-bg-card)', borderRadius: 'var(--radius-lg)',
-    border: '1px solid var(--color-border)', padding: '20px 24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: 'var(--radius-lg)',
+    border: '1px solid var(--color-border)',
+    padding: '20px 24px',
   },
   sectionTitle: {
-    fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    color: 'var(--color-text-primary)', marginBottom: '4px',
+    fontSize: 'var(--font-size-md)',
+    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
+    color: 'var(--color-text-primary)',
+    marginBottom: '4px',
   },
   row: { display: 'flex', gap: '12px', alignItems: 'flex-start' },
   selectLabel: {

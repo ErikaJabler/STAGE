@@ -1,15 +1,15 @@
-import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
+import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config';
 
 export default defineWorkersConfig({
   test: {
-    include: ["backend/src/**/*.test.ts"],
+    include: ['backend/src/**/*.test.ts'],
     poolOptions: {
       workers: {
         wrangler: {
-          configPath: "./wrangler.toml",
+          configPath: './wrangler.toml',
         },
         miniflare: {
-          d1Databases: ["DB"],
+          d1Databases: ['DB'],
         },
       },
     },

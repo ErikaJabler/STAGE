@@ -1,30 +1,34 @@
 # Stage — Consid Eventplattform
 
 ## Vad är Stage?
+
 Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events, deltagare och mailutskick. Deltagare svarar via personliga RSVP-länkar. Allt i Consid Brand Guidelines.
 
 ## Implementationsplan
+
 - Fullständig sessionsplan: `docs/IMPLEMENTATION-PLAN.md`
 - Återgångsplan (rotorsaksanalys + avvikelser): `docs/RECOVERY-PLAN.md`
 - Sessionguider: `docs/SESSION-GUIDE.md`
 - Aktuell session: se `PROGRESS.md`
 
 ## Tech-stack
-| Lager | Val |
-|---|---|
-| Runtime | Cloudflare Workers |
-| Backend | Hono (TypeScript) |
-| Databas | Cloudflare D1 (SQLite) |
-| Frontend | React + TypeScript + Vite |
-| Server state | TanStack Query |
-| Validering | Zod (delade schemas frontend ↔ backend) |
-| Email | Resend via abstraktionslager |
-| Bildlagring | Cloudflare R2 (från session 9) |
-| Auth | Interface-baserad token (från session 10) |
-| Test | Vitest + @cloudflare/vitest-pool-workers |
-| Deploy | Cloudflare Workers (React via Assets) |
+
+| Lager        | Val                                       |
+| ------------ | ----------------------------------------- |
+| Runtime      | Cloudflare Workers                        |
+| Backend      | Hono (TypeScript)                         |
+| Databas      | Cloudflare D1 (SQLite)                    |
+| Frontend     | React + TypeScript + Vite                 |
+| Server state | TanStack Query                            |
+| Validering   | Zod (delade schemas frontend ↔ backend)   |
+| Email        | Resend via abstraktionslager              |
+| Bildlagring  | Cloudflare R2 (från session 9)            |
+| Auth         | Interface-baserad token (från session 10) |
+| Test         | Vitest + @cloudflare/vitest-pool-workers  |
+| Deploy       | Cloudflare Workers (React via Assets)     |
 
 ## Repostruktur
+
 ```
 ~/stage/
 ├── CLAUDE.md                    # Denna fil — läs först
@@ -77,6 +81,7 @@ Stage är en eventplaneringsplattform för Consid. Eventskapare hanterar events,
 ```
 
 ## Kommandon
+
 ```bash
 npm run dev          # Starta Wrangler dev (backend + frontend)
 npm run build        # Bygg frontend + backend
@@ -87,6 +92,7 @@ npm run db:migrate:local -- migrations/0001_events_participants.sql
 ```
 
 ## Sessionsstart — OBLIGATORISKT
+
 1. Läs CLAUDE.md (denna fil)
 2. Läs PROGRESS.md (vad som är gjort)
 3. Läs sessionguiden i `docs/SESSION-GUIDE.md` för aktuell session
@@ -95,6 +101,7 @@ npm run db:migrate:local -- migrations/0001_events_participants.sql
 6. Gör BARA det som sessionen specificerar — inte mer
 
 ## Arkitekturkrav
+
 - Affärslogik i `backend/src/services/`, ALDRIG i routes
 - Routes är tunna: parse request → anropa service → returnera response (max 200 rader per fil)
 - Validering via Zod i `packages/shared/src/schemas.ts` eller `backend/src/utils/validation.ts`
@@ -102,9 +109,10 @@ npm run db:migrate:local -- migrations/0001_events_participants.sql
 - Varje ny service MÅSTE ha colocated tester i `__tests__/`
 
 ## API-mönster (Hono)
+
 ```typescript
 // Routes är tunna — delegerar till services
-events.post("/", async (c) => {
+events.post('/', async (c) => {
   const body = await c.req.json();
   const input = parseCreateEvent(body); // Zod-validering
   const event = await EventService.create(c.env.DB, input);
@@ -113,6 +121,7 @@ events.post("/", async (c) => {
 ```
 
 ## Designsystem — Consid Brand Guidelines 2025
+
 - **Burgundy** `#701131` — primär (sidebar, headings)
 - **Raspberry Red** `#B5223F` — accent/CTA (knappar)
 - **Light Orange** `#F49E88` — highlight (ikoner, accenter)
@@ -123,6 +132,7 @@ events.post("/", async (c) => {
 - WCAG: Vit på Burgundy ✅, Vit på Raspberry Red ✅, Black på Beige ✅
 
 ## Nyckeldesignbeslut
+
 - **Soft-delete:** events har `deleted_at`, aldrig fysisk radering
 - **Inkrementella migrationer:** ny SQL-fil per session som behöver det
 - **Token-auth:** `cancellation_token` (UUID) för deltagaråtgärder
@@ -130,7 +140,9 @@ events.post("/", async (c) => {
 - **Error handling:** ErrorBoundary + Toast + global error-handler middleware
 
 ## Sessionsavslut — OBLIGATORISKT
+
 Varje session MÅSTE avslutas med:
+
 1. `npm run typecheck` + `npm run test` — inga fel
 2. Arkitekturverifiering: Kontrollera att arkitekturkraven ovan uppfylls
 3. Git commit av alla ändringar
@@ -146,6 +158,7 @@ Varje session MÅSTE avslutas med:
    - ALDRIG vara kortare än planens sessionsbeskrivning — all information ska med
 
 ## Vad INTE göra
+
 - Använd INTE egna färger — bara Consid-paletten
 - Använd INTE Inter/system-typsnitt om Consid Sans finns
 - Hårdkoda INTE färger — använd CSS-variabler
@@ -154,4 +167,5 @@ Varje session MÅSTE avslutas med:
 - Lägg INTE affärslogik i routes — använd services/
 
 ## Status
+
 Se `PROGRESS.md` för aktuell sessionsstatus.

@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import { Badge, Button, useToast } from '../../ui';
-import { useParticipants, useDeleteParticipant, useReorderParticipant, useUpdateParticipant } from '../../../hooks/useParticipants';
+import {
+  useParticipants,
+  useDeleteParticipant,
+  useReorderParticipant,
+  useUpdateParticipant,
+} from '../../../hooks/useParticipants';
 import type { Participant } from '@stage/shared';
-import { getCategoryLabel, getParticipantStatusLabel, getParticipantStatusVariant } from '../shared-helpers';
+import {
+  getCategoryLabel,
+  getParticipantStatusLabel,
+  getParticipantStatusVariant,
+} from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
 import { UploadIcon, SearchIcon, TrashIcon, DownloadIcon, PeopleEmptyIcon } from '../shared-icons';
 import { AddParticipantModal } from './AddParticipantModal';
@@ -44,7 +53,7 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
     if (newPos < 1) return;
     reorderParticipant.mutate(
       { id: p.id, queuePosition: newPos },
-      { onError: () => toast('Kunde inte ändra köplats', 'error') }
+      { onError: () => toast('Kunde inte ändra köplats', 'error') },
     );
   }
 
@@ -54,7 +63,7 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
       {
         onSuccess: () => toast('Svarsfrist uppdaterad', 'success'),
         onError: () => toast('Kunde inte uppdatera svarsfrist', 'error'),
-      }
+      },
     );
   }
 
@@ -108,8 +117,16 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
             </Button>
           </div>
         </div>
-        <AddParticipantModal eventId={eventId} open={activeModal === 'add'} onClose={() => setActiveModal(null)} />
-        <ImportCSVModal eventId={eventId} open={activeModal === 'import'} onClose={() => setActiveModal(null)} />
+        <AddParticipantModal
+          eventId={eventId}
+          open={activeModal === 'add'}
+          onClose={() => setActiveModal(null)}
+        />
+        <ImportCSVModal
+          eventId={eventId}
+          open={activeModal === 'import'}
+          onClose={() => setActiveModal(null)}
+        />
       </>
     );
   }
@@ -143,14 +160,18 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
             style={styles.searchInput}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} style={styles.searchClear} title="Rensa sökning">
+            <button
+              onClick={() => setSearchQuery('')}
+              style={styles.searchClear}
+              title="Rensa sökning"
+            >
               ×
             </button>
           )}
         </div>
         <div style={styles.statusFilterRow}>
           {STATUS_FILTERS.map((f) => {
-            const count = f.id === 'all' ? participants.length : statusCounts[f.id] ?? 0;
+            const count = f.id === 'all' ? participants.length : (statusCounts[f.id] ?? 0);
             const isActive = statusFilter === f.id;
             return (
               <button
@@ -182,7 +203,15 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
           <tbody>
             {filteredParticipants.length === 0 ? (
               <tr>
-                <td colSpan={hasWaitlisted ? 8 : 6} style={{ ...sharedStyles.td, textAlign: 'center', color: 'var(--color-text-muted)', padding: '24px 16px' }}>
+                <td
+                  colSpan={hasWaitlisted ? 8 : 6}
+                  style={{
+                    ...sharedStyles.td,
+                    textAlign: 'center',
+                    color: 'var(--color-text-muted)',
+                    padding: '24px 16px',
+                  }}
+                >
                   Inga deltagare matchar filtret
                 </td>
               </tr>
@@ -247,7 +276,11 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
                     </td>
                   )}
                   <td style={sharedStyles.td}>
-                    <button onClick={() => handleDelete(p)} style={sharedStyles.deleteBtn} title="Ta bort">
+                    <button
+                      onClick={() => handleDelete(p)}
+                      style={sharedStyles.deleteBtn}
+                      title="Ta bort"
+                    >
                       <TrashIcon />
                     </button>
                   </td>
@@ -262,8 +295,16 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
         <WaitlistPanel eventId={eventId} participants={participants} />
       )}
 
-      <AddParticipantModal eventId={eventId} open={activeModal === 'add'} onClose={() => setActiveModal(null)} />
-      <ImportCSVModal eventId={eventId} open={activeModal === 'import'} onClose={() => setActiveModal(null)} />
+      <AddParticipantModal
+        eventId={eventId}
+        open={activeModal === 'add'}
+        onClose={() => setActiveModal(null)}
+      />
+      <ImportCSVModal
+        eventId={eventId}
+        open={activeModal === 'import'}
+        onClose={() => setActiveModal(null)}
+      />
     </div>
   );
 }
@@ -271,7 +312,13 @@ export function ParticipantsTab({ eventId }: { eventId: number; participantCount
 function ChevronUpIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M3 7.5L6 4.5L9 7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M3 7.5L6 4.5L9 7.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -279,13 +326,24 @@ function ChevronUpIcon() {
 function ChevronDownIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M3 4.5L6 7.5L9 4.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  filterBar: { display: 'flex', flexDirection: 'column' as const, gap: '10px', marginBottom: '16px' },
+  filterBar: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+    marginBottom: '16px',
+  },
   searchWrapper: {
     position: 'relative' as const,
     display: 'flex',

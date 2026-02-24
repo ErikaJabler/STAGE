@@ -8,7 +8,10 @@ const categoryLabels: Record<string, string> = {
   other: 'Övrig',
 };
 
-export function DashboardStats({ dashboard, totalEvents }: {
+export function DashboardStats({
+  dashboard,
+  totalEvents,
+}: {
   dashboard: AdminDashboardData;
   totalEvents: number;
 }) {
@@ -28,11 +31,12 @@ export function DashboardStats({ dashboard, totalEvents }: {
         <div style={styles.statLabel}>Totalt deltagare</div>
         <div style={styles.statValue}>{dashboard.total_participants ?? 0}</div>
         <div style={styles.statMeta}>
-          {dashboard.participants_by_category && Object.entries(dashboard.participants_by_category).map(([cat, count]) => (
-            <span key={cat} style={styles.categoryChip}>
-              {categoryLabels[cat] || cat}: {count}
-            </span>
-          ))}
+          {dashboard.participants_by_category &&
+            Object.entries(dashboard.participants_by_category).map(([cat, count]) => (
+              <span key={cat} style={styles.categoryChip}>
+                {categoryLabels[cat] || cat}: {count}
+              </span>
+            ))}
         </div>
       </div>
 

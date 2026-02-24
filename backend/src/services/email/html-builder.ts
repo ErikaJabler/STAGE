@@ -1,4 +1,4 @@
-import { escapeHtml } from "../../utils/escaping";
+import { escapeHtml } from '../../utils/escaping';
 
 /** Build Consid-branded HTML email */
 export function buildEmailHtml(opts: {
@@ -11,7 +11,7 @@ export function buildEmailHtml(opts: {
   rsvpUrl?: string;
   calendarUrl?: string;
 }): string {
-  const escapedBody = escapeHtml(opts.body).replace(/\n/g, "<br>");
+  const escapedBody = escapeHtml(opts.body).replace(/\n/g, '<br>');
 
   const rsvpBlock = opts.rsvpUrl
     ? `
@@ -29,7 +29,7 @@ export function buildEmailHtml(opts: {
           </table>
         </td>
       </tr>`
-    : "";
+    : '';
 
   const calendarBlock = opts.calendarUrl
     ? `
@@ -41,32 +41,31 @@ export function buildEmailHtml(opts: {
           </a>
         </td>
       </tr>`
-    : "";
+    : '';
 
-  const eventInfoBlock =
-    opts.eventName
-      ? `
+  const eventInfoBlock = opts.eventName
+    ? `
       <tr>
         <td style="padding: 20px 32px 0;">
           <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #e8e0d8; padding-top: 16px;">
             <tr>
               <td style="font-family: 'Consid Sans', system-ui, sans-serif; font-size: 13px; color: #6b6360; line-height: 1.6;">
                 <strong style="color: #1C1C1C;">${escapeHtml(opts.eventName)}</strong><br>
-                ${opts.eventDate ? `${escapeHtml(opts.eventDate)}${opts.eventTime ? ` kl. ${escapeHtml(opts.eventTime)}` : ""}<br>` : ""}
-                ${opts.eventLocation ? escapeHtml(opts.eventLocation) : ""}
+                ${opts.eventDate ? `${escapeHtml(opts.eventDate)}${opts.eventTime ? ` kl. ${escapeHtml(opts.eventTime)}` : ''}<br>` : ''}
+                ${opts.eventLocation ? escapeHtml(opts.eventLocation) : ''}
               </td>
             </tr>
           </table>
         </td>
       </tr>`
-      : "";
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(opts.eventName ?? "Stage")}</title>
+  <title>${escapeHtml(opts.eventName ?? 'Stage')}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #EFE6DD; font-family: 'Consid Sans', system-ui, sans-serif;">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #EFE6DD;">
@@ -99,7 +98,7 @@ export function buildEmailHtml(opts: {
           <tr>
             <td style="background-color: #ffffff; padding: 24px 32px 28px; border-radius: 0 0 12px 12px;">
               <p style="font-family: 'Consid Sans', system-ui, sans-serif; font-size: 12px; color: #9b9490; margin: 0; border-top: 1px solid #e8e0d8; padding-top: 16px;">
-                Detta mail skickades via Stage, Consids eventplattform.${opts.rsvpUrl ? `<br><a href="${escapeHtml(opts.rsvpUrl)}" style="color: #9b9490; text-decoration: underline;">Avregistrera / hantera din anm&auml;lan</a>` : ""}
+                Detta mail skickades via Stage, Consids eventplattform.${opts.rsvpUrl ? `<br><a href="${escapeHtml(opts.rsvpUrl)}" style="color: #9b9490; text-decoration: underline;">Avregistrera / hantera din anm&auml;lan</a>` : ''}
               </p>
             </td>
           </tr>
@@ -112,4 +111,4 @@ export function buildEmailHtml(opts: {
 }
 
 // Re-export for backward compatibility
-export { escapeHtml } from "../../utils/escaping";
+export { escapeHtml } from '../../utils/escaping';

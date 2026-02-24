@@ -6,7 +6,11 @@ import type { CreateParticipantPayload } from '../../../api/client';
 import { getCategoryLabel } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
 
-export function AddParticipantModal({ eventId, open, onClose }: {
+export function AddParticipantModal({
+  eventId,
+  open,
+  onClose,
+}: {
   eventId: number;
   open: boolean;
   onClose: () => void;
@@ -36,8 +40,7 @@ export function AddParticipantModal({ eventId, open, onClose }: {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = 'Namn krävs';
     if (!form.email.trim()) errs.email = 'E-post krävs';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      errs.email = 'Ogiltig e-postadress';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Ogiltig e-postadress';
     return errs;
   }
 
@@ -90,7 +93,10 @@ export function AddParticipantModal({ eventId, open, onClose }: {
         </>
       }
     >
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+      >
         <Input
           label="Namn"
           value={form.name}
@@ -122,7 +128,9 @@ export function AddParticipantModal({ eventId, open, onClose }: {
             style={sharedStyles.modalSelect}
           >
             {Object.values(PARTICIPANT_CATEGORY).map((c) => (
-              <option key={c} value={c}>{getCategoryLabel(c)}</option>
+              <option key={c} value={c}>
+                {getCategoryLabel(c)}
+              </option>
             ))}
           </select>
         </div>

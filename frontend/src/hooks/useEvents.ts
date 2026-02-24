@@ -1,15 +1,7 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  eventsApi,
-  type CreateEventPayload,
-  type UpdateEventPayload,
-} from "../api/client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { eventsApi, type CreateEventPayload, type UpdateEventPayload } from '../api/client';
 
-const EVENTS_KEY = ["events"] as const;
+const EVENTS_KEY = ['events'] as const;
 
 /** Fetch all events */
 export function useEvents() {

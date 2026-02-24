@@ -28,14 +28,13 @@ export function DangerZone({ eventId, eventName }: Props) {
   return (
     <div style={styles.container}>
       <h3 style={styles.title}>Farozon</h3>
-      <p style={styles.description}>
-        Dessa åtgärder kan inte ångras. Var försiktig.
-      </p>
+      <p style={styles.description}>Dessa åtgärder kan inte ångras. Var försiktig.</p>
       <div style={styles.action}>
         <div>
           <div style={styles.actionTitle}>Ta bort event</div>
           <div style={styles.actionDescription}>
-            Eventet arkiveras och blir inte längre synligt. Deltagare och utskick bevaras i databasen.
+            Eventet arkiveras och blir inte längre synligt. Deltagare och utskick bevaras i
+            databasen.
           </div>
         </div>
         <Button variant="danger" size="sm" onClick={() => setShowConfirm(true)}>
@@ -49,17 +48,14 @@ export function DangerZone({ eventId, eventName }: Props) {
             Är du säker på att du vill ta bort <strong>{eventName}</strong>?
           </p>
           <p style={styles.confirmSubtext}>
-            Eventet arkiveras (soft-delete) och försvinner från översikten. Denna åtgärd kan inte ångras via gränssnittet.
+            Eventet arkiveras (soft-delete) och försvinner från översikten. Denna åtgärd kan inte
+            ångras via gränssnittet.
           </p>
           <div style={styles.confirmActions}>
             <Button variant="ghost" onClick={() => setShowConfirm(false)}>
               Avbryt
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-              disabled={deleteEvent.isPending}
-            >
+            <Button variant="danger" onClick={handleDelete} disabled={deleteEvent.isPending}>
               {deleteEvent.isPending ? 'Tar bort...' : 'Ja, ta bort'}
             </Button>
           </div>

@@ -1,4 +1,14 @@
-import type { EventStatus, EventType, ParticipantStatus, ParticipantCategory, Visibility, MailingStatus, Role, ActivityType, EmailQueueStatus } from "./constants";
+import type {
+  EventStatus,
+  EventType,
+  ParticipantStatus,
+  ParticipantCategory,
+  Visibility,
+  MailingStatus,
+  Role,
+  ActivityType,
+  EmailQueueStatus,
+} from './constants';
 
 export interface Event {
   id: number;

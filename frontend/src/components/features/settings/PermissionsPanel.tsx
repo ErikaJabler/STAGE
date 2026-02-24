@@ -1,6 +1,10 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { Button, Input, Badge } from '../../ui';
-import { usePermissions, useAddPermission, useRemovePermission } from '../../../hooks/usePermissions';
+import {
+  usePermissions,
+  useAddPermission,
+  useRemovePermission,
+} from '../../../hooks/usePermissions';
 import { useAuth } from '../../../hooks/useAuth';
 import { useToast } from '../../ui/Toast';
 import { sharedStyles } from '../shared-styles';
@@ -33,9 +37,7 @@ export function PermissionsPanel({ eventId }: Props) {
   const [role, setRole] = useState<string>('editor');
   const [showForm, setShowForm] = useState(false);
 
-  const isOwner = permissions?.some(
-    (p) => p.user_id === user?.id && p.role === 'owner'
-  );
+  const isOwner = permissions?.some((p) => p.user_id === user?.id && p.role === 'owner');
 
   const handleAdd = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,10 +54,17 @@ export function PermissionsPanel({ eventId }: Props) {
     }
   };
 
-  const handleRoleChange = async (perm: { user_email: string; user_name: string; role: string }, newRole: string) => {
+  const handleRoleChange = async (
+    perm: { user_email: string; user_name: string; role: string },
+    newRole: string,
+  ) => {
     if (newRole === perm.role) return;
     try {
-      await addPermission.mutateAsync({ email: perm.user_email, name: perm.user_name, role: newRole });
+      await addPermission.mutateAsync({
+        email: perm.user_email,
+        name: perm.user_name,
+        role: newRole,
+      });
       addToast(`Roll ändrad till ${ROLE_LABELS[newRole] || newRole}`, 'success');
     } catch {
       addToast('Kunde inte ändra roll', 'error');
@@ -74,15 +83,17 @@ export function PermissionsPanel({ eventId }: Props) {
   };
 
   if (isLoading) {
-    return <div style={{ padding: '24px', color: 'var(--color-text-muted)' }}>Laddar behörigheter...</div>;
+    return (
+      <div style={{ padding: '24px', color: 'var(--color-text-muted)' }}>
+        Laddar behörigheter...
+      </div>
+    );
   }
 
   return (
     <div>
       <div style={sharedStyles.header}>
-        <span style={sharedStyles.headerCount}>
-          Behörigheter ({permissions?.length ?? 0})
-        </span>
+        <span style={sharedStyles.headerCount}>Behörigheter ({permissions?.length ?? 0})</span>
         {isOwner && !showForm && (
           <Button variant="primary" size="sm" onClick={() => setShowForm(true)}>
             + Lägg till
@@ -145,9 +156,7 @@ export function PermissionsPanel({ eventId }: Props) {
                 <tr key={perm.id} style={sharedStyles.tr}>
                   <td style={{ ...sharedStyles.td, ...sharedStyles.participantName }}>
                     {perm.user_name}
-                    {perm.user_id === user?.id && (
-                      <span style={styles.youTag}> (du)</span>
-                    )}
+                    {perm.user_id === user?.id && <span style={styles.youTag}> (du)</span>}
                   </td>
                   <td style={sharedStyles.td}>{perm.user_email}</td>
                   <td style={sharedStyles.td}>
@@ -188,9 +197,7 @@ export function PermissionsPanel({ eventId }: Props) {
       ) : (
         <div style={sharedStyles.emptyTab}>
           <div style={sharedStyles.emptyTitle}>Inga behörigheter</div>
-          <div style={sharedStyles.emptyText}>
-            Bara du har åtkomst till detta event just nu.
-          </div>
+          <div style={sharedStyles.emptyText}>Bara du har åtkomst till detta event just nu.</div>
         </div>
       )}
     </div>

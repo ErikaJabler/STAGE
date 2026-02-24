@@ -7,7 +7,12 @@ interface SkeletonProps {
   style?: CSSProperties;
 }
 
-export function Skeleton({ width = '100%', height = '16px', borderRadius = 'var(--radius-md)', style }: SkeletonProps) {
+export function Skeleton({
+  width = '100%',
+  height = '16px',
+  borderRadius = 'var(--radius-md)',
+  style,
+}: SkeletonProps) {
   return (
     <div
       style={{
@@ -48,7 +53,13 @@ export function EventCardSkeleton() {
 /** Skeleton grid for Overview page */
 export function EventGridSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+        gap: '16px',
+      }}
+    >
       {Array.from({ length: count }, (_, i) => (
         <EventCardSkeleton key={i} />
       ))}
@@ -72,7 +83,14 @@ export function EventDetailSkeleton() {
       {/* Details card */}
       <div style={detailStyles.detailsCard}>
         <Skeleton height={20} width="40%" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginTop: '16px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px',
+            marginTop: '16px',
+          }}
+        >
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i}>
               <Skeleton height={12} width="30%" />

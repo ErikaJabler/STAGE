@@ -10,7 +10,8 @@ const TEMPLATES = [
   {
     id: 'hero-program-plats',
     name: 'Hero + Program + Plats',
-    description: 'Hero-bild, programsektion med tidslinje, platsbeskrivning och anmälningsformulär.',
+    description:
+      'Hero-bild, programsektion med tidslinje, platsbeskrivning och anmälningsformulär.',
   },
 ] as const;
 
@@ -44,9 +45,7 @@ export function WebsiteTemplateSelector({
               ...(selectedTemplate === tmpl.id ? styles.templateCardActive : {}),
             }}
           >
-            <div style={styles.templateIcon}>
-              {tmpl.id === 'hero-info' ? '🖼️' : '📋'}
-            </div>
+            <div style={styles.templateIcon}>{tmpl.id === 'hero-info' ? '🖼️' : '📋'}</div>
             <div style={styles.templateName}>{tmpl.name}</div>
             <div style={styles.templateDesc}>{tmpl.description}</div>
           </button>
@@ -76,9 +75,7 @@ export function WebsiteTemplateSelector({
                 )}
               </div>
             </div>
-            {hasCustomPage && (
-              <div style={styles.editorBadge}>Anpassad sida</div>
-            )}
+            {hasCustomPage && <div style={styles.editorBadge}>Anpassad sida</div>}
           </div>
         </div>
       )}

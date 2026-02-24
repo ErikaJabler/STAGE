@@ -1,4 +1,4 @@
-import type { EmailMessage, EmailResult, EmailProvider } from "./email.interface";
+import type { EmailMessage, EmailResult, EmailProvider } from './email.interface';
 
 /** Resend email provider */
 export class ResendProvider implements EmailProvider {
@@ -7,7 +7,7 @@ export class ResendProvider implements EmailProvider {
   async send(message: EmailMessage): Promise<EmailResult> {
     try {
       const payload: Record<string, unknown> = {
-        from: message.from ?? "Stage <noreply@mikwik.se>",
+        from: message.from ?? 'Stage <noreply@mikwik.se>',
         to: [message.to],
         subject: message.subject,
         text: message.body,
@@ -16,11 +16,11 @@ export class ResendProvider implements EmailProvider {
         payload.html = message.html;
       }
 
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });

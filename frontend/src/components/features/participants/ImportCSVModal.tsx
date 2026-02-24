@@ -5,7 +5,11 @@ import type { ImportParticipantsResult } from '../../../api/client';
 import { UploadIcon } from '../shared-icons';
 import { sharedStyles } from '../shared-styles';
 
-export function ImportCSVModal({ eventId, open, onClose }: {
+export function ImportCSVModal({
+  eventId,
+  open,
+  onClose,
+}: {
   eventId: number;
   open: boolean;
   onClose: () => void;
@@ -63,11 +67,21 @@ export function ImportCSVModal({ eventId, open, onClose }: {
       title="Importera deltagare från CSV"
       footer={
         result ? (
-          <Button variant="primary" size="md" onClick={handleClose}>Stäng</Button>
+          <Button variant="primary" size="md" onClick={handleClose}>
+            Stäng
+          </Button>
         ) : (
           <>
-            <Button variant="secondary" size="md" onClick={handleClose}>Avbryt</Button>
-            <Button variant="primary" size="md" onClick={handleImport} loading={importParticipants.isPending} disabled={!file}>
+            <Button variant="secondary" size="md" onClick={handleClose}>
+              Avbryt
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleImport}
+              loading={importParticipants.isPending}
+              disabled={!file}
+            >
               Importera
             </Button>
           </>
@@ -78,12 +92,16 @@ export function ImportCSVModal({ eventId, open, onClose }: {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={styles.importResultCard}>
             <div style={styles.importResultRow}>
-              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>{result.imported}</span>
+              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+                {result.imported}
+              </span>
               <span> importerade</span>
             </div>
             {result.skipped > 0 && (
               <div style={styles.importResultRow}>
-                <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>{result.skipped}</span>
+                <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>
+                  {result.skipped}
+                </span>
                 <span> hoppades &ouml;ver</span>
               </div>
             )}
@@ -98,7 +116,11 @@ export function ImportCSVModal({ eventId, open, onClose }: {
               <div style={styles.importErrorList}>
                 {result.errors.slice(0, 20).map((err, i) => (
                   <div key={i} style={styles.importErrorItem}>
-                    <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>Rad {err.row}:</span>{' '}
+                    <span
+                      style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}
+                    >
+                      Rad {err.row}:
+                    </span>{' '}
                     {err.reason}
                   </div>
                 ))}
@@ -117,14 +139,44 @@ export function ImportCSVModal({ eventId, open, onClose }: {
             <label style={styles.fileUploadLabel}>
               <UploadIcon />
               <span>{file ? file.name : 'Välj CSV-fil...'}</span>
-              <input type="file" accept=".csv,text/csv" onChange={handleFileChange} style={{ display: 'none' }} />
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
             </label>
           </div>
 
-          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
-            <strong>Format:</strong> CSV med kolumner namn, email, företag, kategori.{' '}
-            Header-rad identifieras automatiskt. Stöder <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>,</code> och <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>;</code> som separator.
-            Duplicerade e-postadresser hoppas över.
+          <div
+            style={{
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-text-muted)',
+              lineHeight: '1.5',
+            }}
+          >
+            <strong>Format:</strong> CSV med kolumner namn, email, företag, kategori. Header-rad
+            identifieras automatiskt. Stöder{' '}
+            <code
+              style={{
+                backgroundColor: 'var(--color-bg-primary)',
+                padding: '1px 4px',
+                borderRadius: '3px',
+              }}
+            >
+              ,
+            </code>{' '}
+            och{' '}
+            <code
+              style={{
+                backgroundColor: 'var(--color-bg-primary)',
+                padding: '1px 4px',
+                borderRadius: '3px',
+              }}
+            >
+              ;
+            </code>{' '}
+            som separator. Duplicerade e-postadresser hoppas över.
           </div>
 
           {preview && preview.length > 0 && (
@@ -134,12 +186,22 @@ export function ImportCSVModal({ eventId, open, onClose }: {
                 <table style={sharedStyles.table}>
                   <tbody>
                     {preview.map((row, i) => (
-                      <tr key={i} style={{
-                        ...sharedStyles.tr,
-                        ...(i === 0 ? { backgroundColor: 'var(--color-bg-primary)', fontWeight: 600 } : {}),
-                      }}>
+                      <tr
+                        key={i}
+                        style={{
+                          ...sharedStyles.tr,
+                          ...(i === 0
+                            ? { backgroundColor: 'var(--color-bg-primary)', fontWeight: 600 }
+                            : {}),
+                        }}
+                      >
                         {row.map((cell, j) => (
-                          <td key={j} style={{ ...sharedStyles.td, fontSize: 'var(--font-size-xs)' }}>{cell || '—'}</td>
+                          <td
+                            key={j}
+                            style={{ ...sharedStyles.td, fontSize: 'var(--font-size-xs)' }}
+                          >
+                            {cell || '—'}
+                          </td>
                         ))}
                       </tr>
                     ))}

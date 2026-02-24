@@ -1,6 +1,6 @@
-import { env, createExecutionContext, waitOnExecutionContext } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import app from "../index";
+import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
+import { describe, it, expect, beforeAll } from 'vitest';
+import app from '../index';
 
 const RATE_LIMITS_SQL = `CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, window_start INTEGER NOT NULL, count INTEGER NOT NULL DEFAULT 1);`;
 
@@ -25,89 +25,93 @@ async function fetchApp(path: string, init?: RequestInit) {
   return res;
 }
 
-describe("Security: R2 path traversal", () => {
-  it("rejects path traversal in prefix (../../etc)", async () => {
-    const res = await fetchApp("/stage/api/images/../../etc/passwd");
+describe('Security: R2 path traversal', () => {
+  it('rejects path traversal in prefix (../../etc)', async () => {
+    const res = await fetchApp('/stage/api/images/../../etc/passwd');
     // Hono may match or not match the route — either 400 or 404 is acceptable
     expect([400, 404]).toContain(res.status);
   });
 
-  it("rejects invalid prefix", async () => {
-    const res = await fetchApp("/stage/api/images/secret/abc.png");
+  it('rejects invalid prefix', async () => {
+    const res = await fetchApp('/stage/api/images/secret/abc.png');
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
-    expect(body.error).toBe("Ogiltigt prefix");
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('Ogiltigt prefix');
   });
 
-  it("rejects non-UUID filename", async () => {
-    const res = await fetchApp("/stage/api/images/events/malicious-file.png");
+  it('rejects non-UUID filename', async () => {
+    const res = await fetchApp('/stage/api/images/events/malicious-file.png');
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
-    expect(body.error).toBe("Ogiltigt filnamn");
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('Ogiltigt filnamn');
   });
 
-  it("rejects filename without extension", async () => {
-    const res = await fetchApp("/stage/api/images/events/12345678-1234-1234-1234-123456789abc");
+  it('rejects filename without extension', async () => {
+    const res = await fetchApp('/stage/api/images/events/12345678-1234-1234-1234-123456789abc');
     expect(res.status).toBe(400);
   });
 
-  it("accepts valid prefix and UUID filename", async () => {
+  it('accepts valid prefix and UUID filename', async () => {
     // This will return 404 or 503 (no R2 in test) but NOT 400
-    const res = await fetchApp("/stage/api/images/events/12345678-1234-1234-1234-123456789abc.png");
+    const res = await fetchApp('/stage/api/images/events/12345678-1234-1234-1234-123456789abc.png');
     expect(res.status).not.toBe(400);
   });
 });
 
-describe("Security: Rate limiting on auth/login", () => {
-  it("allows requests within limit", async () => {
+describe('Security: Rate limiting on auth/login', () => {
+  it('allows requests within limit', async () => {
     // Clean up any existing rate limits
     await env.DB.prepare("DELETE FROM rate_limits WHERE key LIKE 'auth_login%'").run();
 
-    const res = await fetchApp("/stage/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "ratelimit-test@example.com", name: "Test" }),
+    const res = await fetchApp('/stage/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'ratelimit-test@example.com', name: 'Test' }),
     });
     // Should not be rate limited (first request)
     expect(res.status).not.toBe(429);
   });
 
-  it("blocks request #11 with 429", async () => {
+  it('blocks request #11 with 429', async () => {
     // Clean and seed rate_limits with count=10 (at limit)
-    const key = "auth_login:unknown";
+    const key = 'auth_login:unknown';
     const now = Math.floor(Date.now() / 1000);
     await env.DB.prepare(
-      "INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 10) ON CONFLICT(key) DO UPDATE SET window_start = ?, count = 10"
-    ).bind(key, now, now).run();
+      'INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 10) ON CONFLICT(key) DO UPDATE SET window_start = ?, count = 10',
+    )
+      .bind(key, now, now)
+      .run();
 
-    const res = await fetchApp("/stage/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "blocked@example.com", name: "Blocked" }),
+    const res = await fetchApp('/stage/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'blocked@example.com', name: 'Blocked' }),
     });
 
     expect(res.status).toBe(429);
-    const body = await res.json() as { error: string };
-    expect(body.error).toContain("För många förfrågningar");
-    expect(res.headers.get("Retry-After")).toBeDefined();
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain('För många förfrågningar');
+    expect(res.headers.get('Retry-After')).toBeDefined();
   });
 });
 
-describe("Security: Rate limiting on RSVP respond", () => {
-  it("blocks after 5 requests per token", async () => {
-    const token = "rsvp-rate-test-token";
+describe('Security: Rate limiting on RSVP respond', () => {
+  it('blocks after 5 requests per token', async () => {
+    const token = 'rsvp-rate-test-token';
     const key = `rsvp_respond:${token}`;
     const now = Math.floor(Date.now() / 1000);
 
     // Seed rate_limits at limit
     await env.DB.prepare(
-      "INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 5) ON CONFLICT(key) DO UPDATE SET window_start = ?, count = 5"
-    ).bind(key, now, now).run();
+      'INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 5) ON CONFLICT(key) DO UPDATE SET window_start = ?, count = 5',
+    )
+      .bind(key, now, now)
+      .run();
 
     const res = await fetchApp(`/stage/api/rsvp/${token}/respond`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "attending" }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'attending' }),
     });
 
     expect(res.status).toBe(429);

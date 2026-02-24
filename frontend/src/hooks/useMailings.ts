@@ -15,8 +15,7 @@ export function useCreateMailing(eventId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateMailingPayload) =>
-      mailingsApi.create(eventId, data),
+    mutationFn: (data: CreateMailingPayload) => mailingsApi.create(eventId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MAILINGS_KEY(eventId) });
     },
@@ -39,8 +38,7 @@ export function useSendMailing(eventId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (mailingId: number) =>
-      mailingsApi.send(eventId, mailingId),
+    mutationFn: (mailingId: number) => mailingsApi.send(eventId, mailingId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MAILINGS_KEY(eventId) });
     },
@@ -49,8 +47,7 @@ export function useSendMailing(eventId: number) {
 
 export function useSendTestMailing(eventId: number) {
   return useMutation({
-    mutationFn: (mailingId: number) =>
-      mailingsApi.sendTest(eventId, mailingId),
+    mutationFn: (mailingId: number) => mailingsApi.sendTest(eventId, mailingId),
   });
 }
 
@@ -58,8 +55,7 @@ export function useSendToNewParticipants(eventId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (mailingId: number) =>
-      mailingsApi.sendToNew(eventId, mailingId),
+    mutationFn: (mailingId: number) => mailingsApi.sendToNew(eventId, mailingId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MAILINGS_KEY(eventId) });
     },

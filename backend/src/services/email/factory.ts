@@ -1,6 +1,6 @@
-import type { EmailProvider } from "./email.interface";
-import { ResendProvider } from "./resend.adapter";
-import { ConsoleEmailProvider } from "./console.adapter";
+import type { EmailProvider } from './email.interface';
+import { ResendProvider } from './resend.adapter';
+import { ConsoleEmailProvider } from './console.adapter';
 
 /** Factory: create the right provider based on env */
 export function createEmailProvider(apiKey?: string): EmailProvider {

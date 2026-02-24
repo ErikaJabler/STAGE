@@ -11,28 +11,27 @@ export function useConflictCheck() {
    * Check for conflicts. Returns true if conflicts were found (submission should be paused).
    * Returns false if no conflicts (safe to proceed).
    */
-  const checkConflicts = useCallback(async (
-    date: string,
-    location: string,
-    excludeEventId?: number,
-  ): Promise<boolean> => {
-    if (!date || !location.trim()) return false;
+  const checkConflicts = useCallback(
+    async (date: string, location: string, excludeEventId?: number): Promise<boolean> => {
+      if (!date || !location.trim()) return false;
 
-    setCheckingConflicts(true);
-    try {
-      const result = await conflictsApi.check(date, location.trim(), excludeEventId);
-      if (result.conflicts.length > 0) {
-        setConflicts(result.conflicts);
-        setShowConflictWarning(true);
-        setCheckingConflicts(false);
-        return true;
+      setCheckingConflicts(true);
+      try {
+        const result = await conflictsApi.check(date, location.trim(), excludeEventId);
+        if (result.conflicts.length > 0) {
+          setConflicts(result.conflicts);
+          setShowConflictWarning(true);
+          setCheckingConflicts(false);
+          return true;
+        }
+      } catch {
+        // If conflict check fails, proceed anyway
       }
-    } catch {
-      // If conflict check fails, proceed anyway
-    }
-    setCheckingConflicts(false);
-    return false;
-  }, []);
+      setCheckingConflicts(false);
+      return false;
+    },
+    [],
+  );
 
   const dismissConflicts = useCallback(() => {
     setShowConflictWarning(false);

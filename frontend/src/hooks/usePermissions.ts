@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { permissionsApi } from "../api/client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { permissionsApi } from '../api/client';
 
-const PERMISSIONS_KEY = (eventId: number) => ["permissions", eventId] as const;
+const PERMISSIONS_KEY = (eventId: number) => ['permissions', eventId] as const;
 
 export function usePermissions(eventId: number) {
   return useQuery({

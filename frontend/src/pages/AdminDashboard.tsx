@@ -3,7 +3,12 @@ import { DashboardStats } from './DashboardStats';
 import { DashboardEventList } from './DashboardEventList';
 
 export function AdminDashboard() {
-  const { data: dashboard, isLoading: dashLoading, error: dashError, refetch } = useAdminDashboard();
+  const {
+    data: dashboard,
+    isLoading: dashLoading,
+    error: dashError,
+    refetch,
+  } = useAdminDashboard();
   const { data: allEvents, isLoading: eventsLoading } = useAdminEvents();
 
   if (dashLoading || eventsLoading) {
@@ -23,7 +28,9 @@ export function AdminDashboard() {
         <div style={styles.header}>
           <h1 style={styles.title}>Administratörsöversikt</h1>
         </div>
-        <div style={styles.error}>Kunde inte ladda admin-data. Kontrollera att du har admin-behörighet.</div>
+        <div style={styles.error}>
+          Kunde inte ladda admin-data. Kontrollera att du har admin-behörighet.
+        </div>
       </div>
     );
   }

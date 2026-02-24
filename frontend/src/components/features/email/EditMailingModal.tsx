@@ -9,7 +9,12 @@ const EmailEditor = lazy(() => import('../../editor/EmailEditor'));
 
 type EditMode = 'form' | 'editor';
 
-export function EditMailingModal({ eventId, mailing, open, onClose }: {
+export function EditMailingModal({
+  eventId,
+  mailing,
+  open,
+  onClose,
+}: {
   eventId: number;
   mailing: Mailing;
   open: boolean;
@@ -75,14 +80,17 @@ export function EditMailingModal({ eventId, mailing, open, onClose }: {
       recipient_filter: form.recipient_filter,
     };
 
-    updateMailing.mutate({ mailingId: mailing.id, data: payload }, {
-      onSuccess: () => {
-        toast('Utskick uppdaterat', 'success');
-        resetState();
-        onClose();
+    updateMailing.mutate(
+      { mailingId: mailing.id, data: payload },
+      {
+        onSuccess: () => {
+          toast('Utskick uppdaterat', 'success');
+          resetState();
+          onClose();
+        },
+        onError: () => toast('Kunde inte uppdatera utskicket', 'error'),
       },
-      onError: () => toast('Kunde inte uppdatera utskicket', 'error'),
-    });
+    );
   }
 
   function handleEditorSave(htmlBody: string, editorData: string) {
@@ -99,14 +107,17 @@ export function EditMailingModal({ eventId, mailing, open, onClose }: {
       recipient_filter: form.recipient_filter,
     };
 
-    updateMailing.mutate({ mailingId: mailing.id, data: payload }, {
-      onSuccess: () => {
-        toast('Utskick uppdaterat med visuell editor', 'success');
-        resetState();
-        onClose();
+    updateMailing.mutate(
+      { mailingId: mailing.id, data: payload },
+      {
+        onSuccess: () => {
+          toast('Utskick uppdaterat med visuell editor', 'success');
+          resetState();
+          onClose();
+        },
+        onError: () => toast('Kunde inte uppdatera utskicket', 'error'),
       },
-      onError: () => toast('Kunde inte uppdatera utskicket', 'error'),
-    });
+    );
   }
 
   // Full-screen editor mode
@@ -169,8 +180,15 @@ export function EditMailingModal({ eventId, mailing, open, onClose }: {
       footer={
         editMode === 'form' ? (
           <>
-            <Button variant="secondary" size="md" onClick={handleClose}>Avbryt</Button>
-            <Button variant="primary" size="md" onClick={handleSubmit as unknown as () => void} loading={updateMailing.isPending}>
+            <Button variant="secondary" size="md" onClick={handleClose}>
+              Avbryt
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSubmit as unknown as () => void}
+              loading={updateMailing.isPending}
+            >
               Spara ändringar
             </Button>
           </>
@@ -180,7 +198,9 @@ export function EditMailingModal({ eventId, mailing, open, onClose }: {
       {/* Mode selection — only if the mailing has editor_data */}
       {editMode === null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', margin: 0 }}>
+          <p
+            style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', margin: 0 }}
+          >
             Det här utskicket skapades med den visuella editorn. Välj redigeringsläge:
           </p>
           <div style={styles.modeGrid}>
@@ -198,7 +218,10 @@ export function EditMailingModal({ eventId, mailing, open, onClose }: {
 
       {/* Form mode */}
       {editMode === 'form' && (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={sharedStyles.modalSelectLabel}>Mottagare</label>
             <select
@@ -245,10 +268,68 @@ export function EditMailingModal({ eventId, mailing, open, onClose }: {
               }}
             />
             {errors.body && (
-              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>{errors.body}</span>
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>
+                {errors.body}
+              </span>
             )}
-            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
-              Variabler: <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{name}}'}</code> = mottagarens namn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{rsvp_link}}'}</code> = personlig svarslänk, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{event}}'}</code> = eventnamn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{datum}}'}</code> = datum, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{plats}}'}</code> = plats.
+            <span
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-text-muted)',
+                lineHeight: '1.4',
+              }}
+            >
+              Variabler:{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{name}}'}
+              </code>{' '}
+              = mottagarens namn,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{rsvp_link}}'}
+              </code>{' '}
+              = personlig svarslänk,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{event}}'}
+              </code>{' '}
+              = eventnamn,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{datum}}'}
+              </code>{' '}
+              = datum,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{plats}}'}
+              </code>{' '}
+              = plats.
             </span>
           </div>
           {hasEditorData && (
@@ -277,11 +358,20 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: 'var(--color-bg-card)',
     cursor: 'pointer',
     textAlign: 'center' as const,
-    transition: 'border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast)',
+    transition:
+      'border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast)',
     fontFamily: 'inherit',
   },
-  modeName: { fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--color-text-primary)' },
-  modeDesc: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' },
+  modeName: {
+    fontSize: 'var(--font-size-base)',
+    fontWeight: 600,
+    color: 'var(--color-text-primary)',
+  },
+  modeDesc: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-muted)',
+    lineHeight: '1.4',
+  },
   backLink: {
     display: 'inline-flex',
     alignItems: 'center',

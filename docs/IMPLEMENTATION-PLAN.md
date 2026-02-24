@@ -5,6 +5,7 @@
 Stage är en eventplaneringsplattform för Consid. En prototyp finns på mikwik.se/stage/ (Cloudflare Worker + D1). Nu ska en riktig produktionsapp byggas utifrån PRD-Stage.md.
 
 **Nyckelbegränsningar:**
+
 - Claude Opus 4.6 bygger i avgränsade sessioner — minimera kontextfönster
 - Varje session producerar byggbar kod och uppdaterar PROGRESS.md
 - CLAUDE.md ger kontext utan att AI:n behöver läsa hela kodbasen
@@ -14,6 +15,7 @@ Stage är en eventplaneringsplattform för Consid. En prototyp finns på mikwik.
 - Dokumentation i varje session — andra ska kunna ta över
 
 **Fasindelning (från PRD sektion 11.5):**
+
 - **Fas 1 (15 sessioner: 0–13 + 4a/4b-split):** Core — event, deltagare, formulärstyrd mail, avbokning, ICS, behörigheter, sök. Deploybar, användbar produkt.
 - **Fas 2 (5 sessioner: 14–18):** WYSIWYG — GrapeJS mailredigering, eventwebbplats, systemadmin + brand-kontroll.
 - **Totalt: 20 AI-sessioner** (varje session = en separat konversation med manuell start)
@@ -22,27 +24,29 @@ Stage är en eventplaneringsplattform för Consid. En prototyp finns på mikwik.
 
 ## Tech-stack
 
-| Lager | Val | Motivering |
-|---|---|---|
-| **Runtime** | Cloudflare Workers | Redan uppsatt, gratis, edge computing |
-| **Backend-framework** | Hono (TypeScript) | Typsäker routing, middleware, lättviktigt |
-| **Databas** | Cloudflare D1 (SQLite) | Redan fungerande, gratis, serverlöst |
-| **Frontend** | React + TypeScript + Vite | Modernt, välkänt, bra DX |
-| **Server state** | TanStack Query (React Query) | Cache, refetch, mutation, loading/error states |
-| **WYSIWYG-editor** | GrapeJS (open source, BSD) — Fas 2 | Drag-and-drop för mail + webbsidor, gratis |
-| **Email** | Resend (betald plan behövs vid >100/dag) | Abstraktionslager → O365 Graph API senare |
-| **Bildlagring** | Cloudflare R2 (från session 2) | Objektlagring, gratis tier 10 GB. Eventbilder i Fas 1, GrapeJS-bilder i Fas 2 |
-| **Auth** | Interface-baserad (enkel token nu → Azure AD senare) | Designad för swap |
-| **Validering** | Zod | Delade schemas mellan frontend/backend |
-| **Drag-and-drop** | dnd-kit (för väntlista-köordning) | Lättviktigt, React-native, tillgängligt |
-| **Schemaläggning** | Cloudflare Cron Triggers | Triggar Worker vid schemalagda tidpunkter |
-| **Test** | Vitest + @cloudflare/vitest-pool-workers | Vite-native, D1-stöd via miniflare, snabb |
-| **Deploy** | Cloudflare Workers (React via Assets) | Frontend byggs med Vite → serveras som statiska filer |
+| Lager                 | Val                                                  | Motivering                                                                    |
+| --------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Runtime**           | Cloudflare Workers                                   | Redan uppsatt, gratis, edge computing                                         |
+| **Backend-framework** | Hono (TypeScript)                                    | Typsäker routing, middleware, lättviktigt                                     |
+| **Databas**           | Cloudflare D1 (SQLite)                               | Redan fungerande, gratis, serverlöst                                          |
+| **Frontend**          | React + TypeScript + Vite                            | Modernt, välkänt, bra DX                                                      |
+| **Server state**      | TanStack Query (React Query)                         | Cache, refetch, mutation, loading/error states                                |
+| **WYSIWYG-editor**    | GrapeJS (open source, BSD) — Fas 2                   | Drag-and-drop för mail + webbsidor, gratis                                    |
+| **Email**             | Resend (betald plan behövs vid >100/dag)             | Abstraktionslager → O365 Graph API senare                                     |
+| **Bildlagring**       | Cloudflare R2 (från session 2)                       | Objektlagring, gratis tier 10 GB. Eventbilder i Fas 1, GrapeJS-bilder i Fas 2 |
+| **Auth**              | Interface-baserad (enkel token nu → Azure AD senare) | Designad för swap                                                             |
+| **Validering**        | Zod                                                  | Delade schemas mellan frontend/backend                                        |
+| **Drag-and-drop**     | dnd-kit (för väntlista-köordning)                    | Lättviktigt, React-native, tillgängligt                                       |
+| **Schemaläggning**    | Cloudflare Cron Triggers                             | Triggar Worker vid schemalagda tidpunkter                                     |
+| **Test**              | Vitest + @cloudflare/vitest-pool-workers             | Vite-native, D1-stöd via miniflare, snabb                                     |
+| **Deploy**            | Cloudflare Workers (React via Assets)                | Frontend byggs med Vite → serveras som statiska filer                         |
 
 ### Resend-begränsning
+
 Gratis-tier: 100 mail/dag. Ett event med 200 deltagare överskrider gränsen. **Lösning:** Köbaserad utskickshantering som sprider mail (max 80/dag med marginal) + uppgradera till betald plan ($20/mån, 50 000 mail/mån) när produktionen startar. Abstraktionslagret gör att vi kan byta till O365 Graph API utan kodändringar.
 
 ### Bundlestorlek
+
 Cloudflare Workers: 10 MB (betald plan). React-appen byggs med Vite och serveras via Workers Assets (ej inkluderad i Worker-bundlen). Backend-Worker är liten (~50 KB). GrapeJS (~500 KB gzip) laddas lazy i Fas 2.
 
 ---
@@ -53,20 +57,22 @@ Cloudflare Workers: 10 MB (betald plan). React-appen byggs med Vite och serveras
 
 ### Färgpalett
 
-| Namn | Hex | RGB | Användning i Stage |
-|---|---|---|---|
-| **Burgundy** | `#701131` | 112, 17, 49 | Primär — sidebar, headings, primärknapp hover, logotyp på mörk bg |
-| **Raspberry Red** | `#B5223F` | 181, 33, 63 | Accent — primärknappar, CTA, aktiv tabb, badges, notifikationer |
-| **Light Orange** | `#F49E88` | 244, 158, 136 | Highlight — ikoner, sekundära accenter, grafiskt element (20% opacity bg) |
-| **Beige** | `#EFE6DD` | 240, 230, 221 | Bakgrund — sidor, cards, ljusa ytor |
-| **Black** | `#1C1C1C` | 28, 28, 28 | Text — brödtext, rubriker på ljus bg |
-| **Dark Purple** | `#492A34` | 73, 42, 52 | Mörkt komplement — sidebar alt, mörka sektioner |
-| **Greige** | `#A99B94` | 169, 155, 148 | Neutral — borders, disabled, sekundärtext |
-| **Orange** | `#EC6B6A` | 237, 107, 107 | Varning/uppmärksamhet — statusbadges, "väntlista" |
-| **Beige (ljus)** | `#EFE6DD` | 240, 230, 221 | Ljus bakgrund |
+| Namn              | Hex       | RGB           | Användning i Stage                                                        |
+| ----------------- | --------- | ------------- | ------------------------------------------------------------------------- |
+| **Burgundy**      | `#701131` | 112, 17, 49   | Primär — sidebar, headings, primärknapp hover, logotyp på mörk bg         |
+| **Raspberry Red** | `#B5223F` | 181, 33, 63   | Accent — primärknappar, CTA, aktiv tabb, badges, notifikationer           |
+| **Light Orange**  | `#F49E88` | 244, 158, 136 | Highlight — ikoner, sekundära accenter, grafiskt element (20% opacity bg) |
+| **Beige**         | `#EFE6DD` | 240, 230, 221 | Bakgrund — sidor, cards, ljusa ytor                                       |
+| **Black**         | `#1C1C1C` | 28, 28, 28    | Text — brödtext, rubriker på ljus bg                                      |
+| **Dark Purple**   | `#492A34` | 73, 42, 52    | Mörkt komplement — sidebar alt, mörka sektioner                           |
+| **Greige**        | `#A99B94` | 169, 155, 148 | Neutral — borders, disabled, sekundärtext                                 |
+| **Orange**        | `#EC6B6A` | 237, 107, 107 | Varning/uppmärksamhet — statusbadges, "väntlista"                         |
+| **Beige (ljus)**  | `#EFE6DD` | 240, 230, 221 | Ljus bakgrund                                                             |
 
 ### Tillgänglighet (WCAG)
+
 Godkända kombinationer från brand guidelines kontrastmatris:
+
 - **Burgundy på Beige** — godkänd (rubrik + brödtext)
 - **Black på Beige** — godkänd (brödtext)
 - **Vit på Burgundy** — godkänd (knappar, sidebar-text)
@@ -75,6 +81,7 @@ Godkända kombinationer från brand guidelines kontrastmatris:
 - **Raspberry Red på Beige** — ej godkänd för liten text (använd bara för stor rubrik/ikon)
 
 ### Typografi
+
 - **Font:** "Consid Sans" — Consids egna typsnitt (modern soft sans-serif)
 - **Rubriker:** Consid Sans Semibold
 - **Brödtext:** Consid Sans Regular
@@ -82,6 +89,7 @@ Godkända kombinationer från brand guidelines kontrastmatris:
 - **Webfallback:** Om Consid Sans inte finns som webfont → ladda som custom `@font-face` från R2 (self-hosted). Fallback-stack: `"Consid Sans", system-ui, -apple-system, sans-serif`
 
 ### Logotyp
+
 - **Primär:** Horisontell (symbol + "CONSID") — används i sidebar, mailheader
 - **Sekundär:** Vertikal — används där horisontellt utrymme saknas
 - **Frizon:** Storlek av bokstaven "C" runt logotypen
@@ -89,11 +97,13 @@ Godkända kombinationer från brand guidelines kontrastmatris:
 - **SVG-fil:** Inkludera som inline SVG i frontend (sidebar, mail-header)
 
 ### Grafiskt element
+
 - Dekorativt cirkel-med-prick-motiv (härledd ur logotypens symbol)
 - Används vid 20% opacity i Light Orange som bakgrundsdekoration
 - Tillämpning: card-bakgrunder, hero-sektioner, mailmallar
 
 ### Brand-efterlevnad i systemet
+
 Målet är att eventskapare **automatiskt** följer varumärkesprofilen utan att behöva tänka på det:
 
 1. **Designsystem (session 1):** Alla UI-komponenter (Button, Badge, Modal, Input, Card) byggs med rätt färger/typsnitt. Eventskapare kan inte välja "fel" färg — komponenterna har Consid-profil inbyggd.
@@ -174,31 +184,39 @@ Målet är att eventskapare **automatiskt** följer varumärkesprofilen utan att
 ## Sessionsprotokoll
 
 ### KRITISK REGEL: Ingen session startar automatiskt
+
 Varje session är en **separat AI-konversation**. Användaren startar varje session manuellt genom att ge en prompt. AI:n ska **aldrig** automatiskt påbörja nästa session.
 
 ### Sessionsstart
+
 Varje session börjar med att AI:n:
+
 1. Läser `CLAUDE.md` (projektkontext, ~150 rader)
 2. Läser `PROGRESS.md` (vad som är gjort, var vi är)
 3. Bekräftar sessionens mål med användaren innan kodning startar
 
 ### Enhetstester — i VARJE session
+
 Tester skrivs **parallellt med koden**, inte i en separat test-session. Regel:
+
 - **Backend-sessioner (2, 3, 5, 6, 7, 8, 9, 10, 11, 12):** Vitest-tester för varje service/route som skapas. Minst 3-5 testfall per service.
 - **Frontend-sessioner (1, 4a, 4b):** Smoke-test att komponenter renderar utan fel.
 - **Testmönster:** `backend/src/services/__tests__/event.service.test.ts` (colocated med koden)
 - **D1-tester:** Använd `@cloudflare/vitest-pool-workers` för att testa mot riktig D1-instans i miniflare.
-- **Session 13/18** testar *integration* och *end-to-end* — inte enhetstester (de ska redan finnas).
+- **Session 13/18** testar _integration_ och _end-to-end_ — inte enhetstester (de ska redan finnas).
 - `npm run test` måste vara grönt vid sessionsavslut.
 
 ### Dokumentation — SAD.md lever
+
 `SAD.md` uppdateras **varje session som ändrar arkitekturen**:
+
 - Ny tabell/migration → uppdatera databassektion
 - Ny API-endpoint → uppdatera endpoint-lista
 - Ny service/middleware → uppdatera komponentdiagram
 - Ny integration (R2, Resend, Cron) → uppdatera integrationssektion
 
 SAD.md ska alltid vara tillräcklig för att en **ny utvecklare kan sätta sig in i systemet** utan att läsa all kod. Innehåll:
+
 - Systemöversikt (vad Stage gör, 3 meningar)
 - Arkitekturdiagram (textbaserat — worker → D1/R2/Resend)
 - Repostruktur med filändamål
@@ -211,24 +229,30 @@ SAD.md ska alltid vara tillräcklig för att en **ny utvecklare kan sätta sig i
 - Testning (hur man kör tester, vad som testas)
 
 ### Manuella testfall — `TESTPLAN.md`
+
 Varje session som bygger användarsynlig funktionalitet skapar **manuella testfall** i `TESTPLAN.md`:
 
 **Dokumentformat:**
+
 ```markdown
 # Stage — Manuell testplan
 
 ## Session X: [Namn]
+
 ### TC-X.1: [Testfallsnamn]
+
 **Förutsättning:** [Vad som behöver finnas/göras innan]
 **Steg:**
+
 1. Gå till [URL/vy]
 2. Klicka på [element]
 3. Fyll i [fält] med [värde]
-**Förväntat resultat:** [Vad som ska hända]
-**Status:** ☐ Ej testad / ✅ Godkänd / ❌ Underkänd
+   **Förväntat resultat:** [Vad som ska hända]
+   **Status:** ☐ Ej testad / ✅ Godkänd / ❌ Underkänd
 ```
 
 **Regler:**
+
 - Varje session lägger till sina testfall (append, aldrig ta bort gamla)
 - Testfall skrivs från **användarens perspektiv** (inte tekniskt)
 - Täcker alla användarflöden som sessionen implementerar
@@ -237,6 +261,7 @@ Varje session som bygger användarsynlig funktionalitet skapar **manuella testfa
 - Testfall-ID:n är stabila (`TC-2.1`, `TC-4a.3`) så de kan refereras
 
 **Exempel på testfall per session:**
+
 - **Session 1:** Sidebar-navigation, tab-switching, responsivitet
 - **Session 4a:** Skapa event, klona event, se event i översikt
 - **Session 4b:** Lägg till deltagare, sök, filtrera, radera, CSV-export
@@ -245,7 +270,9 @@ Varje session som bygger användarsynlig funktionalitet skapar **manuella testfa
 - **Session 10:** Inloggning, behörigheter (Skapare vs Läsare)
 
 ### Sessionsavslutning — OBLIGATORISKT
+
 Varje session **måste** avslutas med dessa steg i ordning:
+
 1. `npm run typecheck` — inga TypeScript-fel
 2. `npm run test` — alla tester gröna
 3. `npm run dev` — appen startar och visar frontend
@@ -260,13 +287,15 @@ Varje session **måste** avslutas med dessa steg i ordning:
 8. Uppdatera `SAD.md` om arkitekturen ändrats (nya endpoints, tabeller, integrationer)
 9. Uppdatera `TESTPLAN.md` med manuella testfall för sessionens funktionalitet
 10. **Skriv en startprompt för nästa session** — en komplett prompt som användaren kan kopiera och klistra in för att starta nästa session. Prompten ska innehålla:
-   - Sessionsnummer och namn
-   - Kort sammanfattning av vad som ska byggas
-   - Filer som förväntas skapas/ändras
-   - Eventuella förutsättningar eller beslut från denna session
-   - Referens till CLAUDE.md och PROGRESS.md
+
+- Sessionsnummer och namn
+- Kort sammanfattning av vad som ska byggas
+- Filer som förväntas skapas/ändras
+- Eventuella förutsättningar eller beslut från denna session
+- Referens till CLAUDE.md och PROGRESS.md
 
 ### Startprompt-format (exempel)
+
 ```
 Starta Session 2: Event CRUD API
 
@@ -283,6 +312,7 @@ Se planen (session 2) för detaljer.
 ```
 
 ### AI-kontextfönster-budget per session
+
 - **Målstorlek:** Max ~10 nya/ändrade filer per session
 - **Läsa:** ~5-8 befintliga filer för kontext
 - **Skapa:** ~6-10 nya filer
@@ -300,8 +330,10 @@ Se planen (session 2) för detaljer.
 > 20 sessioner totalt (0, 1, 2, 3, 4a, 4b, 5–14 Fas 1 + 15–19 Fas 2).
 
 ### Session 0: Repo + config + build pipeline
+
 **Mål:** Monorepo med npm workspaces, Hono backend, React frontend, TypeScript + Vitest som bygger och serveras korrekt via Wrangler.
 **Skapar:**
+
 - `package.json` (root + backend/frontend/shared workspaces)
 - `tsconfig.json` (root + per workspace med project references)
 - `wrangler.toml` (Worker + Assets för frontend + D1-binding + Cron Trigger placeholder)
@@ -316,6 +348,7 @@ Se planen (session 2) för detaljer.
 - `git init` + första commit
 
 **Beslut att dokumentera i CLAUDE.md:**
+
 - TanStack Query för server state (installeras session 1)
 - dnd-kit för drag-and-drop (installeras session 5)
 - Vitest för enhetstester (setup i denna session)
@@ -327,8 +360,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 1: Consid designsystem + Layout
+
 **Mål:** Designsystem strikt enligt Consid Brand Guidelines 2025. Layout med sidebar, topbar, routing. Grundläggande UI-kit. TanStack Query setup.
 **Skapar:**
+
 - `frontend/src/styles/globals.css` — CSS-variabler enligt brand guidelines:
   - `--color-burgundy: #701131` (primär)
   - `--color-raspberry: #B5223F` (accent/CTA)
@@ -352,6 +387,7 @@ Se planen (session 2) för detaljer.
 - `Overview.tsx` + `EventDetail.tsx` med mockdata och tabs (Sammanfattning, Deltagare, Utskick, Inställningar)
 
 **Mönster som etableras:**
+
 - Loading states: Skeleton/spinner i varje vy
 - Error states: ErrorBoundary + Toast för felmeddelanden
 - Tom-states: "Inga event ännu — skapa ditt första" med CTA-knapp
@@ -364,8 +400,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 2: Event CRUD API
+
 **Mål:** Fullständig event-backend med Hono-routes, service-lager, zod-validering, bilduppladdning, klona event.
 **Skapar:**
+
 - `backend/src/routes/events.ts` — GET lista, POST skapa, GET :id, PUT uppdatera, DELETE mjuk-radera, POST :id/clone
 - `backend/src/services/event.service.ts` — affärslogik, soft-delete (sätter `deleted_at`), klona event (kopierar alla fält utom datum/tid)
 - `backend/src/utils/validation.ts` — Zod-schemas (delade med `packages/shared`)
@@ -383,8 +421,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 3: Deltagar-CRUD API
+
 **Mål:** Deltagarhantering backend — CRUD, statusmaskin, auto-väntlista, cancellation-token.
 **Skapar:**
+
 - `backend/src/routes/participants.ts` — GET lista (med filtrering), POST skapa, PUT uppdatera status, DELETE radera
 - `backend/src/services/participant.service.ts`
 - Statusmaskin: Inbjuden → Kommer / Tackat nej / Väntlista; Väntlista → Kommer; Kommer → Avbokad
@@ -399,9 +439,11 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 4a: Frontend — Event API-integration
+
 **Mål:** Ersätt mockdata för events med riktiga API-anrop. Skapa api-client och event-hooks.
 **Storlek:** ~7 filer (lämplig för en AI-session)
 **Skapar:**
+
 - `frontend/src/api/client.ts` — typad fetch-wrapper med felhantering
 - `frontend/src/hooks/useEvents.ts` — useQuery/useMutation för events (lista, skapa, klona, radera)
 - Uppdatera `Overview.tsx` — laddar events från API, visar stats, loading/error states
@@ -414,9 +456,11 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 4b: Frontend — Deltagar API-integration
+
 **Mål:** Deltagar-UI kopplat till API. Sök, filter, badges, export.
 **Storlek:** ~8 filer (lämplig för en AI-session)
 **Skapar:**
+
 - `frontend/src/hooks/useParticipants.ts` — useQuery/useMutation för deltagare
 - `AddParticipantModal.tsx` — formulär → POST /api/events/:id/participants
 - `ParticipantTable.tsx` — tabell med sök, filter (status, kategori), radera
@@ -429,8 +473,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 5: Väntlista & köhantering
+
 **Mål:** Kö-logik med drag-and-drop-ordning, svarsfrist, auto-uppflyttning.
 **Skapar:**
+
 - `backend/src/services/waitlist.service.ts` — köordning, uppflyttning vid avbokning, svarsfrist-validering
 - `backend/src/routes/waitlist.ts` — PUT köordning, POST svarsfrist
 - `frontend/src/components/features/participants/WaitlistPanel.tsx` — dnd-kit för drag-and-drop köordning
@@ -444,9 +490,11 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 6: Email-abstraktion + Resend + mailmallar
+
 **Mål:** Email-interface, Resend-adapter, 6 HTML-mailmallar i Consid-profil, preview-endpoint.
 **Storlek:** ~12 filer (⚠️ stor — om kontextfönstret tar slut, gör 3 mallar nu och resterande 3 som session 6b)
 **Skapar:**
+
 - `migrations/0002_email_sends.sql` — email_sends-tabell
 - `backend/src/services/email/email.interface.ts` — `EmailProvider` interface
 - `backend/src/services/email/resend.adapter.ts` — Resend SDK-implementation
@@ -464,6 +512,7 @@ Se planen (session 2) för detaljer.
 - **Alla mallar inkluderar:** Consid-logotyp i header, unsubscribe/avregistreringslänk i footer (GDPR art. 7(3)), kontaktinfo till eventskapare
 
 **Mailmallar:** 6 mallar strikt enligt Consid Brand Guidelines 2025:
+
 - Consid-logotyp i header (SVG → inline PNG för mailkompatibilitet)
 - Färger: Burgundy #701131 (rubrik), Raspberry Red #B5223F (CTA-knappar), Beige #EFE6DD (bakgrund), Light Orange #F49E88 (accent)
 - Typsnitt: Consid Sans med fallback `Arial, Helvetica, sans-serif` (mail-klienter stöder sällan custom fonts)
@@ -472,6 +521,7 @@ Se planen (session 2) för detaljer.
 - WCAG-godkända färgkombinationer (vit text på Burgundy/Raspberry Red, svart text på Beige)
 
 **Tester:**
+
 - `backend/src/services/email/__tests__/template-renderer.test.ts` — merge fields renderas korrekt, alla 6 mallar genererar giltig HTML (6+ testfall)
 - `backend/src/services/email/__tests__/factory.test.ts` — rätt adapter väljs baserat på env
 
@@ -480,8 +530,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 7: Email-UI — formulärdriven
+
 **Mål:** Komplett mailflöde: välj mall → fyll i text via formulär → välj mottagare → schemalägga/skicka. **Ingen GrapeJS — det är Fas 2.**
 **Skapar:**
+
 - `backend/src/routes/email.ts` — POST send, POST schedule, GET lista utskick
 - `backend/src/services/email/scheduler.ts` — köhantering med rate limiting (max 80/dag Resend free, eller obegränsat betald)
 - `backend/src/services/email/send-queue.ts` — persistent kö i D1, processed av Cron Trigger
@@ -503,8 +555,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 8: CSV-import
+
 **Mål:** Importera deltagare från CSV med kolumnmappning och validering.
 **Skapar:**
+
 - `backend/src/services/import.service.ts` — parsning, validering, bulk-insert
 - `backend/src/routes/import.ts` — POST upload, POST confirm
 - `frontend/src/components/features/import/CSVUpload.tsx` — filuppladdning
@@ -518,8 +572,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 9: Deltagarportal (RSVP + avbokning)
+
 **Mål:** Publik deltagarportal med RSVP-svar och avbokning via personlig token-länk. Detta är deltagarens enda touchpoint med systemet i Fas 1.
 **Skapar:**
+
 - `backend/src/routes/participant-portal.ts`:
   - `GET /rsvp/:token` — visa eventinfo + deltagarens status
   - `POST /rsvp/:token/yes` — status → "Kommer", skicka bekräftelsemail + ICS
@@ -539,6 +595,7 @@ Se planen (session 2) för detaljer.
 - RSVP-länkar i inbjudningsmallen: `{{rsvp_ja_länk}}` → `/rsvp/:token/yes`, `{{rsvp_nej_länk}}` → `/rsvp/:token/no`
 
 **Flöde:**
+
 1. Deltagare får inbjudningsmail med "Ja, jag kommer" / "Nej tack"-knappar
 2. Klickar → landar på `/rsvp/:token` med bekräftelse
 3. Senare: kan besöka samma URL för att se status eller avboka
@@ -551,9 +608,11 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 10: Behörighetssystem
+
 **Mål:** Roller per event (Skapare/Redigerare/Läsare). Auth-middleware med interface för framtida Azure AD.
 **Storlek:** ~8 filer + ändra alla befintliga routes (⚠️ refaktoreringsintensiv — börja med att läsa alla route-filer)
 **Skapar:**
+
 - `migrations/0003_event_permissions.sql` — event_permissions-tabell
 - `backend/src/middleware/auth.ts` — `AuthProvider` interface + enkel token-implementation (header `X-Auth-Token`)
 - Token-issuance: `POST /api/auth/login` (email → generera enkel JWT eller signerad token)
@@ -571,8 +630,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 11: Aktivitetslogg + Sök
+
 **Mål:** Automatisk aktivitetslogg per event + global sökfunktion i topbar.
 **Skapar:**
+
 - `migrations/0004_activities.sql` — activities-tabell
 - `backend/src/services/activity.service.ts` — logga vid mail/deltagarändringar automatiskt
 - `backend/src/routes/activities.ts` — GET lista per event
@@ -587,8 +648,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 12: Inställningar + ICS-kalender
+
 **Mål:** Inställningar-tabben (redigera event, synlighet, GDPR). ICS-filgenerering.
 **Skapar:**
+
 - `frontend/src/components/features/settings/EventSettingsForm.tsx` — redigera event (PUT /api/events/:id)
 - `frontend/src/components/features/settings/VisibilityToggle.tsx`
 - `frontend/src/components/features/settings/DangerZone.tsx` — radera event med bekräftelse
@@ -603,8 +666,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 13: Integrationstester, polish, deploy Fas 1
+
 **Mål:** Integrationstester (enhetstester finns redan per session), bugfixar, deploy till staging.
 **Skapar:**
+
 - **Integrationstester** — testa flöden end-to-end mot D1 via miniflare:
   - Skapa event → lägg till deltagare → fullbokat → auto-väntlista
   - Skapa event → skicka inbjudan → RSVP ja → bekräftelsemail
@@ -624,8 +689,10 @@ Se planen (session 2) för detaljer.
 > Mål: GrapeJS för mailredigering och eventwebbplats. Systemadmin-roll och varumärkesstyrning. Kräver R2 för bildlagring (redan satt upp i session 2).
 
 ### Session 14: GrapeJS mailredigerare
+
 **Mål:** Integrera GrapeJS som WYSIWYG drag-and-drop editor för mailutskick. Ersätter formulärdriven redigering med visuell editor. **Brand-safe by default.**
 **Skapar:**
+
 - `frontend/src/components/editor/EmailEditor.tsx` — GrapeJS-wrapper (lazy-loaded)
 - `frontend/src/components/editor/grapejs-email-preset.ts` — email-blocks: text, bild, knapp, avdelare, kolumner
 - `frontend/src/components/editor/grapejs-brand-config.ts` — Consid brand constraints:
@@ -645,8 +712,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 15: Eventwebbplats
+
 **Mål:** Publik eventwebbsida med formulärdriven sidgenerering (2-3 templates). Anmälningsformulär med GDPR.
 **Skapar:**
+
 - `backend/src/routes/website.ts` — spara/hämta webbsida-data, GET /e/:slug (publik rendering)
 - `backend/src/services/website.service.ts` — generera HTML från template + data
 - 2-3 webbplatsmallar strikt enligt Consid Brand Guidelines (hero + info, hero + program + plats, hero + info + offentlig sektor) — Consid Sans, godkänd färgpalett, logotyp, grafiskt element
@@ -660,8 +729,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 16: GrapeJS webbplatsredigerare (valfri)
+
 **Mål:** Visuell drag-and-drop editor för eventwebbsidor. **Kan skippas om formulärdriven redigering räcker.**
 **Skapar:**
+
 - `frontend/src/components/editor/PageEditor.tsx` — GrapeJS för webbsidor (reuse blocks från EmailEditor)
 - Integration med befintliga webbplatsmallar som startpunkter
 - Spara/ladda webbsid-HTML via API
@@ -672,8 +743,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 17: Systemadmin + brand-kontroll
+
 **Mål:** Central översikt och varumärkesstyrning. Krockkontroll. Mall-lås i GrapeJS.
 **Skapar:**
+
 - `migrations/0005_admin_role.sql` — utöka `event_permissions` med global `admin` roll
 - `backend/src/services/admin.service.ts` — lista alla event (oavsett behörighet), cross-event dashboard-data
 - `backend/src/routes/admin.ts` — GET /api/admin/events, GET /api/admin/dashboard
@@ -697,8 +770,10 @@ Se planen (session 2) för detaljer.
 ---
 
 ### Session 18: Test, polish, deploy Fas 2
+
 **Mål:** Testa GrapeJS-integration, mailrendering i klienter, deploy.
 **Skapar:**
+
 - Testa mailrendering i Outlook, Gmail, Apple Mail (manuellt)
 - Testa webbplats i mobil/desktop
 - Testa admin-dashboard
@@ -747,23 +822,23 @@ Fas 2 (5 sessioner):
 
 ### Sessionsstorlek (AI-budget)
 
-| Session | Nya/ändrade filer | Bedömning |
-|---|---|---|
-| 0 | ~10 | ✅ Config/scaffolding |
-| 1 | ~15 | ⚠️ Stor men nödvändig (designsystem) |
-| 2 | ~8 | ✅ Backend only |
-| 3 | ~5 | ✅ Fokuserad |
-| 4a | ~7 | ✅ Event-frontend |
-| 4b | ~8 | ✅ Deltagar-frontend |
-| 5 | ~4 | ✅ Liten |
-| 6 | ~12 | ⚠️ 6 HTML-mallar — överväg att göra 3+3 om det tar för lång tid |
-| 7 | ~10 | ✅ OK men tight |
-| 8 | ~6 | ✅ Liten |
-| 9 | ~3 | ✅ Fokuserad |
-| 10 | ~8 + refaktor | ⚠️ Auth på alla routes — läs alla route-filer först |
-| 11 | ~6 | ✅ OK |
-| 12 | ~5 | ✅ Liten |
-| 13 | Varierande | ✅ Test/deploy |
+| Session | Nya/ändrade filer | Bedömning                                                       |
+| ------- | ----------------- | --------------------------------------------------------------- |
+| 0       | ~10               | ✅ Config/scaffolding                                           |
+| 1       | ~15               | ⚠️ Stor men nödvändig (designsystem)                            |
+| 2       | ~8                | ✅ Backend only                                                 |
+| 3       | ~5                | ✅ Fokuserad                                                    |
+| 4a      | ~7                | ✅ Event-frontend                                               |
+| 4b      | ~8                | ✅ Deltagar-frontend                                            |
+| 5       | ~4                | ✅ Liten                                                        |
+| 6       | ~12               | ⚠️ 6 HTML-mallar — överväg att göra 3+3 om det tar för lång tid |
+| 7       | ~10               | ✅ OK men tight                                                 |
+| 8       | ~6                | ✅ Liten                                                        |
+| 9       | ~3                | ✅ Fokuserad                                                    |
+| 10      | ~8 + refaktor     | ⚠️ Auth på alla routes — läs alla route-filer först             |
+| 11      | ~6                | ✅ OK                                                           |
+| 12      | ~5                | ✅ Liten                                                        |
+| 13      | Varierande        | ✅ Test/deploy                                                  |
 
 ---
 
@@ -782,6 +857,7 @@ Ny D1-databas (`stage_db_v2`) för att undvika schemakonflikter med prototypen.
 ## CLAUDE.md (mall)
 
 Varje session börjar med att läsa CLAUDE.md som innehåller:
+
 - Vad projektet gör (2-3 meningar)
 - Tech-stack (tabell)
 - Repostruktur (tree)
@@ -802,12 +878,14 @@ Max ~150 rader — allt en AI-session behöver för att komma igång utan att l�
 ## PROGRESS.md (mall)
 
 Per session:
+
 - Datum, status (DONE/IN PROGRESS/NEXT)
 - Checklista med deliverables
 - Anteckningar (problem, beslut, saker att tänka på nästa gång)
 - Git commit-hash
 
 Plus:
+
 - Arkitekturbeslut-logg (tabell)
 - Kända problem (tabell)
 - Migrations-logg (vilka migrationer som körts lokalt/remote)
@@ -856,6 +934,7 @@ activities (id, event_id FK, type, description, metadata JSON,
 ## Verifiering
 
 ### Efter Fas 1 (session 13) — som eventskapare:
+
 - Logga in → se events → skapa nytt event (med hero-bild)
 - Klona befintligt event → nytt event med kopierade inställningar
 - Lägg till deltagare → auto-väntlista vid fullt
@@ -870,6 +949,7 @@ activities (id, event_id FK, type, description, metadata JSON,
 - Aktivitetstidslinje → visar historik
 
 ### Efter Fas 1 (session 13) — som deltagare:
+
 - Får inbjudningsmail → klickar "Ja, jag kommer" → landar på deltagarportal
 - Ser eventinfo, bekräftelse, ICS-länk
 - Besöker `/rsvp/:token` senare → ser status, kan avboka
@@ -877,6 +957,7 @@ activities (id, event_id FK, type, description, metadata JSON,
 - Alla mail har unsubscribe-länk i footer
 
 ### Efter Fas 2 (session 18):
+
 - Redigera mail i GrapeJS → ladda upp bild → skicka
 - Mail renderas korrekt i Outlook/Gmail/Apple Mail
 - GrapeJS header/footer låsta (Consid-logotyp + unsubscribe skyddade)
@@ -885,6 +966,7 @@ activities (id, event_id FK, type, description, metadata JSON,
 - Anmälningsformulär → GDPR-samtycke registreras
 
 ### Efter Fas 2 (session 18) — som central brand-ansvarig:
+
 - Admin-dashboard → se alla event i organisationen
 - Krockkontroll → varning vid överlappande event
 - Brevlådehantering → konfigurera tillgängliga avsändarbrevlådor
@@ -892,6 +974,7 @@ activities (id, event_id FK, type, description, metadata JSON,
 - GrapeJS brand-enforcement → färger och typsnitt låsta till Consid-profilen
 
 ### Brand guidelines-verifiering (alla faser):
+
 - Alla sidor använder Consid Sans (eller korrekt fallback)
 - Alla färger matchar godkänd Consid-palett (ingen #E63946, ingen #1D3557, inget Inter-typsnitt)
 - Logotyp med korrekt frizon överallt (sidebar, mail, deltagarportal, webbplats)
@@ -902,12 +985,12 @@ activities (id, event_id FK, type, description, metadata JSON,
 
 ## Ändringslogg
 
-| Rev | Datum | Ändringar |
-|-----|-------|-----------|
-| 1 | 2026-02-20 | Ursprunglig plan (19 sessioner) |
-| 2 | 2026-02-20 | **Teknisk granskning:** GrapeJS till Fas 2, inkrementella migrationer, TanStack Query, dnd-kit, Cron Triggers, Resend-begränsning, R2, bundlestorlek, auth login, kritisk väg korrigerad. 18 sessioner (0–17) i 2 faser. |
-| 3 | 2026-02-20 | **Användargranskning (3 perspektiv):** RSVP-flöde via token (session 9 → deltagarportal). 6 mailmallar (+ påminnelse, tackmail). Unsubscribe i alla mail. CSV-export. Klona event. Eventbild (R2 i Fas 1). Systemadmin-roll + cross-event dashboard (session 17). Mall-lås i GrapeJS. Krockkontroll. 19 sessioner (0–18) i 2 faser. |
-| 4 | 2026-02-20 | **Consid Brand Guidelines 2025:** Korrekta färger (Burgundy #701131, Raspberry Red #B5223F, Light Orange #F49E88, Beige #EFE6DD — ersätter felaktiga #E63946/#1D3557/#F8F9FA). Consid Sans typsnitt (ersätter Inter). Ny sektion "Consid Brand Guidelines" med fullständig palett, tillgänglighetsmatris, logotypregler, grafiskt element. Brand-enforcement i GrapeJS (session 14+17): låst färgväljare, låst typsnitt, låst header/footer. Deltagarportal och eventwebbplats i brand-profil. WCAG-verifiering. |
-| 5 | 2026-02-20 | **AI-sessionsgranskning:** Session 4 delad i 4a (event-frontend) + 4b (deltagar-frontend). Nytt "Sessionsprotokoll" med strikt handoff-rutin: varje session avslutas med startprompt för nästa, ingen auto-start. Sessionsstorlek-tabell med AI-budget. Safety-ventil på session 6. Totalt 20 sessioner. |
-| 6 | 2026-02-20 | **Test + dokumentation:** Vitest i tech-stack. Enhetstester i VARJE session. SAD.md uppdateras varje session. Session 13 = integrationstester. |
-| 7 | 2026-02-20 | **Manuella testfall:** Ny `TESTPLAN.md` — manuella testfall skapas löpande per session. Skrivet från användarperspektiv med tydliga steg, URL:er, förväntat resultat. Utformat för framtida AI-driven testning (Chrome-tillägg). Steg 9 i sessionsavslutning. |
+| Rev | Datum      | Ändringar                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 2026-02-20 | Ursprunglig plan (19 sessioner)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2   | 2026-02-20 | **Teknisk granskning:** GrapeJS till Fas 2, inkrementella migrationer, TanStack Query, dnd-kit, Cron Triggers, Resend-begränsning, R2, bundlestorlek, auth login, kritisk väg korrigerad. 18 sessioner (0–17) i 2 faser.                                                                                                                                                                                                                                                                                         |
+| 3   | 2026-02-20 | **Användargranskning (3 perspektiv):** RSVP-flöde via token (session 9 → deltagarportal). 6 mailmallar (+ påminnelse, tackmail). Unsubscribe i alla mail. CSV-export. Klona event. Eventbild (R2 i Fas 1). Systemadmin-roll + cross-event dashboard (session 17). Mall-lås i GrapeJS. Krockkontroll. 19 sessioner (0–18) i 2 faser.                                                                                                                                                                              |
+| 4   | 2026-02-20 | **Consid Brand Guidelines 2025:** Korrekta färger (Burgundy #701131, Raspberry Red #B5223F, Light Orange #F49E88, Beige #EFE6DD — ersätter felaktiga #E63946/#1D3557/#F8F9FA). Consid Sans typsnitt (ersätter Inter). Ny sektion "Consid Brand Guidelines" med fullständig palett, tillgänglighetsmatris, logotypregler, grafiskt element. Brand-enforcement i GrapeJS (session 14+17): låst färgväljare, låst typsnitt, låst header/footer. Deltagarportal och eventwebbplats i brand-profil. WCAG-verifiering. |
+| 5   | 2026-02-20 | **AI-sessionsgranskning:** Session 4 delad i 4a (event-frontend) + 4b (deltagar-frontend). Nytt "Sessionsprotokoll" med strikt handoff-rutin: varje session avslutas med startprompt för nästa, ingen auto-start. Sessionsstorlek-tabell med AI-budget. Safety-ventil på session 6. Totalt 20 sessioner.                                                                                                                                                                                                         |
+| 6   | 2026-02-20 | **Test + dokumentation:** Vitest i tech-stack. Enhetstester i VARJE session. SAD.md uppdateras varje session. Session 13 = integrationstester.                                                                                                                                                                                                                                                                                                                                                                   |
+| 7   | 2026-02-20 | **Manuella testfall:** Ny `TESTPLAN.md` — manuella testfall skapas löpande per session. Skrivet från användarperspektiv med tydliga steg, URL:er, förväntat resultat. Utformat för framtida AI-driven testning (Chrome-tillägg). Steg 9 i sessionsavslutning.                                                                                                                                                                                                                                                    |

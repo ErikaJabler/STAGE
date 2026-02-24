@@ -1,10 +1,10 @@
-import type { TemplateDefinition } from "../template-renderer";
+import type { TemplateDefinition } from '../template-renderer';
 
 export const thankYou: TemplateDefinition = {
-  id: "thank-you",
-  name: "Tackmail",
-  description: "Tack för deltagandet — skickas efter eventet",
-  defaultSubject: "Tack för att du deltog: {{event}}",
+  id: 'thank-you',
+  name: 'Tackmail',
+  description: 'Tack för deltagandet — skickas efter eventet',
+  defaultSubject: 'Tack för att du deltog: {{event}}',
   body: `Hej {{name}},
 
 Stort tack för att du deltog i {{event}}! Vi hoppas att du hade en givande upplevelse.
@@ -15,5 +15,5 @@ Vi hoppas att vi ses igen snart!
 
 Med vänlig hälsning,
 {{organizer}}`,
-  mergeFields: ["name", "event", "organizer"],
+  mergeFields: ['name', 'event', 'organizer'],
 };

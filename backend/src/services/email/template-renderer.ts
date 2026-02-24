@@ -1,12 +1,12 @@
-import type { Event, Participant } from "@stage/shared";
-import { escapeHtml } from "../../utils/escaping";
-import { buildEmailHtml } from "./html-builder";
-import { saveTheDate } from "./templates/save-the-date";
-import { invitation } from "./templates/invitation";
-import { waitlistTemplate } from "./templates/waitlist";
-import { confirmation } from "./templates/confirmation";
-import { reminder } from "./templates/reminder";
-import { thankYou } from "./templates/thank-you";
+import type { Event, Participant } from '@stage/shared';
+import { escapeHtml } from '../../utils/escaping';
+import { buildEmailHtml } from './html-builder';
+import { saveTheDate } from './templates/save-the-date';
+import { invitation } from './templates/invitation';
+import { waitlistTemplate } from './templates/waitlist';
+import { confirmation } from './templates/confirmation';
+import { reminder } from './templates/reminder';
+import { thankYou } from './templates/thank-you';
 
 export interface TemplateDefinition {
   id: string;
@@ -47,7 +47,7 @@ export function getTemplate(id: string): TemplateDefinition | undefined {
 export function buildMergeContext(
   event: Event,
   participant: Participant,
-  baseUrl: string
+  baseUrl: string,
 ): MergeContext {
   const rsvpUrl = `${baseUrl}/stage/rsvp/${participant.cancellation_token}`;
   const calendarUrl = `${baseUrl}/stage/api/events/${event.id}/calendar.ics`;
@@ -68,7 +68,7 @@ export function buildMergeContext(
 export function renderText(text: string, context: MergeContext): string {
   let result = text;
   for (const [key, value] of Object.entries(context)) {
-    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
   }
   return result;
 }
@@ -78,9 +78,9 @@ export function renderHtml(html: string, context: MergeContext): string {
   let result = html;
   for (const [key, value] of Object.entries(context)) {
     // URLs should not be escaped (href attributes need raw URLs)
-    const isUrl = key === "rsvp_link" || key === "calendar_link";
+    const isUrl = key === 'rsvp_link' || key === 'calendar_link';
     const safeValue = isUrl ? value : escapeHtml(value);
-    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), safeValue);
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), safeValue);
   }
   return result;
 }
@@ -90,12 +90,12 @@ export function renderEmail(
   body: string,
   subject: string,
   context: MergeContext,
-  event: Event
+  event: Event,
 ): { subject: string; text: string; html: string } {
   let personalizedBody = body;
 
   // Auto-append RSVP link if not in body
-  if (!personalizedBody.includes("{{rsvp_link}}") && context.rsvp_link) {
+  if (!personalizedBody.includes('{{rsvp_link}}') && context.rsvp_link) {
     personalizedBody += `\n\nSvara på inbjudan: {{rsvp_link}}`;
   }
 

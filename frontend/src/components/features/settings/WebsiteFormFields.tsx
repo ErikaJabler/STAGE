@@ -68,7 +68,8 @@ export function WebsiteFormFields({
 
       {hasCustomPage && (
         <div style={styles.quickEditNote}>
-          Snabbredigering påverkar bara mallbaserad rendering. Använd visuella editorn för att ändra den anpassade sidan.
+          Snabbredigering påverkar bara mallbaserad rendering. Använd visuella editorn för att ändra
+          den anpassade sidan.
         </div>
       )}
     </div>
@@ -91,9 +92,7 @@ function ProgramEditor({
   };
 
   const updateItem = (index: number, field: string, value: string) => {
-    const updated = items.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    );
+    const updated = items.map((item, i) => (i === index ? { ...item, [field]: value } : item));
     onChange(updated);
   };
 
@@ -101,7 +100,9 @@ function ProgramEditor({
     <div style={{ marginTop: '16px' }}>
       <div style={styles.sectionHeader}>
         <div style={styles.fieldLabel}>Programpunkter</div>
-        <Button variant="ghost" size="sm" onClick={addItem}>+ Lägg till</Button>
+        <Button variant="ghost" size="sm" onClick={addItem}>
+          + Lägg till
+        </Button>
       </div>
       {items.map((item, index) => (
         <div key={index} style={styles.programItem}>

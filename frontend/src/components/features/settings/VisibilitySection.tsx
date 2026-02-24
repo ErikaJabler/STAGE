@@ -35,23 +35,25 @@ export function VisibilitySection({ event }: Props) {
           <div style={styles.toggleHint}>
             {event.visibility === 'public'
               ? 'Eventet är synligt för alla med länken.'
-              : 'Eventet är bara synligt för inbjudna.'
-            }
+              : 'Eventet är bara synligt för inbjudna.'}
           </div>
         </div>
         <button
           onClick={toggle}
           style={{
             ...styles.toggleBtn,
-            backgroundColor: event.visibility === 'public' ? 'var(--color-burgundy)' : 'var(--color-border)',
+            backgroundColor:
+              event.visibility === 'public' ? 'var(--color-burgundy)' : 'var(--color-border)',
           }}
           disabled={updateEvent.isPending}
           aria-label={event.visibility === 'public' ? 'Ändra till privat' : 'Ändra till publik'}
         >
-          <span style={{
-            ...styles.toggleKnob,
-            transform: event.visibility === 'public' ? 'translateX(20px)' : 'translateX(0)',
-          }} />
+          <span
+            style={{
+              ...styles.toggleKnob,
+              transform: event.visibility === 'public' ? 'translateX(20px)' : 'translateX(0)',
+            }}
+          />
         </button>
       </div>
     </div>
@@ -91,7 +93,10 @@ export function SenderSection({ event }: Props) {
         label="Avsändaradress"
         type="email"
         value={value}
-        onChange={(e) => { setValue(e.target.value); setDirty(true); }}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setDirty(true);
+        }}
         placeholder="noreply@consid.se"
         hint="Lämna tomt för standardavsändare"
       />
@@ -131,14 +136,15 @@ export function GdprSection({ event }: Props) {
       <div style={styles.textareaWrapper}>
         <textarea
           value={value}
-          onChange={(e) => { setValue(e.target.value); setDirty(true); }}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setDirty(true);
+          }}
           style={styles.textarea}
           rows={4}
           placeholder="Genom att anmäla dig samtycker du till att vi behandlar dina personuppgifter i enlighet med GDPR..."
         />
-        <div style={styles.textareaHint}>
-          Visas på RSVP-sidan när deltagare svarar.
-        </div>
+        <div style={styles.textareaHint}>Visas på RSVP-sidan när deltagare svarar.</div>
       </div>
     </div>
   );

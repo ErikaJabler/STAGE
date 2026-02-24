@@ -12,13 +12,22 @@ export function RsvpConfirmation({ info, responseName, responseStatus }: Props) 
   return (
     <div style={s.body}>
       <div style={s.confirmIcon}>
-        {responseStatus === 'attending' ? '🎉' : responseStatus === 'cancelled' ? '👋' : responseStatus === 'waitlisted' ? '⏳' : '✓'}
+        {responseStatus === 'attending'
+          ? '🎉'
+          : responseStatus === 'cancelled'
+            ? '👋'
+            : responseStatus === 'waitlisted'
+              ? '⏳'
+              : '✓'}
       </div>
       <h2 style={s.title}>
-        {responseStatus === 'attending' ? 'Tack, vi ses!'
-          : responseStatus === 'waitlisted' ? 'Du står på väntelistan'
-          : responseStatus === 'cancelled' ? 'Din plats är avbokad'
-          : 'Tack för ditt svar'}
+        {responseStatus === 'attending'
+          ? 'Tack, vi ses!'
+          : responseStatus === 'waitlisted'
+            ? 'Du står på väntelistan'
+            : responseStatus === 'cancelled'
+              ? 'Din plats är avbokad'
+              : 'Tack för ditt svar'}
       </h2>
       <p style={s.text}>
         {responseStatus === 'attending'
@@ -37,7 +46,10 @@ export function RsvpConfirmation({ info, responseName, responseStatus }: Props) 
         </div>
         <div style={s.summaryRow}>
           <ClockIcon />
-          <span>{info.event.time}{info.event.end_time ? ` – ${info.event.end_time}` : ''}</span>
+          <span>
+            {info.event.time}
+            {info.event.end_time ? ` – ${info.event.end_time}` : ''}
+          </span>
         </div>
         <div style={s.summaryRow}>
           <LocationIcon />
@@ -67,14 +79,34 @@ const s: Record<string, React.CSSProperties> = {
   text: { fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 },
   confirmIcon: { fontSize: '48px', marginBottom: '8px' },
   summaryCard: {
-    display: 'flex', flexDirection: 'column', gap: '8px', width: '100%',
-    padding: '14px', backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    width: '100%',
+    padding: '14px',
+    backgroundColor: 'var(--color-bg-primary)',
+    borderRadius: 'var(--radius-lg)',
   },
-  summaryRow: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' },
+  summaryRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)',
+  },
   calendarBtn: {
-    display: 'flex', alignItems: 'center', gap: '8px',
-    padding: '10px 20px', backgroundColor: 'var(--color-bg-primary)', color: 'var(--color-burgundy)',
-    border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-lg)',
-    fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 150ms ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 20px',
+    backgroundColor: 'var(--color-bg-primary)',
+    color: 'var(--color-burgundy)',
+    border: '1px solid var(--color-border-strong)',
+    borderRadius: 'var(--radius-lg)',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'background-color 150ms ease',
   },
 };

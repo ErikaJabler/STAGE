@@ -1,10 +1,12 @@
 # Stage — Sessionsprogress
 
 ## Session 0: Repo + config + build pipeline
+
 **Datum:** 2026-02-20
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Monorepo med npm workspaces (root + backend + frontend + shared)
 - [x] TypeScript-konfiguration (root + per workspace med project references)
 - [x] Wrangler.toml (Worker + Assets + D1-binding)
@@ -18,6 +20,7 @@
 - [x] git init + första commit
 
 ### Anteckningar
+
 - Node v25.6.1, npm 11.9.0
 - Ny D1-databas `stage_db_v2` (separat från prototypen)
 - Test-filer exkluderade från tsc --build (körs via vitest med cloudflare:test)
@@ -30,10 +33,12 @@
 ---
 
 ## Session 1: Consid designsystem + Layout
+
 **Datum:** 2026-02-20
 **Status:** DONE
 
 ### Deliverables
+
 - [x] CSS-variabler i `frontend/src/styles/globals.css` (alla Consid-färger + semantiska aliases)
 - [x] Design tokens i `frontend/src/styles/design-tokens.ts` (TS-export för dynamiska behov)
 - [x] Consid Sans @font-face (Regular, Medium, Semibold) — struktur i `public/fonts/` (fontfiler ej inkluderade)
@@ -48,6 +53,7 @@
 - [x] WCAG-godkända färgkombinationer dokumenterade i design-tokens.ts
 
 ### Anteckningar
+
 - Consid Sans fontfiler saknas — `public/fonts/` är förberett med @font-face-deklarationer, fallback: system-ui
 - Typsnittsvikter: Regular (400), Medium (500), Semibold (600) — enligt brand guidelines
 - `dialog`-element för Modal (nativt med `::backdrop`)
@@ -59,10 +65,12 @@
 ---
 
 ## Session 2: CRUD Events API + frontend-integration
+
 **Datum:** 2026-02-20
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Typsäkra D1-queries i `backend/src/db/queries.ts` (listEvents, getEventById, createEvent, updateEvent, softDeleteEvent)
 - [x] CRUD-routes i `backend/src/routes/events.ts` (GET, GET/:id, POST, PUT, DELETE)
 - [x] Input-validering: required fields, datumformat (YYYY-MM-DD), tidsformat (HH:MM), email-format, enum-värden
@@ -79,6 +87,7 @@
 - [x] vitest.config.ts: explicit `include` för att bara köra .ts-filer (undviker tsc build-outputs)
 
 ### Anteckningar
+
 - Ingen ny migration krävdes — befintligt schema (0001) stödjer alla CRUD-operationer
 - D1.exec() kräver single-line SQL i tester — multiline template literals fungerar inte med miniflare
 - vitest med cloudflare workers pool isolerar D1-data mellan describe-block — tester måste vara self-contained
@@ -89,10 +98,12 @@
 ---
 
 ## Session 3: Skapa-event-formulär + deltagarhantering
+
 **Datum:** 2026-02-20
 **Status:** DONE
 
 ### Deliverables
+
 - [x] EventForm-komponent — återanvändbar för både skapa och redigera (alla event-fält i sektioner)
 - [x] CreateEvent-sida (`/events/new`) med formulärvalidering, toast-notis, redirect till eventdetalj
 - [x] EditEvent-sida (`/events/:id/edit`) med förpopulerat formulär, toast-notis, redirect
@@ -110,6 +121,7 @@
 - [x] 4 nya tester (participants CRUD) — totalt 14 tester, alla passerar
 
 ### Anteckningar
+
 - Ingen ny migration krävdes — befintligt schema (0001) stödjer participant CRUD
 - EventForm validerar: required fields, datumformat (YYYY-MM-DD), tidsformat (HH:MM), email-format, max_participants >= 1
 - Participant hard-delete (inte soft-delete som events) — deltagare kan faktiskt tas bort
@@ -121,10 +133,12 @@
 ---
 
 ## Session 4: Mailutskick + RSVP
+
 **Datum:** 2026-02-20
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Migration 0002: mailings-tabell (id, event_id, subject, body, recipient_filter, status, sent_at, created_at)
 - [x] Shared types: Mailing interface + MAILING_STATUS konstanter
 - [x] Backend: Email-abstraktionslager med Resend-provider + ConsoleEmailProvider (fallback)
@@ -138,6 +152,7 @@
 - [x] SAD.md uppdaterad med 6 nya endpoints + mailings-tabell + RESEND_API_KEY
 
 ### Anteckningar
+
 - RESEND_API_KEY är valfri — utan den loggas mail till console (ConsoleEmailProvider)
 - RSVP-sidan renderas utanför Layout (ingen sidebar/topbar) — egen route /rsvp/:token
 - Mottagarfilter stödjer: alla, per status (invited/attending/declined/waitlisted/cancelled), per kategori (internal/public_sector/private_sector/partner/other)
@@ -150,54 +165,54 @@
 
 ## Arkitekturbeslut
 
-| # | Beslut | Motivering | Session |
-|---|--------|-----------|---------|
-| 1 | npm workspaces (inte Turborepo) | Enkelt, inget extra beroende | 0 |
-| 2 | Inkrementella SQL-migrationer | En fil per session, enkel att spåra | 0 |
-| 3 | @cloudflare/vitest-pool-workers | Testar mot riktig D1 i miniflare | 0 |
-| 4 | Frontend via Workers Assets | Byggs med Vite, serveras statiskt | 0 |
-| 5 | Test-filer exkluderade från tsc | cloudflare:test-modul finns bara i vitest runtime | 0 |
-| 6 | Inline styles (CSSProperties) istället för CSS-moduler | Enklare för komponentbibliotek, inga extra filer | 1 |
-| 7 | CSS custom properties för design tokens | Konsekvent branding, lätt att ändra, CSS-native | 1 |
-| 8 | Native dialog-element för Modal | Bättre tillgänglighet, inbyggd backdrop, focus trap | 1 |
-| 9 | Toast via React Context | Global åtkomst via useToast(), auto-dismiss | 1 |
-| 10 | Self-contained API-tester | Varje test skapar sin egen data, ej beroende mellan describe-block | 2 |
-| 11 | Dynamisk partial update (PUT) | Bygger SET-klausul från inskickade fält, ej full replace | 2 |
-| 12 | Slug auto-generering | Genereras från eventnamn med svensk teckenhantering | 2 |
-| 13 | Återanvändbar EventForm | Samma komponent för skapa + redigera, initialData-prop styr läge | 3 |
-| 14 | Participant hard-delete | Deltagare raderas fysiskt (inte soft-delete), enklare modell | 3 |
-| 15 | Nested participants-route | Monteras som `/api/events/:eventId/participants` i Hono | 3 |
-| 16 | Worker med ASSETS-binding + path rewriting | Möjliggör deploy under `/stage/`-prefix på Pages-domän | 3 |
-| 17 | Email-abstraktionslager (interface + provider) | Resend nu, O365 senare, ConsoleEmailProvider för dev/test | 4 |
-| 18 | RSVP via cancellation_token | Publika routes, inga credentials, deltagare identifieras via UUID | 4 |
-| 19 | RSVP-sida utanför Layout | Ren publik sida utan sidebar/topbar, egen route i React Router | 4 |
-| 20 | Mailings med recipient_filter | Filtrera mottagare per status eller kategori vid skapande/sändning | 4 |
-| 21 | CSV-import med auto-header-detection | Parser identifierar kolumner från header-rad (sv/en), fallback till positionell | 6 |
-| 22 | Frontendbaserade mailmallar | Mallar definierade i frontend, ej backend — enkelt, ingen migration, redigerbart | 6 |
-| 23 | Auto-waitlist vid kapacitetsgräns | shouldWaitlist() kontrollerar attending >= max_participants + overbooking_limit | 7 |
-| 24 | Auto-promote vid ledig plats | promoteFromWaitlist() vid delete, statusändring och RSVP-cancel | 7 |
-| 25 | Klientsida deltagarfiltrering | Sök + statusfilter i frontend — all data redan hämtad, inga extra API-anrop | 7 |
-| 26 | Dubbel ICS-generering | Backend-endpoint för email, klientsida för RSVP — redundans ger bättre UX | 7 |
-| 27 | Interface-baserad auth (AuthProvider) | Enkel token nu, Azure AD senare — byt implementation utan routeändringar | 10 |
-| 28 | X-Auth-Token header | Enkel header-baserad auth, klienten sätter header per request via localStorage | 10 |
-| 29 | Auto-owner vid event-skapande | POST /events sätter skaparen som owner automatiskt | 10 |
-| 30 | Roller per event (owner/editor/viewer) | Granulär åtkomstkontroll per event, ej global admin | 10 |
-| 31 | Backend email-mallar med template-renderer | Mallar i backend med merge fields, exponeras via API — framtida CMS-integration möjlig | 11 |
-| 32 | Email-kö med Cron Trigger | ≤5 mottagare direkt, >5 via D1-kö + Cron (var 5 min, batch 20) — respekterar rate limits | 11 |
-| 33 | Aktivitetslogg per event | Alla mutationer loggas med typ, beskrivning, metadata — ger audit trail | 11 |
-| 34 | Sök filtrerat per behörighet | SQL LIKE-sök på events, resultat filtrerat per användarens permissions | 11 |
-| 35 | Inline eventinställningar | Redigering via SettingsTab istf separat /edit-sida — allt på ett ställe | 12 |
-| 36 | RSVP extra fält (dietary + plus_one) | Sparas vid RSVP-svar, valfria fält som inte påverkar existerande logik | 12 |
-| 37 | Avbokning med bekräftelsesteg | Separata states i RSVP (confirm-cancel → cancelled) förhindrar accidentell avbokning | 12 |
+| #   | Beslut                                                 | Motivering                                                                               | Session |
+| --- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------- | ------- |
+| 1   | npm workspaces (inte Turborepo)                        | Enkelt, inget extra beroende                                                             | 0       |
+| 2   | Inkrementella SQL-migrationer                          | En fil per session, enkel att spåra                                                      | 0       |
+| 3   | @cloudflare/vitest-pool-workers                        | Testar mot riktig D1 i miniflare                                                         | 0       |
+| 4   | Frontend via Workers Assets                            | Byggs med Vite, serveras statiskt                                                        | 0       |
+| 5   | Test-filer exkluderade från tsc                        | cloudflare:test-modul finns bara i vitest runtime                                        | 0       |
+| 6   | Inline styles (CSSProperties) istället för CSS-moduler | Enklare för komponentbibliotek, inga extra filer                                         | 1       |
+| 7   | CSS custom properties för design tokens                | Konsekvent branding, lätt att ändra, CSS-native                                          | 1       |
+| 8   | Native dialog-element för Modal                        | Bättre tillgänglighet, inbyggd backdrop, focus trap                                      | 1       |
+| 9   | Toast via React Context                                | Global åtkomst via useToast(), auto-dismiss                                              | 1       |
+| 10  | Self-contained API-tester                              | Varje test skapar sin egen data, ej beroende mellan describe-block                       | 2       |
+| 11  | Dynamisk partial update (PUT)                          | Bygger SET-klausul från inskickade fält, ej full replace                                 | 2       |
+| 12  | Slug auto-generering                                   | Genereras från eventnamn med svensk teckenhantering                                      | 2       |
+| 13  | Återanvändbar EventForm                                | Samma komponent för skapa + redigera, initialData-prop styr läge                         | 3       |
+| 14  | Participant hard-delete                                | Deltagare raderas fysiskt (inte soft-delete), enklare modell                             | 3       |
+| 15  | Nested participants-route                              | Monteras som `/api/events/:eventId/participants` i Hono                                  | 3       |
+| 16  | Worker med ASSETS-binding + path rewriting             | Möjliggör deploy under `/stage/`-prefix på Pages-domän                                   | 3       |
+| 17  | Email-abstraktionslager (interface + provider)         | Resend nu, O365 senare, ConsoleEmailProvider för dev/test                                | 4       |
+| 18  | RSVP via cancellation_token                            | Publika routes, inga credentials, deltagare identifieras via UUID                        | 4       |
+| 19  | RSVP-sida utanför Layout                               | Ren publik sida utan sidebar/topbar, egen route i React Router                           | 4       |
+| 20  | Mailings med recipient_filter                          | Filtrera mottagare per status eller kategori vid skapande/sändning                       | 4       |
+| 21  | CSV-import med auto-header-detection                   | Parser identifierar kolumner från header-rad (sv/en), fallback till positionell          | 6       |
+| 22  | Frontendbaserade mailmallar                            | Mallar definierade i frontend, ej backend — enkelt, ingen migration, redigerbart         | 6       |
+| 23  | Auto-waitlist vid kapacitetsgräns                      | shouldWaitlist() kontrollerar attending >= max_participants + overbooking_limit          | 7       |
+| 24  | Auto-promote vid ledig plats                           | promoteFromWaitlist() vid delete, statusändring och RSVP-cancel                          | 7       |
+| 25  | Klientsida deltagarfiltrering                          | Sök + statusfilter i frontend — all data redan hämtad, inga extra API-anrop              | 7       |
+| 26  | Dubbel ICS-generering                                  | Backend-endpoint för email, klientsida för RSVP — redundans ger bättre UX                | 7       |
+| 27  | Interface-baserad auth (AuthProvider)                  | Enkel token nu, Azure AD senare — byt implementation utan routeändringar                 | 10      |
+| 28  | X-Auth-Token header                                    | Enkel header-baserad auth, klienten sätter header per request via localStorage           | 10      |
+| 29  | Auto-owner vid event-skapande                          | POST /events sätter skaparen som owner automatiskt                                       | 10      |
+| 30  | Roller per event (owner/editor/viewer)                 | Granulär åtkomstkontroll per event, ej global admin                                      | 10      |
+| 31  | Backend email-mallar med template-renderer             | Mallar i backend med merge fields, exponeras via API — framtida CMS-integration möjlig   | 11      |
+| 32  | Email-kö med Cron Trigger                              | ≤5 mottagare direkt, >5 via D1-kö + Cron (var 5 min, batch 20) — respekterar rate limits | 11      |
+| 33  | Aktivitetslogg per event                               | Alla mutationer loggas med typ, beskrivning, metadata — ger audit trail                  | 11      |
+| 34  | Sök filtrerat per behörighet                           | SQL LIKE-sök på events, resultat filtrerat per användarens permissions                   | 11      |
+| 35  | Inline eventinställningar                              | Redigering via SettingsTab istf separat /edit-sida — allt på ett ställe                  | 12      |
+| 36  | RSVP extra fält (dietary + plus_one)                   | Sparas vid RSVP-svar, valfria fält som inte påverkar existerande logik                   | 12      |
+| 37  | Avbokning med bekräftelsesteg                          | Separata states i RSVP (confirm-cancel → cancelled) förhindrar accidentell avbokning     | 12      |
 
 ---
 
 ## Kända problem
 
-| # | Problem | Status | Session |
-|---|---------|--------|---------|
-| 1 | ~~D1 database_id i wrangler.toml är placeholder~~ | Löst — `1e935a1e-4a24-44f4-b83d-c70235b982d9` | 3 |
-| 2 | ~~Consid Sans fontfiler saknas~~ | Löst — konverterat OTF → woff2/woff, ligger i public/fonts/ | 2 |
+| #   | Problem                                           | Status                                                      | Session |
+| --- | ------------------------------------------------- | ----------------------------------------------------------- | ------- |
+| 1   | ~~D1 database_id i wrangler.toml är placeholder~~ | Löst — `1e935a1e-4a24-44f4-b83d-c70235b982d9`               | 3       |
+| 2   | ~~Consid Sans fontfiler saknas~~                  | Löst — konverterat OTF → woff2/woff, ligger i public/fonts/ | 2       |
 
 ---
 
@@ -205,11 +220,12 @@
 
 **Live URL:** https://mikwik.se/stage/
 
-| Milstolpe | Krav | Status |
-|---|---|---|
+| Milstolpe                            | Krav                                                      | Status      |
+| ------------------------------------ | --------------------------------------------------------- | ----------- |
 | Första deploy till `mikwik.se/stage` | Session 3 klar (skapa/redigera event + deltagarhantering) | **DONE** ✅ |
 
 ### Deploy-konfiguration
+
 - **Worker:** `stage` (Cloudflare Workers)
 - **Route:** `mikwik.se/stage/*` (zone: mikwik.se)
 - **D1-databas:** `stage_db_v2` (`1e935a1e-4a24-44f4-b83d-c70235b982d9`, region WEUR)
@@ -217,11 +233,13 @@
 - **Base path:** Vite `base: '/stage/'`, React Router `basename="/stage"`, API under `/stage/api/*`
 
 ### Deploy-steg (vid omdeploy)
+
 ```bash
 npm run build && npx wrangler deploy
 ```
 
 ### Första deploy (utförd 2026-02-20)
+
 1. `npx wrangler d1 create stage_db_v2` → databas skapad ✅
 2. `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0001_events_participants.sql` → migration körd ✅
 3. `npm run build && npx wrangler deploy` → Worker deployad med route `mikwik.se/stage/*` ✅
@@ -230,10 +248,12 @@ npm run build && npx wrangler deploy
 ---
 
 ## Session 5: Riktig mailsändning via Resend + HTML-mail med RSVP-länk
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Resend-domän (mikwik.se) verifierad med DKIM, SPF (MX + TXT)
 - [x] RESEND_API_KEY sparad som Cloudflare Worker secret
 - [x] HTML-mailtemplate med Consid-branding (burgundy header, beige bakgrund, raspberry CTA-knapp)
@@ -247,6 +267,7 @@ npm run build && npx wrangler deploy
 - [x] Hela flödet verifierat live: skapa utskick → skicka → mail anländer → klicka RSVP → status "attending"
 
 ### Anteckningar
+
 - Resend-domän verifierad i eu-west-1 (Ireland)
 - `from`-adress: `Stage <noreply@mikwik.se>`
 - `buildEmailHtml()` i `backend/src/services/email.ts` — table-baserad HTML för mailklient-kompatibilitet
@@ -257,10 +278,12 @@ npm run build && npx wrangler deploy
 ---
 
 ## Session 6: CSV-import av deltagare + fördefinierade mailmallar
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Backend: POST /api/events/:id/participants/import — tar emot CSV-fil via multipart form-data
 - [x] CSV-parser med stöd för `,` och `;` som separator, header-autodetektering (namn/email/företag/kategori på svenska och engelska)
 - [x] Validering per rad: email-format, dubbletter (inom CSV + mot befintliga deltagare), felrapport med rad-nummer
@@ -278,6 +301,7 @@ npm run build && npx wrangler deploy
 - [x] SAD.md uppdaterad med ny endpoint
 
 ### Anteckningar
+
 - Ingen ny migration krävdes — befintligt schema stödjer import
 - CSV-parser stödjer vanliga svenska kolumnnamn (namn, e-post, företag, kategori) + engelska (name, email, company, category)
 - CSV-parser hanterar citerade fält (dubbla citattecken)
@@ -287,10 +311,12 @@ npm run build && npx wrangler deploy
 ---
 
 ## Session 7: Väntlistelogik + Deltagarfiltrering + ICS-kalender
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Backend: Waitlist-queries (`getAttendingCount`, `getNextWaitlisted`, `getMaxQueuePosition`, `promoteFromWaitlist`, `shouldWaitlist`) i `db/queries.ts`
 - [x] Backend: Auto-waitlist vid POST /participants (sätter status "waitlisted" + queue_position om fullt)
 - [x] Backend: Auto-waitlist vid CSV-import (räknar kapacitet löpande per rad)
@@ -313,6 +339,7 @@ npm run build && npx wrangler deploy
 - [x] TESTPLAN.md uppdaterad med 11 nya testfall
 
 ### Anteckningar
+
 - Ingen ny migration krävdes — befintligt schema har `queue_position` + `waitlisted` i participants
 - Väntlistelogik tar hänsyn till `max_participants + overbooking_limit`
 - ICS-generering finns på två ställen: backend (GET endpoint) och frontend (klientsida på RSVP-sidan)
@@ -323,10 +350,12 @@ npm run build && npx wrangler deploy
 ---
 
 ## Session 8a: Backend-refaktorering + Processfixar
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `docs/IMPLEMENTATION-PLAN.md` — kopierad från `~/.claude/plans/bubbly-weaving-pizza.md`
 - [x] `docs/RECOVERY-PLAN.md` — rotorsaksanalys, avvikelser, sessionsordning
 - [x] `docs/SESSION-GUIDE.md` — kompakta guider per resterande session (8-18)
@@ -339,13 +368,16 @@ npm run build && npx wrangler deploy
 - [x] Alla 51 tester passerar (27 befintliga + 24 nya)
 
 ### Avvikelser från plan
+
 Session 8 delades i 8a + 8b pga kontextfönsterstorlek:
+
 - **8a (denna):** Processfixar + services + email-uppdelning + queries-uppdelning + tester
 - **8b (nästa):** Zod-validering + error-handler middleware + slutgiltig refaktorering av validering till centraliserad modul
 
 Validering finns kvar inline i routes (events.ts) — flyttas till Zod i session 8b.
 
 ### Anteckningar
+
 - Barrel-filer (`db/queries.ts`, `services/email/index.ts`) bevarar alla befintliga importvägar — inga ändringar i övriga filer behövdes
 - participant.service.ts = 351 rader (inkl CSV-parsning + validering) — under 400-gränsen men kan delas ytterligare i framtiden
 - Inga nya migrationer behövdes
@@ -354,10 +386,12 @@ Validering finns kvar inline i routes (events.ts) — flyttas till Zod i session
 ---
 
 ## Session 8b: Zod-validering + Error-handler middleware
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `packages/shared/src/schemas.ts` — 7 Zod-schemas (createEvent, updateEvent, createParticipant, updateParticipant, createMailing, rsvpRespond, reorder)
 - [x] `packages/shared/src/index.ts` — exporterar schemas
 - [x] `backend/src/utils/validation.ts` — `parseBody()` wrapper som kastar ZodError
@@ -376,9 +410,11 @@ Validering finns kvar inline i routes (events.ts) — flyttas till Zod i session
 - [x] TESTPLAN.md uppdaterad med 6 nya testfall + TC-0.4
 
 ### Avvikelser från plan
+
 Inga avvikelser — sessionen följde planen exakt.
 
 ### Anteckningar
+
 - Zod redan installerad i `packages/shared` (version ^3.25.76)
 - DB-lagren behåller `??`-fallbacks (t.ex. `status ?? "planning"`) — Zod validerar format/enum men applicerar inte defaults, DB hanterar defaults
 - Netto: -199 rader kod (88 tillagda, 287 borttagna) — validering mer koncis med Zod
@@ -389,32 +425,34 @@ Inga avvikelser — sessionen följde planen exakt.
 
 ### Avvikelser från plan — Session 0-7 (retrospektiv)
 
-| # | Avvikelse | Fixad i |
-|---|-----------|---------|
-| 1 | Ingen service-layer (all logik i routes) | 8a ✅ |
-| 2 | Ingen Zod-validering | 8b ✅ |
-| 3 | Ingen error-handler middleware | 8b ✅ |
-| 4 | Tom middleware/ | 8b ✅ |
-| 5 | Ingen R2-integration | 9 ✅ |
-| 6 | Ingen dnd-kit för väntlista | 9 ✅ |
-| 7 | Email i en fil (196 rader) | 8a ✅ |
-| 8 | Ingen email-queue/Cron Trigger | 11 ✅ |
-| 9 | Frontend-mallar istf backend | 11 ✅ |
-| 10 | EventDetail.tsx = 1727 rader | 9 ✅ |
-| 11 | Tom features/ mapp | 9 ✅ |
-| 12 | queries.ts = 654 rader | 8a ✅ |
-| 13 | Duplicerad validering | 8b ✅ |
-| 14 | Inga enhetstester för services | 8a ✅ |
-| 15 | CLAUDE.md matchar inte verkligheten | 8a ✅ |
-| 16 | Saknar CSV-export endpoint | 9 ✅ |
+| #   | Avvikelse                                | Fixad i |
+| --- | ---------------------------------------- | ------- |
+| 1   | Ingen service-layer (all logik i routes) | 8a ✅   |
+| 2   | Ingen Zod-validering                     | 8b ✅   |
+| 3   | Ingen error-handler middleware           | 8b ✅   |
+| 4   | Tom middleware/                          | 8b ✅   |
+| 5   | Ingen R2-integration                     | 9 ✅    |
+| 6   | Ingen dnd-kit för väntlista              | 9 ✅    |
+| 7   | Email i en fil (196 rader)               | 8a ✅   |
+| 8   | Ingen email-queue/Cron Trigger           | 11 ✅   |
+| 9   | Frontend-mallar istf backend             | 11 ✅   |
+| 10  | EventDetail.tsx = 1727 rader             | 9 ✅    |
+| 11  | Tom features/ mapp                       | 9 ✅    |
+| 12  | queries.ts = 654 rader                   | 8a ✅   |
+| 13  | Duplicerad validering                    | 8b ✅   |
+| 14  | Inga enhetstester för services           | 8a ✅   |
+| 15  | CLAUDE.md matchar inte verkligheten      | 8a ✅   |
+| 16  | Saknar CSV-export endpoint               | 9 ✅    |
 
 ---
 
 ## Session 9: Frontend-refaktorering + R2 + dnd-kit + CSV-export
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] EventDetail.tsx bruten från 1727 → 176 rader (< 200)
 - [x] 10 nya filer under `frontend/src/components/features/`:
   - `events/SummaryTab.tsx` — sammanfattningstab med statistik + eventinfo
@@ -439,13 +477,16 @@ Inga avvikelser — sessionen följde planen exakt.
 - [x] TESTPLAN.md uppdaterad med nya testfall + TC-0.4
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla leverabler uppfyllda.
 
 ### Bugfixar efter session
+
 - [x] **Modal-staplingsbugg:** `<dialog>` med inline `display: flex` överskrev webbläsarens `display: none` för stängda dialoger → alla modaler synliga simultant. Fix: Modal returnerar `null` när `open={false}` (villkorlig rendering)
 - [x] **Dubbla modalstates:** ParticipantsTab hade separata `showAddModal`/`showImportModal` booleans → möjliggjorde att båda var `true` samtidigt. Fix: ersatt med `useState<'add' | 'import' | null>(null)`
 
 ### Anteckningar
+
 - R2-bucket `stage-images` behöver skapas med `wrangler r2 bucket create stage-images` innan deploy
 - IMAGES binding är optional (`R2Bucket?`) — images route returnerar 503 om bucket ej konfigurerad
 - dnd-kit tillagd som npm dependency (ej CDN)
@@ -457,10 +498,12 @@ Inga avvikelser — alla leverabler uppfyllda.
 ---
 
 ## Session 10: Behörighetssystem
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `migrations/0003_event_permissions.sql` — users + event_permissions tabeller
 - [x] `backend/src/middleware/auth.ts` — AuthProvider interface + tokenAuthProvider + authMiddleware (X-Auth-Token)
 - [x] `backend/src/services/permission.service.ts` — rollkontroll (canView/canEdit/isOwner), CRUD behörigheter, auto-owner
@@ -487,9 +530,11 @@ Inga avvikelser — alla leverabler uppfyllda.
 - [x] TESTPLAN.md uppdaterad med 12 nya testfall + TC-0.4
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla leverabler uppfyllda.
 
 ### Anteckningar
+
 - AuthProvider interface designat för framtida Azure AD swap — byt `tokenAuthProvider` mot ny implementation
 - Token lagras i localStorage och skickas som `X-Auth-Token` header
 - Login-endpointen gör get-or-create: returnerar befintlig token om email finns, skapar nytt konto annars
@@ -500,10 +545,12 @@ Inga avvikelser — alla leverabler uppfyllda.
 ---
 
 ## Session 11: Email-förbättringar + Aktivitetslogg + Sök
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `migrations/0004_activities.sql` — activities + email_queue tabeller med index
 - [x] `packages/shared/src/types.ts` — Activity, EmailQueueItem interfaces
 - [x] `packages/shared/src/constants.ts` — ACTIVITY_TYPE (10 typer), EMAIL_QUEUE_STATUS
@@ -531,9 +578,11 @@ Inga avvikelser — alla leverabler uppfyllda.
 - [x] TESTPLAN.md uppdaterad med 13 nya testfall + TC-0.4 uppdaterad till 66
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla leverabler uppfyllda.
 
 ### Anteckningar
+
 - Export i index.ts ändrad från `export default app` till `export default { fetch: app.fetch, async scheduled() { ... } }` för Cron Trigger-stöd
 - Email-kö: ≤5 mottagare skickas direkt, >5 köas för Cron-processning (respekterar Resend rate limits)
 - Mallar definierade som TypeScript-objekt i backend — exponeras via GET /api/templates för frontend
@@ -550,6 +599,7 @@ Inga avvikelser — alla leverabler uppfyllda.
 **Vad:** En dedikerad session för att ta fram en komplett migreringsplan och checklista för att flytta Stage från mikwik.se till Consid-ägd infrastruktur (event.consid.se).
 
 Ska inkludera:
+
 - Checklista för DNS, domän, Cloudflare-konto (eller annan hosting)
 - Flytt från Resend → Consid MS 365 (Graph API med delade brevlådor)
 - Avsändardomän, SPF/DKIM/DMARC för consid.se
@@ -564,10 +614,12 @@ Ska inkludera:
 ---
 
 ## Session 12: RSVP-förbättringar + Inställningar-tab
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `migrations/0005_participant_dietary_plusone.sql` — dietary_notes, plus_one_name, plus_one_email kolumner
 - [x] `packages/shared/src/types.ts` — Participant interface utökad med 3 nya fält
 - [x] `packages/shared/src/schemas.ts` — createParticipant, updateParticipant, rsvpRespond utökade med dietary/plus_one
@@ -585,12 +637,15 @@ Ska inkludera:
 - [x] TESTPLAN.md uppdaterad med 12 nya testfall + TC-0.4 uppdaterad till 68
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla leverabler uppfyllda.
 
 ### Bugfixar efter session
+
 - [x] **RSVP-knapp ej synlig på mobil:** Sidan använde `alignItems: 'center'` som vertikalt centrerade kortet — på mobil hamnade "Jag kommer"-knappen under synligt område pga ExtraFieldsForm (dietary + plus-one). Fix: `alignItems: 'flex-start'` + större/tydligare knapp med hårdkodad färg + box-shadow.
 
 ### Anteckningar
+
 - SettingsTab samlar alla eventinställningar (info, bild, synlighet, avsändare, GDPR, behörigheter, borttagning) i en vy
 - Redigera-knapp borttagen från EventDetail topbar — all redigering sker inline via Inställningar-tab
 - RSVP-sida visar hero-bild som bakgrund med gradient-overlay om event har image_url
@@ -602,10 +657,12 @@ Inga avvikelser — alla leverabler uppfyllda.
 ---
 
 ## Session 13a: Saknade features från planen
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] **Klona event:** `EventService.clone()` + `POST /api/events/:id/clone` + "Klona"-knapp (kopieringsikon) per EventCard i Overview
 - [x] **Unsubscribe-länk i mail (GDPR):** Avregistreringslänk i html-builder footer → pekar till deltagarens RSVP-sida
 - [x] **Skicka testmail:** `MailingService.sendTest()` + `POST /api/events/:id/mailings/:mid/test` + testmail-knapp i MailingsTab
@@ -619,9 +676,11 @@ Inga avvikelser — alla leverabler uppfyllda.
 - [x] TESTPLAN.md uppdaterad med 8 nya testfall + TC-0.4 uppdaterad till 72
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla 5 features implementerade.
 
 ### Anteckningar
+
 - Klonat event får namn "(kopia)", status "planning", skaparens email som created_by, auto-owner
 - Testmail skickas med "[TEST]"-prefix i ämnesraden, fake RSVP-kontext
 - Unsubscribe-länk visas i mailfootern: "Avregistrera / hantera din anmälan"
@@ -633,10 +692,12 @@ Inga avvikelser — alla 5 features implementerade.
 ---
 
 ## Session 13b: Integrationstester + Deploy Fas 1
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `backend/src/__tests__/integration.test.ts` — 14 E2E-integrationstester i 5 flöden:
   - Event → deltagare → waitlist → promote (2 tester: delete + statusändring)
   - Inbjudan → RSVP → bekräftelse (3 tester: full flow med dietary/plus-one, cancel med auto-promote, auto-waitlist vid full kapacitet)
@@ -649,9 +710,11 @@ Inga avvikelser — alla 5 features implementerade.
 - [x] SESSION-GUIDE.md markerad ✅ DONE
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ### Anteckningar
+
 - Integrationstesterna skapar 4 testanvändare (owner, editor, viewer, noaccess) med unika tokens
 - Varje test är self-contained — skapar sin egen data, ej beroende av andra tester
 - Email-kö-testet anropar `processQueue()` direkt (simulerar Cron Trigger)
@@ -661,10 +724,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 ---
 
 ## Session 14: GrapeJS mailredigerare
+
 **Datum:** 2026-02-22
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `frontend/src/components/editor/EmailEditor.tsx` — GrapeJS-wrapper (lazy-loaded via React.lazy), helskärms-editor, R2-bilduppladdning, desktop/mobil preview, spara med juice CSS-inlining
 - [x] `frontend/src/components/editor/grapejs-email-preset.ts` — 7 email-blocktyper: text, rubrik, bild, CTA-knapp, avdelare, 2-kolumner, mellanrum. Alla med table-layout.
 - [x] `frontend/src/components/editor/grapejs-brand-config.ts` — Consid brand constraints: begränsad färgpalett (9 färger), Consid Sans typsnitt, CTA-stil (Raspberry Red), style manager med typografi/bakgrund/spacing
@@ -679,16 +744,19 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] Alla 86 tester passerar
 
 ### Avvikelser från plan
+
 - Planen nämner `TemplateSelector.tsx` som separat fil — mallväljare + redigeringsläge integrerades istället i `CreateMailingModal.tsx`
 - 7 blocktyper (rubrik tillagd utöver planens 5-7)
 
 ### Bugfixar efter session
+
 - [x] **Drag-and-drop i asset manager:** `uploadFile` hanterade bara `ev.target.files` (klick) — lade till `ev.dataTransfer.files` (drag)
 - [x] **Bild visas inte + text ej redigerbar:** Bild-URL var relativ (fungerade ej i GrapeJS iframe). Fix: prepend `window.location.origin`. Registrerade custom cell-typ med `editable: true` för table cells.
 - [x] **GET /api/images krävde auth:** GrapeJS iframe har ingen auth-token. Fix: GET images publikt, POST kräver fortfarande auth.
 - [x] **"Spara mail"-knappen fungerade inte:** EmailEditor's container hade `position: absolute` som täckte topBar med ämnesfältet → ämnet alltid tomt → spara misslyckades tyst. Fix: ändrade container till `flex: 1`.
 
 ### Anteckningar
+
 - GrapeJS lazy-laddas (~500KB) — påverkar ej initial bundle
 - `juice` används för CSS-inlining vid export (email-kompatibilitet)
 - Befintligt formulärflöde bibehålls som "Snabbredigering" — bakåtkompatibelt
@@ -701,10 +769,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 ---
 
 ## Session 15: Eventwebbplats
+
 **Datum:** 2026-02-23
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `migrations/0007_event_website.sql` — website_template, website_data (JSON), website_published på events-tabellen
 - [x] `packages/shared/src/types.ts` — Event utökad med 3 website-fält + WebsiteData interface
 - [x] `packages/shared/src/schemas.ts` — updateWebsiteSchema + publicRegisterSchema
@@ -726,10 +796,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] SAD.md, TESTPLAN.md, SESSION-GUIDE.md uppdaterade
 
 ### Avvikelser från plan
+
 - Template 3 (Offentlig sektor) ej implementerad — 2 templates räcker för första iteration
 - `/stage/e/:slug` prefix (ej /e/:slug) — enklast med befintligt SPA-fallback
 
 ### Anteckningar
+
 - Routing: `/stage/e/:slug` — publik webbsida renderas som React-route, eventdata hämtas via GET /api/public/events/:slug
 - Auth-middleware har undantag för POST .../:slug/register (matchar c.req.path.endsWith("/register"))
 - Registrering sätter gdpr_consent_at + GDPR-samtycke krävs via Zod-schema
@@ -740,10 +812,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 ---
 
 ## Bugfixar: Utskick mall → editor → spara
+
 **Datum:** 2026-02-23
 **Status:** DONE
 
 ### Deliverables
+
 - [x] Mall-klick → direkt till snabbredigering (`setEditMode('form')` efter mallval)
 - [x] Visuell editor: felhantering i `handleSave` (try-catch + `onError`-prop)
 - [x] Toast z-index höjt till 9999 (var 70, doldes bakom fullscreen-editor z-2000)
@@ -751,11 +825,13 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] Modal.tsx: borttagen `createPortal` (befintlig ändring)
 
 ### Rotorsak
+
 1. Mall-klick satte bara `selectedTemplate` + form-data — saknades `setEditMode('form')` → användaren fastnade i steg 1
 2. `handleSave()` i EmailEditor hade ingen felhantering — om GrapeJS/juice kastade, hände inget
 3. Toast z-index 70 < fullscreen-editor z-index 2000 → alla toast-meddelanden (felmeddelanden, bekräftelser) doldes bakom editorn
 
 ### Filer ändrade
+
 - `frontend/src/components/features/email/CreateMailingModal.tsx`
 - `frontend/src/components/editor/EmailEditor.tsx`
 - `frontend/src/components/ui/Modal.tsx`
@@ -764,10 +840,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 ---
 
 ## Session 16: GrapeJS webbplatsredigerare
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `frontend/src/components/editor/PageEditor.tsx` — GrapeJS-wrapper för webbsidor (lazy-loaded, R2-bilduppladdning, desktop/mobil preview, spara HTML + editor_data)
 - [x] `frontend/src/components/editor/grapejs-page-preset.ts` — 14 webbsideblock: 6 webbsidespecifika (hero, eventinfo, program, plats, anmälningsformulär, footer) + 8 generella (text, rubrik, bild, CTA-knapp, avdelare, kolumner, mellanrum) + `buildInitialPageHtml()` för att generera startinnehåll från template + eventdata
 - [x] `frontend/src/components/features/settings/WebsitePanel.tsx` — "Visuell editor"-knapp med lazy-loaded PageEditor i fullskärm, "Anpassad sida"-badge, "Återställ till mall"-knapp, snabbredigerings-sektion behållen
@@ -778,18 +856,21 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] Typecheck: enbart förväntade `cloudflare:test` TS2307-fel
 
 ### Avvikelser från plan
+
 - Ingen ny migration behövdes — `page_html` + `page_editor_data` lagras i `website_data` JSON-kolumnen
 - Webbsideblock använder modern CSS (flexbox/grid) istf table-layout (separat från email-block som planen specificerade)
 - `buildInitialPageHtml()` genererar startinnehåll från befintlig template + eventdata, så editorn öppnas förpopulerad
 
 ### Arkitekturbeslut
-| # | Beslut | Motivering | Session |
-|---|--------|-----------|---------|
-| 38 | page_html i website_data JSON | Ingen migration krävs, tillräckligt för JSON-fältlagring | 16 |
-| 39 | createPortal för formulär i custom HTML | React-formulär fungerar i GrapeJS-genererad HTML via DOM-platshållare | 16 |
-| 40 | Separata page-block vs email-block | Webbsidor använder modern CSS (flexbox), email kräver table-layout | 16 |
+
+| #   | Beslut                                  | Motivering                                                            | Session |
+| --- | --------------------------------------- | --------------------------------------------------------------------- | ------- |
+| 38  | page_html i website_data JSON           | Ingen migration krävs, tillräckligt för JSON-fältlagring              | 16      |
+| 39  | createPortal för formulär i custom HTML | React-formulär fungerar i GrapeJS-genererad HTML via DOM-platshållare | 16      |
+| 40  | Separata page-block vs email-block      | Webbsidor använder modern CSS (flexbox), email kräver table-layout    | 16      |
 
 ### Anteckningar
+
 - PageEditor och EmailEditor delar `grapejs-brand-config.ts` (samma färgpalett, typsnitt, CTA-stil)
 - PageEditor lazy-laddas — påverkar ej initial bundle
 - Anmälningsformuläret i custom pages fungerar via `data-page-register-form` attribut i GrapeJS-HTML + React `createPortal`
@@ -800,10 +881,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 ---
 
 ## Session 17: Systemadmin + brand-kontroll
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `migrations/0008_admin_role.sql` — ALTER users: is_admin INTEGER NOT NULL DEFAULT 0
 - [x] `packages/shared/src/types.ts` — is_admin på User, nya AdminDashboardData + EventConflict interfaces
 - [x] `backend/src/db/user.queries.ts` — is_admin i SELECT, isAdminUser() funktion
@@ -833,18 +916,21 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] SAD.md, TESTPLAN.md, SESSION-GUIDE.md uppdaterade
 
 ### Avvikelser från plan
+
 - Mailbox-hantering (dropdown för sender_mailbox) skippades — redan implementerat i SettingsTab (session 12)
 - Konfliktdetektering baseras på datum + plats (inte datum + plats + tidsintervall)
 
 ### Arkitekturbeslut
-| # | Beslut | Motivering | Session |
-|---|--------|-----------|---------|
-| 41 | is_admin kolumn på users (ej event_permissions) | Global roll, inte per-event — enklare modell | 17 |
-| 42 | Admin bypass i canView/canEdit | Admins behöver inte explicit event_permissions | 17 |
-| 43 | Konfliktdetektering klientsida med API | Frontend checkar API innan submit, visar varning, inte blockering | 17 |
-| 44 | GrapeJS locking via data-attribut | data-locked-header/footer attribut + rekursiv komponentlåsning | 17 |
+
+| #   | Beslut                                          | Motivering                                                        | Session |
+| --- | ----------------------------------------------- | ----------------------------------------------------------------- | ------- |
+| 41  | is_admin kolumn på users (ej event_permissions) | Global roll, inte per-event — enklare modell                      | 17      |
+| 42  | Admin bypass i canView/canEdit                  | Admins behöver inte explicit event_permissions                    | 17      |
+| 43  | Konfliktdetektering klientsida med API          | Frontend checkar API innan submit, visar varning, inte blockering | 17      |
+| 44  | GrapeJS locking via data-attribut               | data-locked-header/footer attribut + rekursiv komponentlåsning    | 17      |
 
 ### Anteckningar
+
 - Migration 0008 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0008_admin_role.sql`
 - Admin-dashboard är en ren frontend-sida som anropar 2 API-endpoints (dashboard + events)
 - lockBrandComponents() använder setTimeout(200ms) för att säkerställa att GrapeJS-komponenter är fulladdade
@@ -853,10 +939,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 ---
 
 ## Session 18: Test, polish, deploy Fas 2
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] **XSS-fix i GrapeJS-mail:** Ny `renderHtml()` funktion i template-renderer.ts som HTML-escaper merge field-värden (namn, event, plats etc.) innan de ersätts i HTML-kontext. URL-fält (rsvp_link, calendar_link) undantas för att href-attribut ska fungera. Alla `renderText(html_body, ...)` i mailing.service.ts ersatta med `renderHtml(html_body, ...)`.
 - [x] **Mobilresponsivt registreringsformulär:** PublicEvent.tsx formRow ändrad från `grid-template-columns: 1fr 1fr` → `flex-wrap: wrap` med `flex: 1 1 250px` per fält. Formuläret stackar automatiskt på skärmar < 530px.
 - [x] **Admin-dashboard days_until fix:** Explicit `T00:00:00Z` suffix på datumsträngar + `Math.round` istf `Math.ceil` för konsekvent tidszonshantering.
@@ -865,10 +953,12 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
 
 ### Avvikelser från plan
+
 - Deploy skippas i denna session — migrationer (0007 + 0008) redan körda på remote (markerade ✅ i migrationsloggen). Användaren kör `npm run build && npx wrangler deploy` manuellt.
 - Manuell mailrendering-test (Outlook/Gmail/Apple Mail) kräver live deploy — noterat som TC-18.4.
 
 ### Anteckningar
+
 - Pre-existerande TS-varningar (TS2731, TS2339, TS2769) i queries + auth routes — kosmetiska, esbuild bygger utan problem
 - GrapeJS canvas laddar Inter-font istf Consid Sans — kosmetiskt (preview-only), påverkar ej slutresultatet
 - `dangerouslySetInnerHTML` för GrapeJS page_html är OK — bara autentiserade admins kan redigera, GrapeJS filtrerar scripts
@@ -877,17 +967,17 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 ## Migrations-logg
 
-| Migration | Fil | Tabeller | Lokal | Remote |
-|-----------|-----|----------|-------|--------|
-| 0001 | events_participants.sql | events, participants | ✅ | ✅ |
-| 0002 | mailings.sql | mailings | ✅ | ✅ |
-| 0003 | event_permissions.sql | users, event_permissions | ✅ | ✅ |
-| 0004 | activities.sql | activities, email_queue | ✅ | ✅ |
-| 0005 | participant_dietary_plusone.sql | (ALTER participants) | ✅ | ✅ |
-| 0006 | mailing_html_body.sql | (ALTER mailings) | ✅ | ✅ |
-| 0007 | event_website.sql | (ALTER events: website_template, website_data, website_published) | ✅ | ✅ |
-| 0008 | admin_role.sql | (ALTER users: is_admin) | ✅ | ✅ |
-| 0009 | rate_limits.sql | rate_limits | ✅ | ✅ |
+| Migration | Fil                             | Tabeller                                                          | Lokal | Remote |
+| --------- | ------------------------------- | ----------------------------------------------------------------- | ----- | ------ |
+| 0001      | events_participants.sql         | events, participants                                              | ✅    | ✅     |
+| 0002      | mailings.sql                    | mailings                                                          | ✅    | ✅     |
+| 0003      | event_permissions.sql           | users, event_permissions                                          | ✅    | ✅     |
+| 0004      | activities.sql                  | activities, email_queue                                           | ✅    | ✅     |
+| 0005      | participant_dietary_plusone.sql | (ALTER participants)                                              | ✅    | ✅     |
+| 0006      | mailing_html_body.sql           | (ALTER mailings)                                                  | ✅    | ✅     |
+| 0007      | event_website.sql               | (ALTER events: website_template, website_data, website_published) | ✅    | ✅     |
+| 0008      | admin_role.sql                  | (ALTER users: is_admin)                                           | ✅    | ✅     |
+| 0009      | rate_limits.sql                 | rate_limits                                                       | ✅    | ✅     |
 
 ---
 
@@ -895,22 +985,24 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 
 > Plan: `docs/REFACTORING-PLAN.md` (genererad från fullständig repoanalys 2026-02-24)
 
-| Session | Fokus | Status |
-|---------|-------|--------|
-| 19 | Säkerhetsfixar (XSS, rate limiting, path traversal) | DONE |
-| 20a | Backend-refaktorering (20.1–20.4) | DONE |
-| 20b | Saknade tester (20.5–20.7) | DONE |
-| 21a | Frontend-refaktorering (SettingsTab + WebsitePanel + RsvpPage + a11y) | DONE |
-| 21b | Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard) | DONE |
-| 22 | Developer Experience (CI/CD, linting, docs) | TODO |
+| Session | Fokus                                                                                  | Status |
+| ------- | -------------------------------------------------------------------------------------- | ------ |
+| 19      | Säkerhetsfixar (XSS, rate limiting, path traversal)                                    | DONE   |
+| 20a     | Backend-refaktorering (20.1–20.4)                                                      | DONE   |
+| 20b     | Saknade tester (20.5–20.7)                                                             | DONE   |
+| 21a     | Frontend-refaktorering (SettingsTab + WebsitePanel + RsvpPage + a11y)                  | DONE   |
+| 21b     | Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard) | DONE   |
+| 22      | Developer Experience (CI/CD, linting, docs)                                            | TODO   |
 
 ---
 
 ## Session 19: Säkerhetsfixar
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] **19.1 XSS-skydd i PublicEvent (KRITISK):** DOMPurify installerat i frontend. `page_html` saniteras med `DOMPurify.sanitize()` via `useMemo` innan `dangerouslySetInnerHTML`. Tillåter safe HTML + `<style>` + `data-page-register-form` attribut. Strippar `<script>`, `onclick` etc.
 - [x] **19.2 R2 path traversal-validering (HÖG):** Prefix valideras mot allowlist (`['events']`). Filename valideras som UUID + extension (`/^[0-9a-f]{8}-...\.(jpg|jpeg|png|webp|gif)$/`). Returnerar 400 vid ogiltigt.
 - [x] **19.3 Rate limiting (HÖG):** Ny `backend/src/middleware/rate-limiter.ts` med D1-baserad sliding window. `auth/login` = 10 req/IP/timme, `rsvp/:token/respond` = 5 req/token/minut. Migration `0009_rate_limits.sql` (rate_limits tabell). Fail-open vid D1-fel.
@@ -921,9 +1013,11 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 - [x] SAD.md, TESTPLAN.md, SESSION-GUIDE.md uppdaterade
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 
 ### Anteckningar
+
 - DOMPurify installerat i frontend (browser-only) — INTE i Cloudflare Worker backend (som planen specificerade)
 - Rate limiter fail-open design: om D1-query misslyckas (t.ex. rate_limits-tabellen saknas i test-env), tillåts requestet genom. Loggar error. Skyddar mot att rate limiting-buggar blockerar legitim trafik.
 - Befintliga tester som anropar RSVP-respond loggar `[rate-limiter] D1 error` — detta är förväntat (rate_limits-tabellen skapas inte i alla testfilers beforeAll)
@@ -933,10 +1027,12 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 ---
 
 ## Session 20a: Backend-refaktorering
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] **20.1 — escapeHtml-konsolidering:** Ny `backend/src/utils/escaping.ts` med gemensam `escapeHtml()`. Importerad i `html-builder.ts` och `template-renderer.ts`. Lokala kopior borttagna. Re-export i html-builder för bakåtkompatibilitet.
 - [x] **20.2 — Route-helpers:** Ny `backend/src/utils/route-helpers.ts` med `parseIdParam()` (kastar HTTPException 400) + `requireEvent()` (parse + event-exists, kastar 400/404). Duplicerad `validateEvent()` borttagen från `participants.ts` och `mailings.ts`. `isNaN(id)` ersatt med `parseIdParam` i `website.ts` och `activities.ts`. Alla ID-valideringar i `events.ts` ersatta med `parseIdParam`.
 - [x] **20.3 — mailing.service.ts refaktorering:** Extraherat `buildQueueItem()` (deduplicerat queue-item-byggande i `send()` + `sendToNew()`), `sendEmailsDirect()` (deduplicerat direct-send-loop i `sendDirect()` + `sendToNew()`), `DIRECT_SEND_THRESHOLD = 5` (namngiven magisk siffra). Borttagen `sendDirect()`-metod (ersatt av fristående `sendEmailsDirect()`). Netto: ~50 rader mindre.
@@ -946,10 +1042,12 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 - [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
 
 ### Avvikelser från plan
+
 - Session delad i 20a (refaktorering) + 20b (tester) per användarens instruktion
 - `validateEventAccess` (med permission-check) implementerades som `requireEvent` (utan permission-check) — permission-nivån varierar per route (canView/canEdit/isOwner) och hanteras bättre separat
 
 ### Anteckningar
+
 - Route-helpers använder Hono HTTPException med JSON-body (`{ error: "..." }`) — matchande format som innan
 - Hono fångar HTTPException automatiskt innan custom error-handler → inga ändringar i error-handler.ts
 - Inga nya migrationer behövdes
@@ -959,10 +1057,12 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 ---
 
 ## Session 20b: Saknade tester (MailingService, RsvpService, template-renderer)
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] `backend/src/services/__tests__/mailing.service.test.ts` — 14 nya tester: create+list, update draft/sent/non-existent, send direkt (≤5), send kö (>5), send redan skickad, send inga mottagare, send non-existent, sendToNew (nya/status/inga nya), sendTest (ok + non-existent)
 - [x] `backend/src/services/__tests__/rsvp.service.test.ts` — 10 nya tester: getByToken (valid + ogiltig), respond attending/declined/dietary+plus_one/auto-waitlist/ogiltig token, cancel (ok + promote + ogiltig token)
 - [x] `backend/src/services/email/__tests__/template-renderer.test.ts` — 11 nya tester: buildMergeContext, renderText (ersättning + multipel + ej escape), renderHtml (ersättning + XSS-escape + URL ej escape + specialtecken), renderEmail (komplett + auto-append rsvp + ej dubbla rsvp)
@@ -971,10 +1071,12 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 - [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
 
 ### Avvikelser från plan
+
 - Planen estimerade ~20 testfall, levererade 35 — fler edge cases täckta
 - Inga avvikelser i scope — alla tre service-komponenter testade
 
 ### Anteckningar
+
 - Template-renderer-tester använder inga DB-beroenden (rena funktioner)
 - MailingService-tester skapar alla tabeller (events, participants, mailings, email_queue) i beforeAll
 - RsvpService-tester verifierar auto-waitlist och auto-promote via WaitlistService-integration
@@ -983,10 +1085,12 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 ---
 
 ## Session 21a: Frontend-refaktorering (SettingsTab + WebsitePanel + RsvpPage + a11y)
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] **SettingsTab.tsx** (561 → 44 rader): Extraherat `EventInfoSection.tsx` (245), `HeroImageSection.tsx` (133), `VisibilitySection.tsx` (222, inkl. SenderSection + GdprSection). SettingsTab är nu tunn orkestrerare.
 - [x] **WebsitePanel.tsx** (607 → 145 rader): Extraherat `WebsiteTemplateSelector.tsx` (185), `WebsiteFormFields.tsx` (242), `useWebsiteForm.ts` hook (131). ProgramEditor flyttad till WebsiteFormFields.
 - [x] **RsvpPage.tsx** (568 → 150 rader): Extraherat `RsvpResponseForm.tsx` (303), `RsvpConfirmation.tsx` (80), `RsvpIcons.tsx` (26), `useRsvpState.ts` hook (144, inkl. downloadICS + formatRsvpDate).
@@ -996,12 +1100,14 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 - [x] Alla filer under 400 rader
 
 ### Avvikelser från plan
+
 - `Overview.tsx` ligger i `frontend/src/pages/`, inte `frontend/src/components/features/events/` som planen angav
 - `DangerZone.tsx` existerade redan — verifierad som importerad
 - SenderSection + GdprSection placerade i VisibilitySection.tsx (nära relaterade, under 400 rader tillsammans)
 - RsvpIcons.tsx tillagd som delad ikonkomponent (används av RsvpResponseForm + RsvpConfirmation + RsvpPage)
 
 ### Nya filer
+
 ```
 frontend/src/components/features/settings/EventInfoSection.tsx      # 245 rader
 frontend/src/components/features/settings/HeroImageSection.tsx      # 133 rader
@@ -1018,10 +1124,12 @@ frontend/src/hooks/useRsvpState.ts                                  # 144 rader
 ---
 
 ## Session 21b: Frontend-refaktorering (PublicEvent + EventForm + CreateMailingModal + AdminDashboard)
+
 **Datum:** 2026-02-24
 **Status:** DONE
 
 ### Deliverables
+
 - [x] **PublicEvent.tsx** (554 → 147 rader): Extraherat `PublicRegistrationForm.tsx` (258, anmälningsformulär + GDPR + ICS), `PublicEventRenderer.tsx` (195, template-rendering med hero/info/program/plats). PublicEvent är nu orkestrerare med DOMPurify + createPortal-logik.
 - [x] **EventForm.tsx** (484 → 387 rader): Extraherat `useEventFormValidation.ts` hook (86, validate + buildPayload + clearFieldError), `useConflictCheck.ts` hook (49, krockkontroll med conflicts API). EventForm behåller layout.
 - [x] **CreateMailingModal.tsx** (447 → 342 rader): Extraherat `useMailingForm.ts` hook (79, formulärstate + mallval + validering + reset). Modal behåller UI + editor-vy.
@@ -1031,9 +1139,11 @@ frontend/src/hooks/useRsvpState.ts                                  # 144 rader
 - [x] Alla filer under 400 rader
 
 ### Avvikelser från plan
+
 Inga avvikelser — alla 4 filer uppbrutna enligt plan.
 
 ### Nya filer
+
 ```
 frontend/src/pages/PublicRegistrationForm.tsx      # 258 rader
 frontend/src/pages/PublicEventRenderer.tsx          # 195 rader

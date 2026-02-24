@@ -1,34 +1,34 @@
-import { Hono } from "hono";
-import type { Env, AuthVariables } from "../bindings";
-import { WebsiteService } from "../services/website.service";
-import { parseBody } from "../utils/validation";
-import { updateWebsiteSchema, publicRegisterSchema } from "@stage/shared";
-import { parseIdParam } from "../utils/route-helpers";
-import { PermissionService } from "../services/permission.service";
+import { Hono } from 'hono';
+import type { Env, AuthVariables } from '../bindings';
+import { WebsiteService } from '../services/website.service';
+import { parseBody } from '../utils/validation';
+import { updateWebsiteSchema, publicRegisterSchema } from '@stage/shared';
+import { parseIdParam } from '../utils/route-helpers';
+import { PermissionService } from '../services/permission.service';
 
 const website = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /** GET /api/events/:id/website — get website config (auth, editor+) */
-website.get("/:id/website", async (c) => {
-  const id = parseIdParam(c.req.param("id"), "event-ID");
+website.get('/:id/website', async (c) => {
+  const id = parseIdParam(c.req.param('id'), 'event-ID');
 
   const user = c.var.user;
   const canView = await PermissionService.canView(c.env.DB, user.id, id);
-  if (!canView) return c.json({ error: "Åtkomst nekad" }, 403);
+  if (!canView) return c.json({ error: 'Åtkomst nekad' }, 403);
 
   const result = await WebsiteService.getWebsite(c.env.DB, id);
-  if (!result) return c.json({ error: "Event hittades inte" }, 404);
+  if (!result) return c.json({ error: 'Event hittades inte' }, 404);
 
   return c.json(result);
 });
 
 /** PUT /api/events/:id/website — save website config (auth, editor+) */
-website.put("/:id/website", async (c) => {
-  const id = parseIdParam(c.req.param("id"), "event-ID");
+website.put('/:id/website', async (c) => {
+  const id = parseIdParam(c.req.param('id'), 'event-ID');
 
   const user = c.var.user;
   const canEdit = await PermissionService.canEdit(c.env.DB, user.id, id);
-  if (!canEdit) return c.json({ error: "Åtkomst nekad" }, 403);
+  if (!canEdit) return c.json({ error: 'Åtkomst nekad' }, 403);
 
   const body = await c.req.json();
   const input = parseBody(updateWebsiteSchema, body);
@@ -38,8 +38,8 @@ website.put("/:id/website", async (c) => {
 });
 
 /** POST /api/events/:slug/register — public registration (no auth via middleware exception) */
-website.post("/:slug/register", async (c) => {
-  const slug = c.req.param("slug");
+website.post('/:slug/register', async (c) => {
+  const slug = c.req.param('slug');
   const body = await c.req.json();
   const input = parseBody(publicRegisterSchema, body);
 

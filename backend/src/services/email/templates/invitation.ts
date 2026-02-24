@@ -1,10 +1,10 @@
-import type { TemplateDefinition } from "../template-renderer";
+import type { TemplateDefinition } from '../template-renderer';
 
 export const invitation: TemplateDefinition = {
-  id: "invitation",
-  name: "Officiell inbjudan",
-  description: "Formell inbjudan med RSVP-länk",
-  defaultSubject: "Inbjudan: {{event}}",
+  id: 'invitation',
+  name: 'Officiell inbjudan',
+  description: 'Formell inbjudan med RSVP-länk',
+  defaultSubject: 'Inbjudan: {{event}}',
   body: `Hej {{name}},
 
 Du är varmt välkommen att delta i {{event}}!
@@ -22,5 +22,5 @@ Svara gärna på inbjudan via länken nedan så snart du kan.
 Har du frågor? Kontakta {{organizer}}.
 
 Varmt välkommen!`,
-  mergeFields: ["name", "event", "datum", "tid", "plats", "rsvp_link", "organizer"],
+  mergeFields: ['name', 'event', 'datum', 'tid', 'plats', 'rsvp_link', 'organizer'],
 };

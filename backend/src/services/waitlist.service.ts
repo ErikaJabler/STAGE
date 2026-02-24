@@ -1,15 +1,14 @@
-import type { Participant } from "@stage/shared";
+import type { Participant } from '@stage/shared';
 import {
   getParticipantById,
   createParticipant,
   updateParticipant,
   getAttendingCount,
-  getNextWaitlisted,
   getMaxQueuePosition,
   promoteFromWaitlist,
   shouldWaitlist,
   type CreateParticipantInput,
-} from "../db/queries";
+} from '../db/queries';
 
 export const WaitlistService = {
   /** Check if event is at capacity */
@@ -36,10 +35,10 @@ export const WaitlistService = {
   async createWaitlisted(
     db: D1Database,
     eventId: number,
-    input: CreateParticipantInput
+    input: CreateParticipantInput,
   ): Promise<Participant> {
     const maxPos = await getMaxQueuePosition(db, eventId);
-    input.status = "waitlisted";
+    input.status = 'waitlisted';
     const participant = await createParticipant(db, eventId, input);
     await updateParticipant(db, participant.id, { queue_position: maxPos + 1 });
     const updated = await getParticipantById(db, participant.id);
@@ -51,11 +50,11 @@ export const WaitlistService = {
     db: D1Database,
     eventId: number,
     participantId: number,
-    newPos: number
+    newPos: number,
   ): Promise<Participant | null> {
     const participant = await getParticipantById(db, participantId);
     if (!participant || participant.event_id !== eventId) return null;
-    if (participant.status !== "waitlisted") return null;
+    if (participant.status !== 'waitlisted') return null;
 
     const oldPos = participant.queue_position ?? 0;
     if (oldPos === newPos) return participant;
@@ -69,7 +68,7 @@ export const WaitlistService = {
       // Moving up: shift positions down for those in [newPos, oldPos)
       await db
         .prepare(
-          "UPDATE participants SET queue_position = queue_position + 1, updated_at = ? WHERE event_id = ? AND status = 'waitlisted' AND queue_position >= ? AND queue_position < ? AND id != ?"
+          "UPDATE participants SET queue_position = queue_position + 1, updated_at = ? WHERE event_id = ? AND status = 'waitlisted' AND queue_position >= ? AND queue_position < ? AND id != ?",
         )
         .bind(now, eventId, newPos, oldPos, participantId)
         .run();
@@ -77,7 +76,7 @@ export const WaitlistService = {
       // Moving down: shift positions up for those in (oldPos, newPos]
       await db
         .prepare(
-          "UPDATE participants SET queue_position = queue_position - 1, updated_at = ? WHERE event_id = ? AND status = 'waitlisted' AND queue_position > ? AND queue_position <= ? AND id != ?"
+          "UPDATE participants SET queue_position = queue_position - 1, updated_at = ? WHERE event_id = ? AND status = 'waitlisted' AND queue_position > ? AND queue_position <= ? AND id != ?",
         )
         .bind(now, eventId, oldPos, newPos, participantId)
         .run();

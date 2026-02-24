@@ -1,4 +1,4 @@
-import type { Event, EventWithCount, CreateEventInput, UpdateEventInput } from "@stage/shared";
+import type { Event, EventWithCount, CreateEventInput, UpdateEventInput } from '@stage/shared';
 
 export type { CreateEventInput, UpdateEventInput };
 
@@ -11,7 +11,7 @@ export async function listEvents(db: D1Database): Promise<EventWithCount[]> {
        LEFT JOIN participants p ON p.event_id = e.id
        WHERE e.deleted_at IS NULL
        GROUP BY e.id
-       ORDER BY e.date ASC`
+       ORDER BY e.date ASC`,
     )
     .all<EventWithCount>();
 
@@ -28,7 +28,7 @@ export async function listEventsForUser(db: D1Database, userId: number): Promise
        LEFT JOIN participants p ON p.event_id = e.id
        WHERE e.deleted_at IS NULL
        GROUP BY e.id
-       ORDER BY e.date ASC`
+       ORDER BY e.date ASC`,
     )
     .bind(userId)
     .all<EventWithCount>();
@@ -37,17 +37,14 @@ export async function listEventsForUser(db: D1Database, userId: number): Promise
 }
 
 /** Get a single event by ID (non-deleted) */
-export async function getEventById(
-  db: D1Database,
-  id: number
-): Promise<EventWithCount | null> {
+export async function getEventById(db: D1Database, id: number): Promise<EventWithCount | null> {
   const result = await db
     .prepare(
       `SELECT e.*, COUNT(p.id) AS participant_count
        FROM events e
        LEFT JOIN participants p ON p.event_id = e.id
        WHERE e.id = ? AND e.deleted_at IS NULL
-       GROUP BY e.id`
+       GROUP BY e.id`,
     )
     .bind(id)
     .first<EventWithCount>();
@@ -56,10 +53,7 @@ export async function getEventById(
 }
 
 /** Create a new event */
-export async function createEvent(
-  db: D1Database,
-  input: CreateEventInput
-): Promise<Event> {
+export async function createEvent(db: D1Database, input: CreateEventInput): Promise<Event> {
   const now = new Date().toISOString();
 
   const result = await db
@@ -76,12 +70,12 @@ export async function createEvent(
         ?, ?, ?, ?,
         ?, ?, ?, ?,
         ?, ?, ?
-      )`
+      )`,
     )
     .bind(
       input.name,
       input.emoji ?? null,
-      input.slug ?? "",
+      input.slug ?? '',
       input.date,
       input.time,
       input.end_date ?? null,
@@ -90,25 +84,22 @@ export async function createEvent(
       input.description ?? null,
       input.organizer,
       input.organizer_email,
-      input.status ?? "planning",
-      input.type ?? "other",
+      input.status ?? 'planning',
+      input.type ?? 'other',
       input.max_participants ?? null,
       input.overbooking_limit ?? 0,
-      input.visibility ?? "private",
+      input.visibility ?? 'private',
       input.sender_mailbox ?? null,
       input.gdpr_consent_text ?? null,
       input.image_url ?? null,
       input.created_by,
       now,
-      now
+      now,
     )
     .run();
 
   const id = result.meta.last_row_id;
-  const event = await db
-    .prepare("SELECT * FROM events WHERE id = ?")
-    .bind(id)
-    .first<Event>();
+  const event = await db.prepare('SELECT * FROM events WHERE id = ?').bind(id).first<Event>();
 
   return event!;
 }
@@ -117,32 +108,32 @@ export async function createEvent(
 export async function updateEvent(
   db: D1Database,
   id: number,
-  input: UpdateEventInput
+  input: UpdateEventInput,
 ): Promise<Event | null> {
   // Build SET clause dynamically from provided fields
   const fields: string[] = [];
   const values: unknown[] = [];
 
   const updatable: (keyof UpdateEventInput)[] = [
-    "name",
-    "slug",
-    "date",
-    "time",
-    "location",
-    "organizer",
-    "organizer_email",
-    "emoji",
-    "end_date",
-    "end_time",
-    "description",
-    "status",
-    "type",
-    "max_participants",
-    "overbooking_limit",
-    "visibility",
-    "sender_mailbox",
-    "gdpr_consent_text",
-    "image_url",
+    'name',
+    'slug',
+    'date',
+    'time',
+    'location',
+    'organizer',
+    'organizer_email',
+    'emoji',
+    'end_date',
+    'end_time',
+    'description',
+    'status',
+    'type',
+    'max_participants',
+    'overbooking_limit',
+    'visibility',
+    'sender_mailbox',
+    'gdpr_consent_text',
+    'image_url',
   ];
 
   for (const key of updatable) {
@@ -156,14 +147,12 @@ export async function updateEvent(
     return getEventById(db, id);
   }
 
-  fields.push("updated_at = ?");
+  fields.push('updated_at = ?');
   values.push(new Date().toISOString());
   values.push(id);
 
   await db
-    .prepare(
-      `UPDATE events SET ${fields.join(", ")} WHERE id = ? AND deleted_at IS NULL`
-    )
+    .prepare(`UPDATE events SET ${fields.join(', ')} WHERE id = ? AND deleted_at IS NULL`)
     .bind(...values)
     .run();
 
@@ -171,14 +160,9 @@ export async function updateEvent(
 }
 
 /** Soft-delete an event */
-export async function softDeleteEvent(
-  db: D1Database,
-  id: number
-): Promise<boolean> {
+export async function softDeleteEvent(db: D1Database, id: number): Promise<boolean> {
   const result = await db
-    .prepare(
-      "UPDATE events SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL"
-    )
+    .prepare('UPDATE events SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL')
     .bind(new Date().toISOString(), new Date().toISOString(), id)
     .run();
 

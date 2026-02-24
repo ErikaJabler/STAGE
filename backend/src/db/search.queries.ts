@@ -1,11 +1,11 @@
-import type { EventWithCount } from "@stage/shared";
+import type { EventWithCount } from '@stage/shared';
 
 /** Search events by name, location, or organizer (user-scoped) */
 export async function searchEvents(
   db: D1Database,
   userId: number,
   query: string,
-  limit = 10
+  limit = 10,
 ): Promise<EventWithCount[]> {
   const pattern = `%${query}%`;
 
@@ -19,7 +19,7 @@ export async function searchEvents(
          AND (e.name LIKE ? OR e.location LIKE ? OR e.organizer LIKE ?)
        GROUP BY e.id
        ORDER BY e.date ASC
-       LIMIT ?`
+       LIMIT ?`,
     )
     .bind(userId, pattern, pattern, pattern, limit)
     .all<EventWithCount>();

@@ -1,17 +1,11 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   participantsApi,
   type CreateParticipantPayload,
   type UpdateParticipantPayload,
-  type ImportParticipantsResult,
-} from "../api/client";
+} from '../api/client';
 
-const PARTICIPANTS_KEY = (eventId: number) =>
-  ["events", eventId, "participants"] as const;
+const PARTICIPANTS_KEY = (eventId: number) => ['events', eventId, 'participants'] as const;
 
 /** Fetch all participants for an event */
 export function useParticipants(eventId: number) {
@@ -27,12 +21,11 @@ export function useCreateParticipant(eventId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateParticipantPayload) =>
-      participantsApi.create(eventId, data),
+    mutationFn: (data: CreateParticipantPayload) => participantsApi.create(eventId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
-      queryClient.invalidateQueries({ queryKey: ["events", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ['events', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 }
@@ -46,8 +39,8 @@ export function useUpdateParticipant(eventId: number) {
       participantsApi.update(eventId, id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
-      queryClient.invalidateQueries({ queryKey: ["events", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ['events', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 }
@@ -60,8 +53,8 @@ export function useDeleteParticipant(eventId: number) {
     mutationFn: (id: number) => participantsApi.delete(eventId, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
-      queryClient.invalidateQueries({ queryKey: ["events", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ['events', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 }
@@ -87,8 +80,8 @@ export function useImportParticipants(eventId: number) {
     mutationFn: (file: File) => participantsApi.import(eventId, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PARTICIPANTS_KEY(eventId) });
-      queryClient.invalidateQueries({ queryKey: ["events", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ['events', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 }

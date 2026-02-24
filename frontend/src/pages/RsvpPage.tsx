@@ -13,7 +13,11 @@ export function RsvpPage() {
         {/* Hero image or Consid header */}
         {rsvp.info?.event.image_url ? (
           <div style={s.heroWrapper}>
-            <img src={rsvp.info.event.image_url} alt={`Hero-bild för ${rsvp.info.event.name}`} style={s.heroImg} />
+            <img
+              src={rsvp.info.event.image_url}
+              alt={`Hero-bild för ${rsvp.info.event.name}`}
+              style={s.heroImg}
+            />
             <div style={s.heroOverlay}>
               <span style={s.heroLogo}>Stage</span>
             </div>
@@ -21,7 +25,14 @@ export function RsvpPage() {
         ) : (
           <div style={s.header}>
             <svg width="120" height="28" viewBox="0 0 120 28" fill="none" aria-label="Stage">
-              <text x="0" y="22" fontFamily="'Consid Sans', system-ui, sans-serif" fontSize="22" fontWeight="600" fill="#FFFFFF">
+              <text
+                x="0"
+                y="22"
+                fontFamily="'Consid Sans', system-ui, sans-serif"
+                fontSize="22"
+                fontWeight="600"
+                fill="#FFFFFF"
+              >
                 Stage
               </text>
             </svg>
@@ -29,7 +40,9 @@ export function RsvpPage() {
         )}
 
         {rsvp.state === 'loading' && (
-          <div style={s.body}><p style={s.loadingText}>Laddar...</p></div>
+          <div style={s.body}>
+            <p style={s.loadingText}>Laddar...</p>
+          </div>
         )}
 
         {rsvp.state === 'error' && (
@@ -143,8 +156,22 @@ const s: Record<string, React.CSSProperties> = {
   text: { fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 },
   loadingText: { fontSize: '0.9375rem', color: 'var(--color-text-muted)', padding: '40px 0' },
   errorIcon: {
-    width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--color-danger)',
-    color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 700,
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-danger)',
+    color: '#FFFFFF',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '24px',
+    fontWeight: 700,
   },
-  footer: { padding: '16px 32px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)' },
+  footer: {
+    padding: '16px 32px',
+    textAlign: 'center',
+    fontSize: '0.75rem',
+    color: 'var(--color-text-muted)',
+    borderTop: '1px solid var(--color-border)',
+  },
 };

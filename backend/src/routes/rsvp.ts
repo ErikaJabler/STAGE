@@ -1,19 +1,19 @@
-import { Hono } from "hono";
-import type { Env } from "../bindings";
-import { rsvpRespondSchema } from "@stage/shared";
-import { parseBody } from "../utils/validation";
-import { RsvpService } from "../services/rsvp.service";
-import { rsvpRespondRateLimiter } from "../middleware/rate-limiter";
+import { Hono } from 'hono';
+import type { Env } from '../bindings';
+import { rsvpRespondSchema } from '@stage/shared';
+import { parseBody } from '../utils/validation';
+import { RsvpService } from '../services/rsvp.service';
+import { rsvpRespondRateLimiter } from '../middleware/rate-limiter';
 
 const rsvp = new Hono<{ Bindings: Env }>();
 
 /** GET /api/rsvp/:token — Get participant + event info */
-rsvp.get("/:token", async (c) => {
-  const token = c.req.param("token");
+rsvp.get('/:token', async (c) => {
+  const token = c.req.param('token');
 
   const result = await RsvpService.getByToken(c.env.DB, token);
   if (!result) {
-    return c.json({ error: "Ogiltig eller utgången länk" }, 404);
+    return c.json({ error: 'Ogiltig eller utgången länk' }, 404);
   }
 
   const { participant, event } = result;
@@ -42,10 +42,13 @@ rsvp.get("/:token", async (c) => {
 });
 
 /** POST /api/rsvp/:token/respond — Respond attending or declined */
-rsvp.post("/:token/respond", rsvpRespondRateLimiter, async (c) => {
-  const token = c.req.param("token");
+rsvp.post('/:token/respond', rsvpRespondRateLimiter, async (c) => {
+  const token = c.req.param('token');
   const body = await c.req.json();
-  const { status, dietary_notes, plus_one_name, plus_one_email } = parseBody(rsvpRespondSchema, body);
+  const { status, dietary_notes, plus_one_name, plus_one_email } = parseBody(
+    rsvpRespondSchema,
+    body,
+  );
 
   const result = await RsvpService.respond(c.env.DB, token, status, {
     dietary_notes,
@@ -54,7 +57,7 @@ rsvp.post("/:token/respond", rsvpRespondRateLimiter, async (c) => {
   });
 
   if (!result.ok) {
-    const statusCode = result.error === "Ogiltig eller utgången länk" ? 404 : 500;
+    const statusCode = result.error === 'Ogiltig eller utgången länk' ? 404 : 500;
     return c.json({ error: result.error }, statusCode);
   }
 
@@ -67,13 +70,13 @@ rsvp.post("/:token/respond", rsvpRespondRateLimiter, async (c) => {
 });
 
 /** POST /api/rsvp/:token/cancel — Cancel attendance */
-rsvp.post("/:token/cancel", async (c) => {
-  const token = c.req.param("token");
+rsvp.post('/:token/cancel', async (c) => {
+  const token = c.req.param('token');
 
   const result = await RsvpService.cancel(c.env.DB, token);
 
   if (!result.ok) {
-    const statusCode = result.error === "Ogiltig eller utgången länk" ? 404 : 500;
+    const statusCode = result.error === 'Ogiltig eller utgången länk' ? 404 : 500;
     return c.json({ error: result.error }, statusCode);
   }
 

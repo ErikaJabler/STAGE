@@ -23,47 +23,56 @@ export interface EmailEditorProps {
   onError?: (message: string) => void;
 }
 
-export default function EmailEditor({ initialHtml, initialProjectData, onSave, onCancel, onError }: EmailEditorProps) {
+export default function EmailEditor({
+  initialHtml,
+  initialProjectData,
+  onSave,
+  onCancel,
+  onError,
+}: EmailEditorProps) {
   const editorRef = useRef<Editor | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const brandConfig = getBrandEditorConfig();
 
-  const handleEditorInit = useCallback((editor: Editor) => {
-    editorRef.current = editor;
+  const handleEditorInit = useCallback(
+    (editor: Editor) => {
+      editorRef.current = editor;
 
-    // Register email blocks
-    registerEmailBlocks(editor);
+      // Register email blocks
+      registerEmailBlocks(editor);
 
-    // Make table cells editable (double-click to edit text)
-    editor.DomComponents.addType('cell', {
-      extend: 'cell',
-      model: {
-        defaults: {
-          editable: true,
+      // Make table cells editable (double-click to edit text)
+      editor.DomComponents.addType('cell', {
+        extend: 'cell',
+        model: {
+          defaults: {
+            editable: true,
+          },
         },
-      },
-    });
+      });
 
-    // Load initial content
-    if (initialProjectData) {
-      try {
-        editor.loadProjectData(JSON.parse(initialProjectData));
-      } catch {
-        // Fallback to HTML
+      // Load initial content
+      if (initialProjectData) {
+        try {
+          editor.loadProjectData(JSON.parse(initialProjectData));
+        } catch {
+          // Fallback to HTML
+          const html = initialHtml || getEmailCanvasHtml();
+          editor.setComponents(html);
+        }
+      } else {
         const html = initialHtml || getEmailCanvasHtml();
         editor.setComponents(html);
       }
-    } else {
-      const html = initialHtml || getEmailCanvasHtml();
-      editor.setComponents(html);
-    }
 
-    // Set canvas size for email (600px max)
-    editor.Canvas.getFrameEl()?.style.setProperty('max-width', '100%');
+      // Set canvas size for email (600px max)
+      editor.Canvas.getFrameEl()?.style.setProperty('max-width', '100%');
 
-    // Lock header/footer (Consid brand enforcement)
-    lockBrandComponents(editor);
-  }, [initialHtml, initialProjectData]);
+      // Lock header/footer (Consid brand enforcement)
+      lockBrandComponents(editor);
+    },
+    [initialHtml, initialProjectData],
+  );
 
   function handleSave() {
     const editor = editorRef.current;
@@ -122,22 +131,32 @@ ${html}
         <div style={styles.toolbarCenter}>
           <button
             onClick={() => handlePreviewToggle('desktop')}
-            style={{ ...styles.previewBtn, ...(previewMode === 'desktop' ? styles.previewBtnActive : {}) }}
+            style={{
+              ...styles.previewBtn,
+              ...(previewMode === 'desktop' ? styles.previewBtnActive : {}),
+            }}
             title="Desktop"
           >
             <DesktopIcon />
           </button>
           <button
             onClick={() => handlePreviewToggle('mobile')}
-            style={{ ...styles.previewBtn, ...(previewMode === 'mobile' ? styles.previewBtnActive : {}) }}
+            style={{
+              ...styles.previewBtn,
+              ...(previewMode === 'mobile' ? styles.previewBtnActive : {}),
+            }}
             title="Mobil"
           >
             <MobileIcon />
           </button>
         </div>
         <div style={styles.toolbarRight}>
-          <button onClick={onCancel} style={styles.cancelBtn}>Avbryt</button>
-          <button onClick={handleSave} style={styles.saveBtn}>Spara mail</button>
+          <button onClick={onCancel} style={styles.cancelBtn}>
+            Avbryt
+          </button>
+          <button onClick={handleSave} style={styles.saveBtn}>
+            Spara mail
+          </button>
         </div>
       </div>
 
@@ -224,7 +243,13 @@ ${html}
 function ArrowLeftIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M10 3L5 8l5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -242,7 +267,15 @@ function MobileIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="4" y="1" width="10" height="16" rx="2" stroke="currentColor" strokeWidth="1.2" />
-      <line x1="7" y1="14" x2="11" y2="14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <line
+        x1="7"
+        y1="14"
+        x2="11"
+        y2="14"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -269,7 +302,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   toolbarLeft: { display: 'flex', alignItems: 'center', gap: '8px', flex: 1 },
   toolbarCenter: { display: 'flex', alignItems: 'center', gap: '4px' },
-  toolbarRight: { display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'flex-end' },
+  toolbarRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   toolbarBtn: {
     display: 'flex',
     alignItems: 'center',

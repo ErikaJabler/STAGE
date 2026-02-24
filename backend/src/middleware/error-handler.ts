@@ -1,6 +1,6 @@
-import type { ErrorHandler } from "hono";
-import { ZodError } from "zod";
-import type { Env, AuthVariables } from "../bindings";
+import type { ErrorHandler } from 'hono';
+import { ZodError } from 'zod';
+import type { Env, AuthVariables } from '../bindings';
 
 /**
  * Global error handler for Hono.
@@ -10,9 +10,9 @@ import type { Env, AuthVariables } from "../bindings";
 export const errorHandler: ErrorHandler<{ Bindings: Env; Variables: AuthVariables }> = (err, c) => {
   if (err instanceof ZodError) {
     const details = err.errors.map((e) => e.message);
-    return c.json({ error: "Valideringsfel", details }, 400);
+    return c.json({ error: 'Valideringsfel', details }, 400);
   }
 
-  console.error("Unhandled error:", err);
-  return c.json({ error: "Internt serverfel" }, 500);
+  console.error('Unhandled error:', err);
+  return c.json({ error: 'Internt serverfel' }, 500);
 };

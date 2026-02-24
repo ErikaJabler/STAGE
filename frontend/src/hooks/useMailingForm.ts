@@ -43,19 +43,22 @@ export function useMailingForm() {
     });
   }, []);
 
-  const handleTemplateSelect = useCallback((templateId: string, templates: MailingTemplate[] | undefined) => {
-    if (selectedTemplate === templateId) {
-      setSelectedTemplate(null);
-      return;
-    }
-    const template = templates?.find((t) => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(templateId);
-      setForm((prev) => ({ ...prev, subject: template.defaultSubject, body: template.body }));
-      setErrors({});
-      setEditMode('form');
-    }
-  }, [selectedTemplate]);
+  const handleTemplateSelect = useCallback(
+    (templateId: string, templates: MailingTemplate[] | undefined) => {
+      if (selectedTemplate === templateId) {
+        setSelectedTemplate(null);
+        return;
+      }
+      const template = templates?.find((t) => t.id === templateId);
+      if (template) {
+        setSelectedTemplate(templateId);
+        setForm((prev) => ({ ...prev, subject: template.defaultSubject, body: template.body }));
+        setErrors({});
+        setEditMode('form');
+      }
+    },
+    [selectedTemplate],
+  );
 
   const validate = useCallback((): Record<string, string> => {
     const errs: Record<string, string> = {};

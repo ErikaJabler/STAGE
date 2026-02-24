@@ -8,7 +8,11 @@ import { useMailingForm } from '../../../hooks/useMailingForm';
 
 const EmailEditor = lazy(() => import('../../editor/EmailEditor'));
 
-export function CreateMailingModal({ eventId, open, onClose }: {
+export function CreateMailingModal({
+  eventId,
+  open,
+  onClose,
+}: {
   eventId: number;
   open: boolean;
   onClose: () => void;
@@ -17,8 +21,16 @@ export function CreateMailingModal({ eventId, open, onClose }: {
   const createMailing = useCreateMailing(eventId);
   const { data: templates } = useTemplates();
   const {
-    form, errors, setErrors, editMode, setEditMode,
-    selectedTemplate, resetState, updateField, handleTemplateSelect, validate,
+    form,
+    errors,
+    setErrors,
+    editMode,
+    setEditMode,
+    selectedTemplate,
+    resetState,
+    updateField,
+    handleTemplateSelect,
+    validate,
   } = useMailingForm();
 
   function handleClose() {
@@ -134,8 +146,15 @@ export function CreateMailingModal({ eventId, open, onClose }: {
       footer={
         editMode === 'form' ? (
           <>
-            <Button variant="secondary" size="md" onClick={handleClose}>Avbryt</Button>
-            <Button variant="primary" size="md" onClick={handleSubmit as unknown as () => void} loading={createMailing.isPending}>
+            <Button variant="secondary" size="md" onClick={handleClose}>
+              Avbryt
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSubmit as unknown as () => void}
+              loading={createMailing.isPending}
+            >
               Skapa utkast
             </Button>
           </>
@@ -171,14 +190,18 @@ export function CreateMailingModal({ eventId, open, onClose }: {
             <label style={sharedStyles.modalSelectLabel}>Välj redigeringsläge</label>
             <div style={styles.modeGrid}>
               <button type="button" onClick={() => setEditMode('editor')} style={styles.modeCard}>
-                <span style={styles.modeIcon}><EditorIcon /></span>
+                <span style={styles.modeIcon}>
+                  <EditorIcon />
+                </span>
                 <span style={styles.modeName}>Visuell editor</span>
                 <span style={styles.modeDesc}>
                   Dra-och-släpp block, bilder och knappar. Full kontroll över layout.
                 </span>
               </button>
               <button type="button" onClick={() => setEditMode('form')} style={styles.modeCard}>
-                <span style={styles.modeIcon}><FormIcon /></span>
+                <span style={styles.modeIcon}>
+                  <FormIcon />
+                </span>
                 <span style={styles.modeName}>Snabbredigering</span>
                 <span style={styles.modeDesc}>
                   Skriv ämne och brödtext i formulär. Automatisk Consid-mall.
@@ -191,7 +214,10 @@ export function CreateMailingModal({ eventId, open, onClose }: {
 
       {/* Step 2: Form mode */}
       {editMode === 'form' && (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={sharedStyles.modalSelectLabel}>Mottagare</label>
             <select
@@ -239,10 +265,68 @@ export function CreateMailingModal({ eventId, open, onClose }: {
               }}
             />
             {errors.body && (
-              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>{errors.body}</span>
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>
+                {errors.body}
+              </span>
             )}
-            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
-              Variabler: <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{name}}'}</code> = mottagarens namn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{rsvp_link}}'}</code> = personlig svarslänk, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{event}}'}</code> = eventnamn, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{datum}}'}</code> = datum, <code style={{ backgroundColor: 'var(--color-bg-primary)', padding: '1px 4px', borderRadius: '3px' }}>{'{{plats}}'}</code> = plats. RSVP-länk läggs till automatiskt om den inte finns i meddelandet.
+            <span
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-text-muted)',
+                lineHeight: '1.4',
+              }}
+            >
+              Variabler:{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{name}}'}
+              </code>{' '}
+              = mottagarens namn,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{rsvp_link}}'}
+              </code>{' '}
+              = personlig svarslänk,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{event}}'}
+              </code>{' '}
+              = eventnamn,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{datum}}'}
+              </code>{' '}
+              = datum,{' '}
+              <code
+                style={{
+                  backgroundColor: 'var(--color-bg-primary)',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                }}
+              >
+                {'{{plats}}'}
+              </code>{' '}
+              = plats. RSVP-länk läggs till automatiskt om den inte finns i meddelandet.
             </span>
           </div>
           <button type="button" onClick={() => setEditMode(null)} style={styles.backLink}>
@@ -260,7 +344,16 @@ function EditorIcon() {
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
       <rect x="2" y="2" width="24" height="24" rx="4" stroke="#701131" strokeWidth="1.5" />
       <rect x="5" y="5" width="8" height="6" rx="1" fill="#F49E88" />
-      <rect x="15" y="5" width="8" height="6" rx="1" fill="#EFE6DD" stroke="#A99B94" strokeWidth="0.5" />
+      <rect
+        x="15"
+        y="5"
+        width="8"
+        height="6"
+        rx="1"
+        fill="#EFE6DD"
+        stroke="#A99B94"
+        strokeWidth="0.5"
+      />
       <rect x="5" y="13" width="18" height="3" rx="1" fill="#EFE6DD" />
       <rect x="5" y="18" width="18" height="3" rx="1" fill="#EFE6DD" />
       <rect x="9" y="23" width="10" height="3" rx="1.5" fill="#B5223F" />
@@ -283,10 +376,15 @@ function FormIcon() {
 const styles: Record<string, React.CSSProperties> = {
   templateGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' },
   templateCard: {
-    display: 'flex', flexDirection: 'column' as const, gap: '2px',
-    padding: '10px 12px', borderRadius: 'var(--radius-md)',
-    border: '1.5px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)',
-    cursor: 'pointer', textAlign: 'left' as const,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '2px',
+    padding: '10px 12px',
+    borderRadius: 'var(--radius-md)',
+    border: '1.5px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-card)',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
     transition: 'border-color var(--transition-fast), background-color var(--transition-fast)',
     fontFamily: 'inherit',
   },
@@ -294,49 +392,106 @@ const styles: Record<string, React.CSSProperties> = {
     borderColor: 'var(--color-burgundy)',
     backgroundColor: 'rgba(112, 17, 49, 0.04)',
   },
-  templateName: { fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-primary)' },
-  templateDesc: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.3' },
+  templateName: {
+    fontSize: 'var(--font-size-sm)',
+    fontWeight: 600,
+    color: 'var(--color-text-primary)',
+  },
+  templateDesc: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-muted)',
+    lineHeight: '1.3',
+  },
   modeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   modeCard: {
-    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px',
-    padding: '20px 16px', borderRadius: 'var(--radius-lg, 12px)',
-    border: '1.5px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)',
-    cursor: 'pointer', textAlign: 'center' as const,
-    transition: 'border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '8px',
+    padding: '20px 16px',
+    borderRadius: 'var(--radius-lg, 12px)',
+    border: '1.5px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-card)',
+    cursor: 'pointer',
+    textAlign: 'center' as const,
+    transition:
+      'border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast)',
     fontFamily: 'inherit',
   },
   modeIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  modeName: { fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--color-text-primary)' },
-  modeDesc: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', lineHeight: '1.4' },
+  modeName: {
+    fontSize: 'var(--font-size-base)',
+    fontWeight: 600,
+    color: 'var(--color-text-primary)',
+  },
+  modeDesc: {
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-muted)',
+    lineHeight: '1.4',
+  },
   backLink: {
-    display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 0',
-    border: 'none', backgroundColor: 'transparent', color: 'var(--color-text-muted)',
-    cursor: 'pointer', fontSize: 'var(--font-size-sm)', fontFamily: 'inherit',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '4px 0',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+    fontSize: 'var(--font-size-sm)',
+    fontFamily: 'inherit',
   },
 };
 
 const editorStyles: Record<string, React.CSSProperties> = {
   fullscreen: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 'var(--z-fullscreen-editor)' as unknown as number,
-    display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5',
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#f5f5f5',
   },
   topBar: {
-    display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 16px',
-    backgroundColor: '#FFFFFF', borderBottom: '1px solid #e8e0d8', flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '8px 16px',
+    backgroundColor: '#FFFFFF',
+    borderBottom: '1px solid #e8e0d8',
+    flexShrink: 0,
   },
   topBarField: { display: 'flex', alignItems: 'center', gap: '6px' },
-  topBarLabel: { fontSize: '13px', fontWeight: 500, color: '#6b6360', whiteSpace: 'nowrap' as const },
+  topBarLabel: {
+    fontSize: '13px',
+    fontWeight: 500,
+    color: '#6b6360',
+    whiteSpace: 'nowrap' as const,
+  },
   topBarInput: {
-    padding: '5px 10px', border: '1px solid #e8e0d8', borderRadius: '6px',
-    fontSize: '13px', fontFamily: 'inherit', minWidth: '240px',
+    padding: '5px 10px',
+    border: '1px solid #e8e0d8',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontFamily: 'inherit',
+    minWidth: '240px',
   },
   topBarSelect: {
-    padding: '5px 10px', border: '1px solid #e8e0d8', borderRadius: '6px',
-    fontSize: '13px', fontFamily: 'inherit',
+    padding: '5px 10px',
+    border: '1px solid #e8e0d8',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontFamily: 'inherit',
   },
   loading: {
-    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '15px', color: '#6b6360',
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '15px',
+    color: '#6b6360',
   },
 };

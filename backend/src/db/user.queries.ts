@@ -1,6 +1,6 @@
-import type { User } from "@stage/shared";
+import type { User } from '@stage/shared';
 
-const USER_COLUMNS = "id, email, name, token, is_admin, created_at, updated_at";
+const USER_COLUMNS = 'id, email, name, token, is_admin, created_at, updated_at';
 
 export async function getUserByEmail(db: D1Database, email: string): Promise<User | null> {
   const row = await db
@@ -22,10 +22,10 @@ export async function createUser(
   db: D1Database,
   email: string,
   name: string,
-  token: string
+  token: string,
 ): Promise<User> {
   await db
-    .prepare("INSERT INTO users (email, name, token) VALUES (?, ?, ?)")
+    .prepare('INSERT INTO users (email, name, token) VALUES (?, ?, ?)')
     .bind(email, name, token)
     .run();
 
@@ -38,7 +38,7 @@ export async function getOrCreateUser(
   db: D1Database,
   email: string,
   name: string,
-  token: string
+  token: string,
 ): Promise<User> {
   const existing = await getUserByEmail(db, email);
   if (existing) return existing;
@@ -48,7 +48,7 @@ export async function getOrCreateUser(
 /** Check if a user has global admin status */
 export async function isAdminUser(db: D1Database, userId: number): Promise<boolean> {
   const row = await db
-    .prepare("SELECT is_admin FROM users WHERE id = ?")
+    .prepare('SELECT is_admin FROM users WHERE id = ?')
     .bind(userId)
     .first<{ is_admin: number }>();
   return row ? row.is_admin === 1 : false;

@@ -22,34 +22,47 @@ export interface PageEditorProps {
   onError?: (message: string) => void;
 }
 
-export default function PageEditor({ initialHtml, initialProjectData, onSave, onCancel, onError }: PageEditorProps) {
+export default function PageEditor({
+  initialHtml,
+  initialProjectData,
+  onSave,
+  onCancel,
+  onError,
+}: PageEditorProps) {
   const editorRef = useRef<Editor | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const brandConfig = getBrandEditorConfig();
 
-  const handleEditorInit = useCallback((editor: Editor) => {
-    editorRef.current = editor;
+  const handleEditorInit = useCallback(
+    (editor: Editor) => {
+      editorRef.current = editor;
 
-    // Register page blocks
-    registerPageBlocks(editor);
+      // Register page blocks
+      registerPageBlocks(editor);
 
-    // Load initial content
-    if (initialProjectData) {
-      try {
-        editor.loadProjectData(JSON.parse(initialProjectData));
-      } catch {
-        const html = initialHtml || '<div style="padding:40px; text-align:center; color:#A99B94;">Dra block hit för att börja bygga din sida</div>';
-        editor.setComponents(html);
+      // Load initial content
+      if (initialProjectData) {
+        try {
+          editor.loadProjectData(JSON.parse(initialProjectData));
+        } catch {
+          const html =
+            initialHtml ||
+            '<div style="padding:40px; text-align:center; color:#A99B94;">Dra block hit för att börja bygga din sida</div>';
+          editor.setComponents(html);
+        }
+      } else if (initialHtml) {
+        editor.setComponents(initialHtml);
+      } else {
+        editor.setComponents(
+          '<div style="padding:40px; text-align:center; color:#A99B94;">Dra block hit för att börja bygga din sida</div>',
+        );
       }
-    } else if (initialHtml) {
-      editor.setComponents(initialHtml);
-    } else {
-      editor.setComponents('<div style="padding:40px; text-align:center; color:#A99B94;">Dra block hit för att börja bygga din sida</div>');
-    }
 
-    // Lock header/footer (Consid brand enforcement)
-    lockBrandComponents(editor);
-  }, [initialHtml, initialProjectData]);
+      // Lock header/footer (Consid brand enforcement)
+      lockBrandComponents(editor);
+    },
+    [initialHtml, initialProjectData],
+  );
 
   function handleSave() {
     const editor = editorRef.current;
@@ -62,9 +75,7 @@ export default function PageEditor({ initialHtml, initialProjectData, onSave, on
       const html = editor.getHtml();
       const css = editor.getCss() || '';
 
-      const fullHtml = css.trim()
-        ? `<style>${css}</style>\n${html}`
-        : html;
+      const fullHtml = css.trim() ? `<style>${css}</style>\n${html}` : html;
 
       const projectData = JSON.stringify(editor.getProjectData());
       onSave(fullHtml, projectData);
@@ -97,22 +108,32 @@ export default function PageEditor({ initialHtml, initialProjectData, onSave, on
         <div style={styles.toolbarCenter}>
           <button
             onClick={() => handlePreviewToggle('desktop')}
-            style={{ ...styles.previewBtn, ...(previewMode === 'desktop' ? styles.previewBtnActive : {}) }}
+            style={{
+              ...styles.previewBtn,
+              ...(previewMode === 'desktop' ? styles.previewBtnActive : {}),
+            }}
             title="Desktop"
           >
             <DesktopIcon />
           </button>
           <button
             onClick={() => handlePreviewToggle('mobile')}
-            style={{ ...styles.previewBtn, ...(previewMode === 'mobile' ? styles.previewBtnActive : {}) }}
+            style={{
+              ...styles.previewBtn,
+              ...(previewMode === 'mobile' ? styles.previewBtnActive : {}),
+            }}
             title="Mobil"
           >
             <MobileIcon />
           </button>
         </div>
         <div style={styles.toolbarRight}>
-          <button onClick={onCancel} style={styles.cancelBtn}>Avbryt</button>
-          <button onClick={handleSave} style={styles.saveBtn}>Spara webbsida</button>
+          <button onClick={onCancel} style={styles.cancelBtn}>
+            Avbryt
+          </button>
+          <button onClick={handleSave} style={styles.saveBtn}>
+            Spara webbsida
+          </button>
         </div>
       </div>
 
@@ -190,7 +211,13 @@ export default function PageEditor({ initialHtml, initialProjectData, onSave, on
 function ArrowLeftIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M10 3L5 8l5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -208,7 +235,15 @@ function MobileIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <rect x="4" y="1" width="10" height="16" rx="2" stroke="currentColor" strokeWidth="1.2" />
-      <line x1="7" y1="14" x2="11" y2="14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <line
+        x1="7"
+        y1="14"
+        x2="11"
+        y2="14"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -235,7 +270,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   toolbarLeft: { display: 'flex', alignItems: 'center', gap: '8px', flex: 1 },
   toolbarCenter: { display: 'flex', alignItems: 'center', gap: '4px' },
-  toolbarRight: { display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'flex-end' },
+  toolbarRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   toolbarBtn: {
     display: 'flex',
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { websiteApi, type UpdateWebsitePayload, type WebsiteConfig } from '../api/client';
+import { websiteApi, type UpdateWebsitePayload } from '../api/client';
 
 export function useWebsite(eventId: number) {
   return useQuery({

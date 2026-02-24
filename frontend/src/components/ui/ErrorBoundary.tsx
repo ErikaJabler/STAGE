@@ -38,13 +38,16 @@ export class ErrorBoundary extends Component<Props, State> {
           <div style={styles.icon}>
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
               <circle cx="24" cy="24" r="22" stroke="var(--color-greige)" strokeWidth="2" />
-              <path d="M24 14v12M24 30v4" stroke="var(--color-greige)" strokeWidth="2.5" strokeLinecap="round" />
+              <path
+                d="M24 14v12M24 30v4"
+                stroke="var(--color-greige)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
             </svg>
           </div>
           <h2 style={styles.title}>Något gick fel</h2>
-          <p style={styles.message}>
-            {this.state.error?.message || 'Ett oväntat fel uppstod.'}
-          </p>
+          <p style={styles.message}>{this.state.error?.message || 'Ett oväntat fel uppstod.'}</p>
           <Button variant="secondary" onClick={this.handleReset}>
             Försök igen
           </Button>

@@ -127,7 +127,9 @@ export function registerEmailBlocks(editor: Editor) {
 
 /** Get the initial email template HTML to load in the editor */
 export function getEmailCanvasHtml(bodyContent?: string): string {
-  const content = bodyContent || `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="width:100%;">
+  const content =
+    bodyContent ||
+    `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="width:100%;">
   <tr>
     <td style="padding:16px 32px; font-family:${EMAIL_FONT_FAMILY}; font-size:15px; line-height:1.7; color:#1C1C1C;">
       Börja skriva ditt mail här, eller dra block från panelen till vänster.

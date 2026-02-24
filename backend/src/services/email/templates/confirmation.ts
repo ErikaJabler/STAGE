@@ -1,10 +1,10 @@
-import type { TemplateDefinition } from "../template-renderer";
+import type { TemplateDefinition } from '../template-renderer';
 
 export const confirmation: TemplateDefinition = {
-  id: "confirmation",
-  name: "Bekräftelse",
-  description: "Bekräftelse på att deltagaren är med",
-  defaultSubject: "Bekräftelse: {{event}}",
+  id: 'confirmation',
+  name: 'Bekräftelse',
+  description: 'Bekräftelse på att deltagaren är med',
+  defaultSubject: 'Bekräftelse: {{event}}',
   body: `Hej {{name}},
 
 Vad roligt att du kommer till {{event}}! Din plats är nu bokad.
@@ -23,5 +23,14 @@ Vi ses!
 
 Med vänlig hälsning,
 {{organizer}}`,
-  mergeFields: ["name", "event", "datum", "tid", "plats", "rsvp_link", "calendar_link", "organizer"],
+  mergeFields: [
+    'name',
+    'event',
+    'datum',
+    'tid',
+    'plats',
+    'rsvp_link',
+    'calendar_link',
+    'organizer',
+  ],
 };

@@ -2,21 +2,15 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { ConsidLogo } from '../../assets/ConsidLogo';
 import { useAuth } from '../../hooks/useAuth';
 
-const navItems = [
-  { to: '/', label: 'Översikt', icon: OverviewIcon },
-];
+const navItems = [{ to: '/', label: 'Översikt', icon: OverviewIcon }];
 
-const adminNavItems = [
-  { to: '/admin', label: 'Admin', icon: AdminIcon },
-];
+const adminNavItems = [{ to: '/admin', label: 'Admin', icon: AdminIcon }];
 
 export function Sidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const allItems = user?.is_admin
-    ? [...navItems, ...adminNavItems]
-    : navItems;
+  const allItems = user?.is_admin ? [...navItems, ...adminNavItems] : navItems;
 
   return (
     <aside style={styles.sidebar}>
@@ -26,9 +20,8 @@ export function Sidebar() {
 
       <nav style={styles.nav}>
         {allItems.map((item) => {
-          const isActive = item.to === '/'
-            ? location.pathname === '/'
-            : location.pathname.startsWith(item.to);
+          const isActive =
+            item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
 
           return (
             <NavLink
@@ -78,8 +71,19 @@ function OverviewIcon() {
 function AdminIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M10 2L3 6v6c0 3.5 3 6.5 7 8 4-1.5 7-4.5 7-8V6l-7-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M10 2L3 6v6c0 3.5 3 6.5 7 8 4-1.5 7-4.5 7-8V6l-7-4z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 10l2 2 4-4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

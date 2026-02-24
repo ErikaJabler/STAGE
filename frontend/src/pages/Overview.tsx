@@ -80,7 +80,13 @@ function EventCard({ event }: { event: EventWithCount }) {
       <div style={styles.cardFooter}>
         <span style={styles.organizer}>{event.organizer}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button onClick={handleClone} style={styles.cloneBtn} title="Klona event" aria-label="Klona event" disabled={cloneEvent.isPending}>
+          <button
+            onClick={handleClone}
+            style={styles.cloneBtn}
+            title="Klona event"
+            aria-label="Klona event"
+            disabled={cloneEvent.isPending}
+          >
             <CopyIcon />
           </button>
           <TypeBadge type={event.type} />
@@ -95,7 +101,15 @@ function EmptyState() {
     <div style={styles.empty}>
       <div style={styles.emptyIcon}>
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="8" y="12" width="48" height="40" rx="4" stroke="var(--color-greige)" strokeWidth="2" />
+          <rect
+            x="8"
+            y="12"
+            width="48"
+            height="40"
+            rx="4"
+            stroke="var(--color-greige)"
+            strokeWidth="2"
+          />
           <path d="M8 22h48" stroke="var(--color-greige)" strokeWidth="2" />
           <circle cx="16" cy="17" r="2" fill="var(--color-greige)" />
           <circle cx="24" cy="17" r="2" fill="var(--color-greige)" />
@@ -148,14 +162,23 @@ function TypeBadge({ type }: { type: string }) {
   return <span style={styles.typeBadge}>{labels[type] || type}</span>;
 }
 
-function getStatusBadge(status: string): { variant: 'default' | 'success' | 'warning' | 'danger' | 'muted'; label: string } {
+function getStatusBadge(status: string): {
+  variant: 'default' | 'success' | 'warning' | 'danger' | 'muted';
+  label: string;
+} {
   switch (status) {
-    case 'planning': return { variant: 'muted', label: 'Planering' };
-    case 'upcoming': return { variant: 'default', label: 'Kommande' };
-    case 'ongoing': return { variant: 'success', label: 'Pågår' };
-    case 'completed': return { variant: 'muted', label: 'Avslutad' };
-    case 'cancelled': return { variant: 'danger', label: 'Inställd' };
-    default: return { variant: 'muted', label: status };
+    case 'planning':
+      return { variant: 'muted', label: 'Planering' };
+    case 'upcoming':
+      return { variant: 'default', label: 'Kommande' };
+    case 'ongoing':
+      return { variant: 'success', label: 'Pågår' };
+    case 'completed':
+      return { variant: 'muted', label: 'Avslutad' };
+    case 'cancelled':
+      return { variant: 'danger', label: 'Inställd' };
+    default:
+      return { variant: 'muted', label: status };
   }
 }
 
@@ -177,7 +200,11 @@ function CalendarIcon() {
 function LocationIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M7 13S2 8.5 2 5.5a5 5 0 1 1 10 0C12 8.5 7 13 7 13z" stroke="currentColor" strokeWidth="1.2" />
+      <path
+        d="M7 13S2 8.5 2 5.5a5 5 0 1 1 10 0C12 8.5 7 13 7 13z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
       <circle cx="7" cy="5.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
@@ -187,7 +214,11 @@ function CopyIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M10 4V2.5A1.5 1.5 0 0 0 8.5 1h-6A1.5 1.5 0 0 0 1 2.5v6A1.5 1.5 0 0 0 2.5 10H4" stroke="currentColor" strokeWidth="1.2" />
+      <path
+        d="M10 4V2.5A1.5 1.5 0 0 0 8.5 1h-6A1.5 1.5 0 0 0 1 2.5v6A1.5 1.5 0 0 0 2.5 10H4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
     </svg>
   );
 }
@@ -196,9 +227,19 @@ function PeopleIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <circle cx="5" cy="4" r="2" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M1 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path
+        d="M1 12c0-2.2 1.8-4 4-4s4 1.8 4 4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
       <circle cx="10" cy="4.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M10.5 8c1.4.4 2.5 1.7 2.5 3.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path
+        d="M10.5 8c1.4.4 2.5 1.7 2.5 3.2"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

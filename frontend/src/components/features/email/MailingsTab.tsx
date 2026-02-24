@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Badge, Button, Modal, useToast } from '../../ui';
-import { useMailings, useSendMailing, useSendTestMailing, useSendToNewParticipants } from '../../../hooks/useMailings';
+import {
+  useMailings,
+  useSendMailing,
+  useSendTestMailing,
+  useSendToNewParticipants,
+} from '../../../hooks/useMailings';
 import type { Mailing } from '@stage/shared';
 import { getFilterLabel, formatDateTime } from '../shared-helpers';
 import { sharedStyles } from '../shared-styles';
@@ -12,8 +17,21 @@ function TestMailIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M1 4.5l7 4.5 7-4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12.5" cy="4" r="2.5" fill="var(--color-accent)" stroke="var(--color-bg-card)" strokeWidth="1" />
+      <path
+        d="M1 4.5l7 4.5 7-4.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12.5"
+        cy="4"
+        r="2.5"
+        fill="var(--color-accent)"
+        stroke="var(--color-bg-card)"
+        strokeWidth="1"
+      />
     </svg>
   );
 }
@@ -21,7 +39,13 @@ function TestMailIcon() {
 function SendToNewIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M1 3l7 5 7-5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M1 3l7 5 7-5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
       <path d="M12 9v4m-2-2h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
@@ -31,7 +55,13 @@ function SendToNewIcon() {
 function EditIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -61,7 +91,10 @@ export function MailingsTab({ eventId }: { eventId: number }) {
         if (result.total === 0) {
           toast('Inga nya mottagare', 'info');
         } else if (result.failed > 0) {
-          toast(`Skickat till ${result.sent}/${result.total} nya (${result.failed} misslyckades)`, 'error');
+          toast(
+            `Skickat till ${result.sent}/${result.total} nya (${result.failed} misslyckades)`,
+            'error',
+          );
         } else {
           toast(`Skickat till ${result.total} nya mottagare`, 'success');
         }
@@ -74,7 +107,10 @@ export function MailingsTab({ eventId }: { eventId: number }) {
     sendMailing.mutate(mailing.id, {
       onSuccess: (result) => {
         if (result.failed > 0) {
-          toast(`Skickat till ${result.sent}/${result.total} (${result.failed} misslyckades)`, 'error');
+          toast(
+            `Skickat till ${result.sent}/${result.total} (${result.failed} misslyckades)`,
+            'error',
+          );
         } else {
           toast(`Utskickat till ${result.sent} mottagare`, 'success');
         }
@@ -103,7 +139,11 @@ export function MailingsTab({ eventId }: { eventId: number }) {
             + Nytt utskick
           </Button>
         </div>
-        <CreateMailingModal eventId={eventId} open={showCreateModal} onClose={() => setShowCreateModal(false)} />
+        <CreateMailingModal
+          eventId={eventId}
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+        />
       </>
     );
   }
@@ -156,7 +196,11 @@ export function MailingsTab({ eventId }: { eventId: number }) {
                         <EditIcon />
                       </button>
                     )}
-                    <button onClick={() => setPreviewMailing(m)} style={sharedStyles.actionBtn} title="Förhandsgranska">
+                    <button
+                      onClick={() => setPreviewMailing(m)}
+                      style={sharedStyles.actionBtn}
+                      title="Förhandsgranska"
+                    >
                       <EyeIcon />
                     </button>
                     <button
@@ -195,7 +239,11 @@ export function MailingsTab({ eventId }: { eventId: number }) {
         </table>
       </div>
 
-      <CreateMailingModal eventId={eventId} open={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <CreateMailingModal
+        eventId={eventId}
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
 
       {editingMailing && (
         <EditMailingModal
@@ -213,9 +261,16 @@ export function MailingsTab({ eventId }: { eventId: number }) {
         title={previewMailing?.subject ?? 'Förhandsgranskning'}
         footer={
           <>
-            <Button variant="secondary" size="md" onClick={() => setPreviewMailing(null)}>Stäng</Button>
+            <Button variant="secondary" size="md" onClick={() => setPreviewMailing(null)}>
+              Stäng
+            </Button>
             {previewMailing?.status === 'draft' && (
-              <Button variant="primary" size="md" onClick={() => previewMailing && handleSend(previewMailing)} loading={sendMailing.isPending}>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => previewMailing && handleSend(previewMailing)}
+                loading={sendMailing.isPending}
+              >
                 Skicka utskick
               </Button>
             )}
@@ -226,7 +281,9 @@ export function MailingsTab({ eventId }: { eventId: number }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
               <span style={sharedStyles.detailLabel}>Mottagare</span>
-              <span style={sharedStyles.detailValue}>{getFilterLabel(previewMailing.recipient_filter)}</span>
+              <span style={sharedStyles.detailValue}>
+                {getFilterLabel(previewMailing.recipient_filter)}
+              </span>
             </div>
             <div>
               <span style={sharedStyles.detailLabel}>Status</span>
@@ -241,15 +298,17 @@ export function MailingsTab({ eventId }: { eventId: number }) {
             </div>
             <div>
               <span style={sharedStyles.detailLabel}>Meddelande</span>
-              <div style={{
-                padding: '12px',
-                backgroundColor: 'var(--color-bg-primary)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: 'var(--font-size-base)',
-                lineHeight: 'var(--line-height-relaxed)',
-                color: 'var(--color-text-primary)',
-                whiteSpace: 'pre-wrap',
-              }}>
+              <div
+                style={{
+                  padding: '12px',
+                  backgroundColor: 'var(--color-bg-primary)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: 'var(--font-size-base)',
+                  lineHeight: 'var(--line-height-relaxed)',
+                  color: 'var(--color-text-primary)',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
                 {previewMailing.body}
               </div>
             </div>

@@ -14,28 +14,29 @@ export function SummaryTab({ event }: { event: EventWithCount }) {
           total={event.max_participants ?? undefined}
           color="var(--color-burgundy)"
         />
-        <StatCard
-          label="Status"
-          value={statusBadge.label}
-          color="var(--color-accent)"
-        />
-        <StatCard
-          label="Typ"
-          value={getTypeLabel(event.type)}
-          color="var(--color-dark-purple)"
-        />
+        <StatCard label="Status" value={statusBadge.label} color="var(--color-accent)" />
+        <StatCard label="Typ" value={getTypeLabel(event.type)} color="var(--color-dark-purple)" />
       </div>
 
       <div style={styles.detailsCard}>
         <h3 style={styles.sectionTitle}>Eventinformation</h3>
         <div style={styles.detailsGrid}>
           <DetailItem label="Datum" value={formatDate(event.date)} />
-          <DetailItem label="Tid" value={`${event.time}${event.end_time ? ` – ${event.end_time}` : ''}`} />
+          <DetailItem
+            label="Tid"
+            value={`${event.time}${event.end_time ? ` – ${event.end_time}` : ''}`}
+          />
           <DetailItem label="Plats" value={event.location} />
           <DetailItem label="Arrangör" value={`${event.organizer} (${event.organizer_email})`} />
-          <DetailItem label="Synlighet" value={event.visibility === 'public' ? 'Publik' : 'Privat'} />
+          <DetailItem
+            label="Synlighet"
+            value={event.visibility === 'public' ? 'Publik' : 'Privat'}
+          />
           {event.max_participants && (
-            <DetailItem label="Max deltagare" value={`${event.max_participants} (+${event.overbooking_limit} överbokning)`} />
+            <DetailItem
+              label="Max deltagare"
+              value={`${event.max_participants} (+${event.overbooking_limit} överbokning)`}
+            />
           )}
         </div>
         {event.description && (
@@ -51,7 +52,12 @@ export function SummaryTab({ event }: { event: EventWithCount }) {
   );
 }
 
-function StatCard({ label, value, total, color }: {
+function StatCard({
+  label,
+  value,
+  total,
+  color,
+}: {
   label: string;
   value: string | number;
   total?: number;
@@ -62,9 +68,7 @@ function StatCard({ label, value, total, color }: {
       <span style={styles.statLabel}>{label}</span>
       <div style={styles.statValue}>
         <span style={{ color }}>{value}</span>
-        {total !== undefined && (
-          <span style={styles.statTotal}>/ {total}</span>
-        )}
+        {total !== undefined && <span style={styles.statTotal}>/ {total}</span>}
       </div>
     </div>
   );

@@ -42,9 +42,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
       <div style={styles.content}>
         <p style={styles.description}>{activity.description}</p>
         <div style={styles.meta}>
-          {activity.created_by && (
-            <span style={styles.actor}>{activity.created_by}</span>
-          )}
+          {activity.created_by && <span style={styles.actor}>{activity.created_by}</span>}
           <span style={styles.time}>{formatTimeAgo(activity.created_at)}</span>
         </div>
       </div>

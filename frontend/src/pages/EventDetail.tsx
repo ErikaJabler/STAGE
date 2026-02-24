@@ -80,7 +80,9 @@ export function EventDetail() {
       {/* Tab content */}
       <div style={styles.content} role="tabpanel">
         {activeTab === 'summary' && <SummaryTab event={event} />}
-        {activeTab === 'participants' && <ParticipantsTab eventId={eventId} participantCount={event.participant_count} />}
+        {activeTab === 'participants' && (
+          <ParticipantsTab eventId={eventId} participantCount={event.participant_count} />
+        )}
         {activeTab === 'mailings' && <MailingsTab eventId={eventId} />}
         {activeTab === 'settings' && <SettingsTab event={event} />}
       </div>

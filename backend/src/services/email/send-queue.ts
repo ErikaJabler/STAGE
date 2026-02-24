@@ -1,5 +1,5 @@
-import type { EmailQueueItem } from "@stage/shared";
-import { createEmailProvider } from "./factory";
+import type { EmailQueueItem } from '@stage/shared';
+import { createEmailProvider } from './factory';
 
 const BATCH_SIZE = 20;
 
@@ -14,14 +14,14 @@ export async function enqueueEmails(
     subject: string;
     html: string;
     plain_text: string;
-  }>
+  }>,
 ): Promise<number> {
   if (items.length === 0) return 0;
 
   const now = new Date().toISOString();
   const stmt = db.prepare(
     `INSERT INTO email_queue (mailing_id, event_id, to_email, to_name, subject, html, plain_text, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
   );
 
   const batch = items.map((item) =>
@@ -33,8 +33,8 @@ export async function enqueueEmails(
       item.subject,
       item.html,
       item.plain_text,
-      now
-    )
+      now,
+    ),
   );
 
   await db.batch(batch);
@@ -52,14 +52,14 @@ export async function recordSentEmails(
     subject: string;
     html: string;
     plain_text: string;
-  }>
+  }>,
 ): Promise<number> {
   if (items.length === 0) return 0;
 
   const now = new Date().toISOString();
   const stmt = db.prepare(
     `INSERT INTO email_queue (mailing_id, event_id, to_email, to_name, subject, html, plain_text, status, created_at, sent_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?)`,
   );
 
   const batch = items.map((item) =>
@@ -72,8 +72,8 @@ export async function recordSentEmails(
       item.html,
       item.plain_text,
       now,
-      now
-    )
+      now,
+    ),
   );
 
   await db.batch(batch);
@@ -83,12 +83,10 @@ export async function recordSentEmails(
 /** Process pending emails from the queue (called by Cron Trigger) */
 export async function processQueue(
   db: D1Database,
-  apiKey?: string
+  apiKey?: string,
 ): Promise<{ sent: number; failed: number }> {
   const pending = await db
-    .prepare(
-      `SELECT * FROM email_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT ?`
-    )
+    .prepare(`SELECT * FROM email_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT ?`)
     .bind(BATCH_SIZE)
     .all<EmailQueueItem>();
 
@@ -111,18 +109,14 @@ export async function processQueue(
 
     if (result.success) {
       await db
-        .prepare(
-          `UPDATE email_queue SET status = 'sent', sent_at = ? WHERE id = ?`
-        )
+        .prepare(`UPDATE email_queue SET status = 'sent', sent_at = ? WHERE id = ?`)
         .bind(now, item.id)
         .run();
       sent++;
     } else {
       await db
-        .prepare(
-          `UPDATE email_queue SET status = 'failed', error = ? WHERE id = ?`
-        )
-        .bind(result.error ?? "Unknown error", item.id)
+        .prepare(`UPDATE email_queue SET status = 'failed', error = ? WHERE id = ?`)
+        .bind(result.error ?? 'Unknown error', item.id)
         .run();
       failed++;
     }
@@ -134,20 +128,20 @@ export async function processQueue(
 /** Get queue stats for a mailing */
 export async function getQueueStats(
   db: D1Database,
-  mailingId: number
+  mailingId: number,
 ): Promise<{ pending: number; sent: number; failed: number; total: number }> {
   const result = await db
     .prepare(
-      `SELECT status, COUNT(*) as count FROM email_queue WHERE mailing_id = ? GROUP BY status`
+      `SELECT status, COUNT(*) as count FROM email_queue WHERE mailing_id = ? GROUP BY status`,
     )
     .bind(mailingId)
     .all<{ status: string; count: number }>();
 
   const stats = { pending: 0, sent: 0, failed: 0, total: 0 };
   for (const row of result.results) {
-    if (row.status === "pending") stats.pending = row.count;
-    else if (row.status === "sent") stats.sent = row.count;
-    else if (row.status === "failed") stats.failed = row.count;
+    if (row.status === 'pending') stats.pending = row.count;
+    else if (row.status === 'sent') stats.sent = row.count;
+    else if (row.status === 'failed') stats.failed = row.count;
     stats.total += row.count;
   }
   return stats;

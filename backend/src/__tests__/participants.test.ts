@@ -1,10 +1,6 @@
-import {
-  env,
-  createExecutionContext,
-  waitOnExecutionContext,
-} from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import app from "../index";
+import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
+import { describe, it, expect, beforeAll } from 'vitest';
+import app from '../index';
 
 const EVENTS_SQL = `CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, emoji TEXT, slug TEXT NOT NULL UNIQUE, date TEXT NOT NULL, time TEXT NOT NULL, end_date TEXT, end_time TEXT, location TEXT NOT NULL, description TEXT, organizer TEXT NOT NULL, organizer_email TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'planning', type TEXT NOT NULL DEFAULT 'other', max_participants INTEGER, overbooking_limit INTEGER NOT NULL DEFAULT 0, visibility TEXT NOT NULL DEFAULT 'private', sender_mailbox TEXT, gdpr_consent_text TEXT, image_url TEXT, website_template TEXT, website_data TEXT, website_published INTEGER NOT NULL DEFAULT 0, created_by TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), deleted_at TEXT);`;
 
@@ -16,7 +12,7 @@ const PERMISSIONS_SQL = `CREATE TABLE IF NOT EXISTS event_permissions (id INTEGE
 
 const ACTIVITIES_SQL = `CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id INTEGER NOT NULL REFERENCES events(id), type TEXT NOT NULL, description TEXT NOT NULL, metadata TEXT, created_by TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')));`;
 
-const TEST_TOKEN = "test-auth-token-participants";
+const TEST_TOKEN = 'test-auth-token-participants';
 
 beforeAll(async () => {
   await env.DB.exec(EVENTS_SQL);
@@ -24,16 +20,14 @@ beforeAll(async () => {
   await env.DB.exec(USERS_SQL);
   await env.DB.exec(PERMISSIONS_SQL);
   await env.DB.exec(ACTIVITIES_SQL);
-  await env.DB.exec(`INSERT OR IGNORE INTO users (email, name, token) VALUES ('test@consid.se', 'Test User', '${TEST_TOKEN}')`);
+  await env.DB.exec(
+    `INSERT OR IGNORE INTO users (email, name, token) VALUES ('test@consid.se', 'Test User', '${TEST_TOKEN}')`,
+  );
 });
 
-async function request(
-  method: string,
-  path: string,
-  body?: unknown
-): Promise<Response> {
-  const headers: Record<string, string> = { "X-Auth-Token": TEST_TOKEN };
-  if (body) headers["Content-Type"] = "application/json";
+async function request(method: string, path: string, body?: unknown): Promise<Response> {
+  const headers: Record<string, string> = { 'X-Auth-Token': TEST_TOKEN };
+  if (body) headers['Content-Type'] = 'application/json';
   const req = new Request(`http://localhost/stage${path}`, {
     method,
     headers,
@@ -46,28 +40,28 @@ async function request(
 }
 
 async function createTestEvent(): Promise<number> {
-  const res = await request("POST", "/api/events", {
+  const res = await request('POST', '/api/events', {
     name: `Participant Test ${Date.now()}`,
-    date: "2026-09-01",
-    time: "14:00",
-    location: "Göteborg",
-    organizer: "Test",
-    organizer_email: "test@consid.se",
+    date: '2026-09-01',
+    time: '14:00',
+    location: 'Göteborg',
+    organizer: 'Test',
+    organizer_email: 'test@consid.se',
     slug: `participant-test-${Date.now()}`,
   });
   const event = (await res.json()) as { id: number };
   return event.id;
 }
 
-describe("Participants CRUD API", () => {
-  it("POST /api/events/:id/participants creates a participant and returns 201", async () => {
+describe('Participants CRUD API', () => {
+  it('POST /api/events/:id/participants creates a participant and returns 201', async () => {
     const eventId = await createTestEvent();
 
-    const res = await request("POST", `/api/events/${eventId}/participants`, {
-      name: "Anna Svensson",
-      email: "anna@consid.se",
-      company: "Consid AB",
-      category: "internal",
+    const res = await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'Anna Svensson',
+      email: 'anna@consid.se',
+      company: 'Consid AB',
+      category: 'internal',
     });
     expect(res.status).toBe(201);
 
@@ -81,73 +75,73 @@ describe("Participants CRUD API", () => {
       cancellation_token: string;
     };
     expect(participant.id).toBeGreaterThan(0);
-    expect(participant.name).toBe("Anna Svensson");
-    expect(participant.email).toBe("anna@consid.se");
-    expect(participant.company).toBe("Consid AB");
-    expect(participant.category).toBe("internal");
-    expect(participant.status).toBe("invited");
+    expect(participant.name).toBe('Anna Svensson');
+    expect(participant.email).toBe('anna@consid.se');
+    expect(participant.company).toBe('Consid AB');
+    expect(participant.category).toBe('internal');
+    expect(participant.status).toBe('invited');
     expect(participant.cancellation_token).toBeTruthy();
   });
 
-  it("GET /api/events/:id/participants lists participants for an event", async () => {
+  it('GET /api/events/:id/participants lists participants for an event', async () => {
     const eventId = await createTestEvent();
 
     // Add two participants
-    await request("POST", `/api/events/${eventId}/participants`, {
-      name: "Person A",
-      email: "a@consid.se",
+    await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'Person A',
+      email: 'a@consid.se',
     });
-    await request("POST", `/api/events/${eventId}/participants`, {
-      name: "Person B",
-      email: "b@consid.se",
+    await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'Person B',
+      email: 'b@consid.se',
     });
 
-    const res = await request("GET", `/api/events/${eventId}/participants`);
+    const res = await request('GET', `/api/events/${eventId}/participants`);
     expect(res.status).toBe(200);
 
     const participants = (await res.json()) as { name: string }[];
     expect(participants.length).toBe(2);
-    expect(participants[0].name).toBe("Person A");
-    expect(participants[1].name).toBe("Person B");
+    expect(participants[0].name).toBe('Person A');
+    expect(participants[1].name).toBe('Person B');
   });
 
-  it("POST /api/events/:id/participants returns 400 for invalid data", async () => {
+  it('POST /api/events/:id/participants returns 400 for invalid data', async () => {
     const eventId = await createTestEvent();
 
-    const res = await request("POST", `/api/events/${eventId}/participants`, {
-      name: "",
-      email: "invalid-email",
+    const res = await request('POST', `/api/events/${eventId}/participants`, {
+      name: '',
+      email: 'invalid-email',
     });
     expect(res.status).toBe(400);
 
     const body = (await res.json()) as { error: string; details: string[] };
-    expect(body.error).toBe("Valideringsfel");
+    expect(body.error).toBe('Valideringsfel');
     expect(body.details.length).toBeGreaterThan(0);
   });
 
-  it("DELETE /api/events/:id/participants/:id removes a participant", async () => {
+  it('DELETE /api/events/:id/participants/:id removes a participant', async () => {
     const eventId = await createTestEvent();
 
     // Create participant
-    const createRes = await request("POST", `/api/events/${eventId}/participants`, {
-      name: "To Delete",
-      email: "delete@consid.se",
+    const createRes = await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'To Delete',
+      email: 'delete@consid.se',
     });
     const created = (await createRes.json()) as { id: number };
 
     // Delete
-    const res = await request("DELETE", `/api/events/${eventId}/participants/${created.id}`);
+    const res = await request('DELETE', `/api/events/${eventId}/participants/${created.id}`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean };
     expect(body.ok).toBe(true);
 
     // Verify gone from list
-    const listRes = await request("GET", `/api/events/${eventId}/participants`);
+    const listRes = await request('GET', `/api/events/${eventId}/participants`);
     const list = (await listRes.json()) as { id: number }[];
     expect(list.find((p) => p.id === created.id)).toBeUndefined();
   });
 
-  it("POST /api/events/:id/participants/import imports CSV with headers", async () => {
+  it('POST /api/events/:id/participants/import imports CSV with headers', async () => {
     const eventId = await createTestEvent();
 
     const csv = `namn,email,företag,kategori
@@ -156,11 +150,11 @@ Erik Import,erik-import-${Date.now()}@test.se,IKEA,partner
 Lisa Import,lisa-import-${Date.now()}@test.se,,`;
 
     const formData = new FormData();
-    formData.append("file", new File([csv], "test.csv", { type: "text/csv" }));
+    formData.append('file', new File([csv], 'test.csv', { type: 'text/csv' }));
 
     const req = new Request(`http://localhost/stage/api/events/${eventId}/participants/import`, {
-      method: "POST",
-      headers: { "X-Auth-Token": TEST_TOKEN },
+      method: 'POST',
+      headers: { 'X-Auth-Token': TEST_TOKEN },
       body: formData,
     });
     const ctx = createExecutionContext();
@@ -178,44 +172,44 @@ Lisa Import,lisa-import-${Date.now()}@test.se,,`;
     expect(result.skipped).toBe(0);
 
     // Verify participants exist
-    const listRes = await request("GET", `/api/events/${eventId}/participants`);
+    const listRes = await request('GET', `/api/events/${eventId}/participants`);
     const participants = (await listRes.json()) as { name: string; email: string }[];
     expect(participants.length).toBe(3);
   });
 
-  it("GET /api/events/:id/participants/export returns CSV with header and data", async () => {
+  it('GET /api/events/:id/participants/export returns CSV with header and data', async () => {
     const eventId = await createTestEvent();
 
     // Add participants
-    await request("POST", `/api/events/${eventId}/participants`, {
-      name: "Export Test",
+    await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'Export Test',
       email: `export-${Date.now()}@test.se`,
-      company: "Consid AB",
-      category: "internal",
+      company: 'Consid AB',
+      category: 'internal',
     });
 
-    const res = await request("GET", `/api/events/${eventId}/participants/export`);
+    const res = await request('GET', `/api/events/${eventId}/participants/export`);
     expect(res.status).toBe(200);
-    expect(res.headers.get("Content-Type")).toContain("text/csv");
-    expect(res.headers.get("Content-Disposition")).toContain("deltagare-event-");
+    expect(res.headers.get('Content-Type')).toContain('text/csv');
+    expect(res.headers.get('Content-Disposition')).toContain('deltagare-event-');
 
     const csv = await res.text();
-    const lines = csv.split("\n");
-    expect(lines[0]).toBe("Namn,E-post,Företag,Kategori,Status");
+    const lines = csv.split('\n');
+    expect(lines[0]).toBe('Namn,E-post,Företag,Kategori,Status');
     expect(lines.length).toBeGreaterThanOrEqual(2);
-    expect(lines[1]).toContain("Export Test");
-    expect(lines[1]).toContain("Consid AB");
+    expect(lines[1]).toContain('Export Test');
+    expect(lines[1]).toContain('Consid AB');
   });
 
-  it("POST /api/events/:id/participants creates participant with dietary_notes and plus_one", async () => {
+  it('POST /api/events/:id/participants creates participant with dietary_notes and plus_one', async () => {
     const eventId = await createTestEvent();
 
-    const res = await request("POST", `/api/events/${eventId}/participants`, {
-      name: "Diet Test",
+    const res = await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'Diet Test',
       email: `diet-${Date.now()}@consid.se`,
-      dietary_notes: "Vegetarian, nötallergi",
-      plus_one_name: "Partner Person",
-      plus_one_email: "partner@example.com",
+      dietary_notes: 'Vegetarian, nötallergi',
+      plus_one_name: 'Partner Person',
+      plus_one_email: 'partner@example.com',
     });
     expect(res.status).toBe(201);
 
@@ -224,17 +218,17 @@ Lisa Import,lisa-import-${Date.now()}@test.se,,`;
       plus_one_name: string | null;
       plus_one_email: string | null;
     };
-    expect(p.dietary_notes).toBe("Vegetarian, nötallergi");
-    expect(p.plus_one_name).toBe("Partner Person");
-    expect(p.plus_one_email).toBe("partner@example.com");
+    expect(p.dietary_notes).toBe('Vegetarian, nötallergi');
+    expect(p.plus_one_name).toBe('Partner Person');
+    expect(p.plus_one_email).toBe('partner@example.com');
   });
 
-  it("RSVP respond saves dietary_notes and plus_one fields", async () => {
+  it('RSVP respond saves dietary_notes and plus_one fields', async () => {
     const eventId = await createTestEvent();
 
     // Create participant
-    const createRes = await request("POST", `/api/events/${eventId}/participants`, {
-      name: "RSVP Diet Test",
+    const createRes = await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'RSVP Diet Test',
       email: `rsvp-diet-${Date.now()}@consid.se`,
     });
     const created = (await createRes.json()) as { cancellation_token: string };
@@ -243,15 +237,15 @@ Lisa Import,lisa-import-${Date.now()}@test.se,,`;
     const rsvpReq = new Request(
       `http://localhost/stage/api/rsvp/${created.cancellation_token}/respond`,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: "attending",
-          dietary_notes: "Glutenfri",
-          plus_one_name: "Guest Name",
-          plus_one_email: "guest@example.com",
+          status: 'attending',
+          dietary_notes: 'Glutenfri',
+          plus_one_name: 'Guest Name',
+          plus_one_email: 'guest@example.com',
         }),
-      }
+      },
     );
     const ctx = createExecutionContext();
     const rsvpRes = await app.fetch(rsvpReq, env, ctx);
@@ -259,27 +253,27 @@ Lisa Import,lisa-import-${Date.now()}@test.se,,`;
     expect(rsvpRes.status).toBe(200);
 
     // Verify fields saved via GET /participants
-    const listRes = await request("GET", `/api/events/${eventId}/participants`);
+    const listRes = await request('GET', `/api/events/${eventId}/participants`);
     const participants = (await listRes.json()) as {
       name: string;
       dietary_notes: string | null;
       plus_one_name: string | null;
       plus_one_email: string | null;
     }[];
-    const p = participants.find((pp) => pp.name === "RSVP Diet Test");
+    const p = participants.find((pp) => pp.name === 'RSVP Diet Test');
     expect(p).toBeDefined();
-    expect(p!.dietary_notes).toBe("Glutenfri");
-    expect(p!.plus_one_name).toBe("Guest Name");
-    expect(p!.plus_one_email).toBe("guest@example.com");
+    expect(p!.dietary_notes).toBe('Glutenfri');
+    expect(p!.plus_one_name).toBe('Guest Name');
+    expect(p!.plus_one_email).toBe('guest@example.com');
   });
 
-  it("POST /api/events/:id/participants/import skips duplicates and invalid emails", async () => {
+  it('POST /api/events/:id/participants/import skips duplicates and invalid emails', async () => {
     const eventId = await createTestEvent();
 
     const ts = Date.now();
     // Add existing participant
-    await request("POST", `/api/events/${eventId}/participants`, {
-      name: "Existing",
+    await request('POST', `/api/events/${eventId}/participants`, {
+      name: 'Existing',
       email: `existing-${ts}@test.se`,
     });
 
@@ -291,11 +285,11 @@ No Email,,Test
 Duplicate,valid-${ts}@test.se,Test`;
 
     const formData = new FormData();
-    formData.append("file", new File([csv], "test.csv", { type: "text/csv" }));
+    formData.append('file', new File([csv], 'test.csv', { type: 'text/csv' }));
 
     const req = new Request(`http://localhost/stage/api/events/${eventId}/participants/import`, {
-      method: "POST",
-      headers: { "X-Auth-Token": TEST_TOKEN },
+      method: 'POST',
+      headers: { 'X-Auth-Token': TEST_TOKEN },
       body: formData,
     });
     const ctx = createExecutionContext();

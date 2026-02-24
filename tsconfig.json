@@ -13,9 +13,5 @@
     "declarationMap": true,
     "composite": true
   },
-  "references": [
-    { "path": "./packages/shared" },
-    { "path": "./backend" },
-    { "path": "./frontend" }
-  ]
+  "references": [{ "path": "./packages/shared" }, { "path": "./backend" }, { "path": "./frontend" }]
 }

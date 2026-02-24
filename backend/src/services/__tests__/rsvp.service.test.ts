@@ -1,8 +1,8 @@
-import { env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { RsvpService } from "../rsvp.service";
-import { EventService } from "../event.service";
-import { ParticipantService } from "../participant.service";
+import { env } from 'cloudflare:test';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { RsvpService } from '../rsvp.service';
+import { EventService } from '../event.service';
+import { ParticipantService } from '../participant.service';
 
 const EVENTS_SQL = `CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, emoji TEXT, slug TEXT NOT NULL UNIQUE, date TEXT NOT NULL, time TEXT NOT NULL, end_date TEXT, end_time TEXT, location TEXT NOT NULL, description TEXT, organizer TEXT NOT NULL, organizer_email TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'planning', type TEXT NOT NULL DEFAULT 'other', max_participants INTEGER, overbooking_limit INTEGER NOT NULL DEFAULT 0, visibility TEXT NOT NULL DEFAULT 'private', sender_mailbox TEXT, gdpr_consent_text TEXT, image_url TEXT, website_template TEXT, website_data TEXT, website_published INTEGER NOT NULL DEFAULT 0, created_by TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), deleted_at TEXT);`;
 
@@ -19,12 +19,12 @@ async function createTestEvent(maxParticipants?: number): Promise<number> {
   const event = await EventService.create(env.DB, {
     name: `RSVP Test ${ts()}`,
     slug: `rsvp-${ts()}`,
-    date: "2026-09-01",
-    time: "14:00",
-    location: "Göteborg",
-    organizer: "Test",
-    organizer_email: "test@consid.se",
-    created_by: "test@consid.se",
+    date: '2026-09-01',
+    time: '14:00',
+    location: 'Göteborg',
+    organizer: 'Test',
+    organizer_email: 'test@consid.se',
+    created_by: 'test@consid.se',
     max_participants: maxParticipants ?? null,
     overbooking_limit: 0,
   });
@@ -33,20 +33,24 @@ async function createTestEvent(maxParticipants?: number): Promise<number> {
 
 async function addParticipant(
   eventId: number,
-  overrides: { name?: string; email?: string; status?: "invited" | "attending" | "declined" | "waitlisted" | "cancelled" } = {}
+  overrides: {
+    name?: string;
+    email?: string;
+    status?: 'invited' | 'attending' | 'declined' | 'waitlisted' | 'cancelled';
+  } = {},
 ): Promise<{ id: number; token: string }> {
   const t = ts();
   const p = await ParticipantService.create(env.DB, eventId, {
     name: overrides.name ?? `Person ${t}`,
     email: overrides.email ?? `p-${t}@test.se`,
-    status: overrides.status ?? "invited",
+    status: overrides.status ?? 'invited',
   });
   return { id: p.id, token: p.cancellation_token };
 }
 
-describe("RsvpService", () => {
-  describe("getByToken", () => {
-    it("returns participant + event for valid token", async () => {
+describe('RsvpService', () => {
+  describe('getByToken', () => {
+    it('returns participant + event for valid token', async () => {
       const eventId = await createTestEvent();
       const { token } = await addParticipant(eventId);
 
@@ -57,110 +61,110 @@ describe("RsvpService", () => {
       expect(result!.event.id).toBe(eventId);
     });
 
-    it("returns null for invalid token", async () => {
-      const result = await RsvpService.getByToken(env.DB, "nonexistent-token");
+    it('returns null for invalid token', async () => {
+      const result = await RsvpService.getByToken(env.DB, 'nonexistent-token');
       expect(result).toBeNull();
     });
   });
 
-  describe("respond", () => {
-    it("sets status to attending", async () => {
+  describe('respond', () => {
+    it('sets status to attending', async () => {
       const eventId = await createTestEvent();
       const { token } = await addParticipant(eventId);
 
-      const result = await RsvpService.respond(env.DB, token, "attending");
+      const result = await RsvpService.respond(env.DB, token, 'attending');
 
       expect(result.ok).toBe(true);
-      expect(result.status).toBe("attending");
+      expect(result.status).toBe('attending');
     });
 
-    it("sets status to declined", async () => {
+    it('sets status to declined', async () => {
       const eventId = await createTestEvent();
       const { token } = await addParticipant(eventId);
 
-      const result = await RsvpService.respond(env.DB, token, "declined");
+      const result = await RsvpService.respond(env.DB, token, 'declined');
 
       expect(result.ok).toBe(true);
-      expect(result.status).toBe("declined");
+      expect(result.status).toBe('declined');
     });
 
-    it("saves dietary_notes and plus_one fields", async () => {
+    it('saves dietary_notes and plus_one fields', async () => {
       const eventId = await createTestEvent();
       const { token, id } = await addParticipant(eventId);
 
-      await RsvpService.respond(env.DB, token, "attending", {
-        dietary_notes: "Vegetarian",
-        plus_one_name: "Lisa Svensson",
-        plus_one_email: "lisa@test.se",
+      await RsvpService.respond(env.DB, token, 'attending', {
+        dietary_notes: 'Vegetarian',
+        plus_one_name: 'Lisa Svensson',
+        plus_one_email: 'lisa@test.se',
       });
 
       const p = await ParticipantService.getById(env.DB, id);
-      expect(p?.dietary_notes).toBe("Vegetarian");
-      expect(p?.plus_one_name).toBe("Lisa Svensson");
-      expect(p?.plus_one_email).toBe("lisa@test.se");
+      expect(p?.dietary_notes).toBe('Vegetarian');
+      expect(p?.plus_one_name).toBe('Lisa Svensson');
+      expect(p?.plus_one_email).toBe('lisa@test.se');
     });
 
-    it("auto-waitlists when event is at capacity", async () => {
+    it('auto-waitlists when event is at capacity', async () => {
       const eventId = await createTestEvent(1);
       // First person attending fills the event
-      await addParticipant(eventId, { status: "attending" });
+      await addParticipant(eventId, { status: 'attending' });
 
       // Second person tries to attend
       const { token } = await addParticipant(eventId);
-      const result = await RsvpService.respond(env.DB, token, "attending");
+      const result = await RsvpService.respond(env.DB, token, 'attending');
 
       expect(result.ok).toBe(true);
-      expect(result.status).toBe("waitlisted");
+      expect(result.status).toBe('waitlisted');
       expect(result.waitlisted).toBe(true);
     });
 
-    it("returns error for invalid token", async () => {
-      const result = await RsvpService.respond(env.DB, "bad-token", "attending");
+    it('returns error for invalid token', async () => {
+      const result = await RsvpService.respond(env.DB, 'bad-token', 'attending');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toBe("Ogiltig eller utgången länk");
+      expect(result.error).toBe('Ogiltig eller utgången länk');
     });
   });
 
-  describe("cancel", () => {
-    it("cancels an attending participant", async () => {
+  describe('cancel', () => {
+    it('cancels an attending participant', async () => {
       const eventId = await createTestEvent();
-      const { token } = await addParticipant(eventId, { status: "attending" });
+      const { token } = await addParticipant(eventId, { status: 'attending' });
 
       const result = await RsvpService.cancel(env.DB, token);
 
       expect(result.ok).toBe(true);
-      expect(result.status).toBe("cancelled");
+      expect(result.status).toBe('cancelled');
     });
 
-    it("promotes next waitlisted when attending cancels", async () => {
+    it('promotes next waitlisted when attending cancels', async () => {
       const eventId = await createTestEvent(1);
       // Fill the event
       const { token: attendingToken } = await addParticipant(eventId, {
-        status: "attending",
+        status: 'attending',
       });
 
       // Waitlist someone via RSVP
       const { token: waitToken, id: waitId } = await addParticipant(eventId);
-      await RsvpService.respond(env.DB, waitToken, "attending");
+      await RsvpService.respond(env.DB, waitToken, 'attending');
 
       // Verify waitlisted
       const before = await ParticipantService.getById(env.DB, waitId);
-      expect(before?.status).toBe("waitlisted");
+      expect(before?.status).toBe('waitlisted');
 
       // Cancel the attending person
       await RsvpService.cancel(env.DB, attendingToken);
 
       // Waitlisted person should now be attending
       const after = await ParticipantService.getById(env.DB, waitId);
-      expect(after?.status).toBe("attending");
+      expect(after?.status).toBe('attending');
     });
 
-    it("returns error for invalid token", async () => {
-      const result = await RsvpService.cancel(env.DB, "bad-token");
+    it('returns error for invalid token', async () => {
+      const result = await RsvpService.cancel(env.DB, 'bad-token');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toBe("Ogiltig eller utgången länk");
+      expect(result.error).toBe('Ogiltig eller utgången länk');
     });
   });
 });

@@ -10,7 +10,10 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Inställt',
 };
 
-export function DashboardEventList({ dashboard, allEvents }: {
+export function DashboardEventList({
+  dashboard,
+  allEvents,
+}: {
   dashboard: AdminDashboardData;
   allEvents: EventWithCount[];
 }) {
@@ -55,10 +58,12 @@ export function DashboardEventList({ dashboard, allEvents }: {
                       )}
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={{
-                        ...styles.daysBadge,
-                        ...(event.days_until <= 7 ? styles.daysBadgeUrgent : {}),
-                      }}>
+                      <span
+                        style={{
+                          ...styles.daysBadge,
+                          ...(event.days_until <= 7 ? styles.daysBadgeUrgent : {}),
+                        }}
+                      >
                         {event.days_until === 0 ? 'Idag' : `${event.days_until} d`}
                       </span>
                     </td>
@@ -96,10 +101,12 @@ export function DashboardEventList({ dashboard, allEvents }: {
                     <td style={styles.td}>{m.event_name}</td>
                     <td style={styles.td}>{m.subject}</td>
                     <td style={styles.td}>
-                      <span style={{
-                        ...styles.statusBadge,
-                        ...(m.status === 'sent' ? styles.statusSent : styles.statusDraft),
-                      }}>
+                      <span
+                        style={{
+                          ...styles.statusBadge,
+                          ...(m.status === 'sent' ? styles.statusSent : styles.statusDraft),
+                        }}
+                      >
                         {m.status === 'sent' ? 'Skickat' : 'Utkast'}
                       </span>
                     </td>
@@ -147,19 +154,22 @@ export function DashboardEventList({ dashboard, allEvents }: {
                     <td style={styles.td}>{event.date}</td>
                     <td style={styles.td}>{event.location}</td>
                     <td style={styles.td}>
-                      <span style={{
-                        ...styles.statusBadge,
-                        ...(event.status === 'upcoming' ? styles.statusUpcoming :
-                          event.status === 'completed' ? styles.statusCompleted :
-                          event.status === 'cancelled' ? styles.statusCancelled :
-                          styles.statusDraft),
-                      }}>
+                      <span
+                        style={{
+                          ...styles.statusBadge,
+                          ...(event.status === 'upcoming'
+                            ? styles.statusUpcoming
+                            : event.status === 'completed'
+                              ? styles.statusCompleted
+                              : event.status === 'cancelled'
+                                ? styles.statusCancelled
+                                : styles.statusDraft),
+                        }}
+                      >
                         {statusLabels[event.status] || event.status}
                       </span>
                     </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      {event.participant_count}
-                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>{event.participant_count}</td>
                   </tr>
                 ))}
               </tbody>

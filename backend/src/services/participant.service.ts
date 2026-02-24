@@ -1,4 +1,4 @@
-import type { Participant, CreateParticipantInput, UpdateParticipantInput } from "@stage/shared";
+import type { Participant, CreateParticipantInput, UpdateParticipantInput } from '@stage/shared';
 import {
   listParticipants,
   getParticipantById,
@@ -6,8 +6,8 @@ import {
   updateParticipant,
   deleteParticipant,
   getEventById,
-} from "../db/queries";
-import { WaitlistService } from "./waitlist.service";
+} from '../db/queries';
+import { WaitlistService } from './waitlist.service';
 
 /* ---- CSV parsing ---- */
 
@@ -27,21 +27,22 @@ export function parseCSV(text: string): {
 
   const headerLine = lines[0];
   const headers = parseCSVLine(headerLine).map((h) =>
-    h.toLowerCase().trim().replace(/^["']|["']$/g, "")
+    h
+      .toLowerCase()
+      .trim()
+      .replace(/^["']|["']$/g, ''),
   );
 
   const nameIdx = headers.findIndex((h) =>
-    ["namn", "name", "förnamn", "fullname", "full name"].includes(h)
+    ['namn', 'name', 'förnamn', 'fullname', 'full name'].includes(h),
   );
   const emailIdx = headers.findIndex((h) =>
-    ["email", "e-post", "epost", "mail", "e-mail"].includes(h)
+    ['email', 'e-post', 'epost', 'mail', 'e-mail'].includes(h),
   );
   const companyIdx = headers.findIndex((h) =>
-    ["företag", "company", "firma", "organisation", "org"].includes(h)
+    ['företag', 'company', 'firma', 'organisation', 'org'].includes(h),
   );
-  const categoryIdx = headers.findIndex((h) =>
-    ["kategori", "category", "typ", "type"].includes(h)
-  );
+  const categoryIdx = headers.findIndex((h) => ['kategori', 'category', 'typ', 'type'].includes(h));
 
   if (nameIdx === -1 && emailIdx === -1) {
     return parsePositional(lines);
@@ -55,10 +56,10 @@ export function parseCSV(text: string): {
     if (fields.every((f) => !f.trim())) continue;
 
     const row: CSVRow = {
-      name: nameIdx >= 0 ? (fields[nameIdx] || "").trim() : "",
-      email: emailIdx >= 0 ? (fields[emailIdx] || "").trim() : "",
-      company: companyIdx >= 0 ? (fields[companyIdx] || "").trim() : undefined,
-      category: categoryIdx >= 0 ? mapCategory((fields[categoryIdx] || "").trim()) : undefined,
+      name: nameIdx >= 0 ? (fields[nameIdx] || '').trim() : '',
+      email: emailIdx >= 0 ? (fields[emailIdx] || '').trim() : '',
+      company: companyIdx >= 0 ? (fields[companyIdx] || '').trim() : undefined,
+      category: categoryIdx >= 0 ? mapCategory((fields[categoryIdx] || '').trim()) : undefined,
     };
 
     rows.push({ data: row, rowNumber: i + 1 });
@@ -79,7 +80,7 @@ function parsePositional(lines: string[]): {
     if (fields.every((f) => !f.trim())) continue;
 
     if (fields.length < 2) {
-      parseErrors.push({ row: i + 1, reason: "Mindre än 2 kolumner" });
+      parseErrors.push({ row: i + 1, reason: 'Mindre än 2 kolumner' });
       continue;
     }
 
@@ -99,9 +100,9 @@ function parsePositional(lines: string[]): {
 
 function parseCSVLine(line: string): string[] {
   const fields: string[] = [];
-  let current = "";
+  let current = '';
   let inQuotes = false;
-  const sep = line.includes(";") && !line.includes(",") ? ";" : ",";
+  const sep = line.includes(';') && !line.includes(',') ? ';' : ',';
 
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
@@ -119,7 +120,7 @@ function parseCSVLine(line: string): string[] {
         inQuotes = true;
       } else if (ch === sep) {
         fields.push(current);
-        current = "";
+        current = '';
       } else {
         current += ch;
       }
@@ -132,15 +133,15 @@ function parseCSVLine(line: string): string[] {
 function mapCategory(value: string): string | undefined {
   const lower = value.toLowerCase();
   const map: Record<string, string> = {
-    intern: "internal",
-    internal: "internal",
-    "offentlig sektor": "public_sector",
-    public_sector: "public_sector",
-    "privat sektor": "private_sector",
-    private_sector: "private_sector",
-    partner: "partner",
-    övrig: "other",
-    other: "other",
+    intern: 'internal',
+    internal: 'internal',
+    'offentlig sektor': 'public_sector',
+    public_sector: 'public_sector',
+    'privat sektor': 'private_sector',
+    private_sector: 'private_sector',
+    partner: 'partner',
+    övrig: 'other',
+    other: 'other',
   };
   return map[lower] || undefined;
 }
@@ -148,7 +149,7 @@ function mapCategory(value: string): string | undefined {
 /* ---- CSV helpers ---- */
 
 function escapeCSVField(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
@@ -168,10 +169,10 @@ export const ParticipantService = {
   async create(
     db: D1Database,
     eventId: number,
-    input: CreateParticipantInput
+    input: CreateParticipantInput,
   ): Promise<Participant> {
     // Auto-waitlist: if status would be "attending" and event is at capacity
-    if (!input.status || input.status === "attending") {
+    if (!input.status || input.status === 'attending') {
       const needsWaitlist = await WaitlistService.shouldWaitlist(db, eventId);
       if (needsWaitlist) {
         return WaitlistService.createWaitlisted(db, eventId, input);
@@ -185,7 +186,7 @@ export const ParticipantService = {
     db: D1Database,
     eventId: number,
     id: number,
-    input: UpdateParticipantInput
+    input: UpdateParticipantInput,
   ): Promise<Participant | null> {
     const before = await getParticipantById(db, id);
     if (!before) return null;
@@ -194,7 +195,7 @@ export const ParticipantService = {
     if (!participant) return null;
 
     // If status changed from "attending" to something else, promote next from waitlist
-    if (before.status === "attending" && input.status && input.status !== "attending") {
+    if (before.status === 'attending' && input.status && input.status !== 'attending') {
       await WaitlistService.promoteNext(db, eventId);
     }
 
@@ -203,7 +204,7 @@ export const ParticipantService = {
 
   async delete(db: D1Database, eventId: number, id: number): Promise<boolean> {
     const before = await getParticipantById(db, id);
-    const wasAttending = before?.status === "attending";
+    const wasAttending = before?.status === 'attending';
 
     const deleted = await deleteParticipant(db, id);
     if (!deleted) return false;
@@ -217,22 +218,22 @@ export const ParticipantService = {
 
   async exportCSV(db: D1Database, eventId: number): Promise<string> {
     const participants = await listParticipants(db, eventId);
-    const header = "Namn,E-post,Företag,Kategori,Status";
+    const header = 'Namn,E-post,Företag,Kategori,Status';
     const rows = participants.map((p) => {
       const name = escapeCSVField(p.name);
       const email = escapeCSVField(p.email);
-      const company = escapeCSVField(p.company ?? "");
+      const company = escapeCSVField(p.company ?? '');
       const category = escapeCSVField(p.category);
       const status = escapeCSVField(p.status);
       return `${name},${email},${company},${category},${status}`;
     });
-    return [header, ...rows].join("\n");
+    return [header, ...rows].join('\n');
   },
 
   async importCSV(
     db: D1Database,
     eventId: number,
-    csvText: string
+    csvText: string,
   ): Promise<{
     imported: number;
     skipped: number;
@@ -242,7 +243,7 @@ export const ParticipantService = {
     const { rows, parseErrors } = parseCSV(csvText);
 
     if (rows.length === 0 && parseErrors.length === 0) {
-      throw new Error("CSV-filen är tom");
+      throw new Error('CSV-filen är tom');
     }
 
     // Get existing participants to check for duplicate emails
@@ -255,11 +256,11 @@ export const ParticipantService = {
 
     for (const { data, rowNumber } of rows) {
       if (!data.name?.trim()) {
-        skipped.push({ row: rowNumber, reason: "Namn saknas" });
+        skipped.push({ row: rowNumber, reason: 'Namn saknas' });
         continue;
       }
       if (!data.email?.trim()) {
-        skipped.push({ row: rowNumber, reason: "E-post saknas" });
+        skipped.push({ row: rowNumber, reason: 'E-post saknas' });
         continue;
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
@@ -281,10 +282,18 @@ export const ParticipantService = {
 
       seenEmails.add(emailLower);
 
-      const validCategories = ["internal", "public_sector", "private_sector", "partner", "other"] as const;
-      const category = (data.category && validCategories.includes(data.category as typeof validCategories[number])
-        ? data.category
-        : "other") as CreateParticipantInput["category"];
+      const validCategories = [
+        'internal',
+        'public_sector',
+        'private_sector',
+        'partner',
+        'other',
+      ] as const;
+      const category = (
+        data.category && validCategories.includes(data.category as (typeof validCategories)[number])
+          ? data.category
+          : 'other'
+      ) as CreateParticipantInput['category'];
 
       validRows.push({
         name: data.name.trim(),
@@ -298,23 +307,24 @@ export const ParticipantService = {
     const event = await getEventById(db, eventId);
     let currentAttending = await WaitlistService.getAttendingCount(db, eventId);
     let maxQueuePos = await WaitlistService.getMaxQueuePosition(db, eventId);
-    const capacity = event && event.max_participants !== null
-      ? event.max_participants + (event.overbooking_limit ?? 0)
-      : null;
+    const capacity =
+      event && event.max_participants !== null
+        ? event.max_participants + (event.overbooking_limit ?? 0)
+        : null;
 
     let created = 0;
     for (const input of validRows) {
-      const status = input.status ?? "invited";
-      if (status === "attending" && capacity !== null && currentAttending >= capacity) {
-        input.status = "waitlisted";
+      const status = input.status ?? 'invited';
+      if (status === 'attending' && capacity !== null && currentAttending >= capacity) {
+        input.status = 'waitlisted';
       }
 
       const participant = await createParticipant(db, eventId, input);
 
-      if (input.status === "waitlisted" && status === "attending") {
+      if (input.status === 'waitlisted' && status === 'attending') {
         maxQueuePos++;
         await updateParticipant(db, participant.id, { queue_position: maxQueuePos });
-      } else if (participant.status === "attending") {
+      } else if (participant.status === 'attending') {
         currentAttending++;
       }
 

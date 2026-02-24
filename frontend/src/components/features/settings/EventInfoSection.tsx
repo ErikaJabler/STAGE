@@ -63,15 +63,23 @@ export function EventInfoSection({ event }: Props) {
       <div style={styles.section}>
         <div style={styles.sectionHeader}>
           <h3 style={styles.sectionTitle}>Eventinformation</h3>
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Redigera</Button>
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+            Redigera
+          </Button>
         </div>
         <div style={styles.infoGrid}>
           <InfoRow label="Namn" value={event.name} />
           <InfoRow label="Datum" value={event.date} />
-          <InfoRow label="Tid" value={`${event.time}${event.end_time ? ' – ' + event.end_time : ''}`} />
+          <InfoRow
+            label="Tid"
+            value={`${event.time}${event.end_time ? ' – ' + event.end_time : ''}`}
+          />
           <InfoRow label="Plats" value={event.location} />
           <InfoRow label="Arrangör" value={`${event.organizer} (${event.organizer_email})`} />
-          <InfoRow label="Max deltagare" value={event.max_participants?.toString() ?? 'Obegränsat'} />
+          <InfoRow
+            label="Max deltagare"
+            value={event.max_participants?.toString() ?? 'Obegränsat'}
+          />
           <InfoRow label="Status" value={event.status} />
           <InfoRow label="Typ" value={event.type} />
           {event.description && <InfoRow label="Beskrivning" value={event.description} />}
@@ -85,7 +93,9 @@ export function EventInfoSection({ event }: Props) {
       <div style={styles.sectionHeader}>
         <h3 style={styles.sectionTitle}>Eventinformation</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <Button variant="ghost" size="sm" type="button" onClick={() => setEditing(false)}>Avbryt</Button>
+          <Button variant="ghost" size="sm" type="button" onClick={() => setEditing(false)}>
+            Avbryt
+          </Button>
           <Button variant="primary" size="sm" type="submit" disabled={updateEvent.isPending}>
             {updateEvent.isPending ? 'Sparar...' : 'Spara'}
           </Button>
@@ -94,26 +104,74 @@ export function EventInfoSection({ event }: Props) {
       <div style={styles.formGrid}>
         <Input label="Eventnamn" value={form.name} onChange={(e) => set('name', e.target.value)} />
         <div style={styles.formRow}>
-          <Input label="Datum" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
-          <Input label="Starttid" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
+          <Input
+            label="Datum"
+            type="date"
+            value={form.date}
+            onChange={(e) => set('date', e.target.value)}
+          />
+          <Input
+            label="Starttid"
+            type="time"
+            value={form.time}
+            onChange={(e) => set('time', e.target.value)}
+          />
         </div>
         <div style={styles.formRow}>
-          <Input label="Slutdatum" type="date" value={form.end_date} onChange={(e) => set('end_date', e.target.value)} />
-          <Input label="Sluttid" type="time" value={form.end_time} onChange={(e) => set('end_time', e.target.value)} />
+          <Input
+            label="Slutdatum"
+            type="date"
+            value={form.end_date}
+            onChange={(e) => set('end_date', e.target.value)}
+          />
+          <Input
+            label="Sluttid"
+            type="time"
+            value={form.end_time}
+            onChange={(e) => set('end_time', e.target.value)}
+          />
         </div>
-        <Input label="Plats" value={form.location} onChange={(e) => set('location', e.target.value)} />
+        <Input
+          label="Plats"
+          value={form.location}
+          onChange={(e) => set('location', e.target.value)}
+        />
         <div style={styles.formRow}>
-          <Input label="Arrangör" value={form.organizer} onChange={(e) => set('organizer', e.target.value)} />
-          <Input label="Arrangörs e-post" type="email" value={form.organizer_email} onChange={(e) => set('organizer_email', e.target.value)} />
+          <Input
+            label="Arrangör"
+            value={form.organizer}
+            onChange={(e) => set('organizer', e.target.value)}
+          />
+          <Input
+            label="Arrangörs e-post"
+            type="email"
+            value={form.organizer_email}
+            onChange={(e) => set('organizer_email', e.target.value)}
+          />
         </div>
         <div style={styles.formRow}>
-          <Input label="Max deltagare" type="number" value={form.max_participants} onChange={(e) => set('max_participants', e.target.value)} hint="Lämna tomt för obegränsat" />
-          <Input label="Overbooking-gräns" type="number" value={form.overbooking_limit} onChange={(e) => set('overbooking_limit', e.target.value)} />
+          <Input
+            label="Max deltagare"
+            type="number"
+            value={form.max_participants}
+            onChange={(e) => set('max_participants', e.target.value)}
+            hint="Lämna tomt för obegränsat"
+          />
+          <Input
+            label="Overbooking-gräns"
+            type="number"
+            value={form.overbooking_limit}
+            onChange={(e) => set('overbooking_limit', e.target.value)}
+          />
         </div>
         <div style={styles.formRow}>
           <div style={styles.selectWrapper}>
             <label style={styles.selectLabel}>Status</label>
-            <select value={form.status} onChange={(e) => set('status', e.target.value)} style={styles.select}>
+            <select
+              value={form.status}
+              onChange={(e) => set('status', e.target.value)}
+              style={styles.select}
+            >
               <option value="planning">Planering</option>
               <option value="upcoming">Kommande</option>
               <option value="ongoing">Pågående</option>
@@ -123,7 +181,11 @@ export function EventInfoSection({ event }: Props) {
           </div>
           <div style={styles.selectWrapper}>
             <label style={styles.selectLabel}>Typ</label>
-            <select value={form.type} onChange={(e) => set('type', e.target.value)} style={styles.select}>
+            <select
+              value={form.type}
+              onChange={(e) => set('type', e.target.value)}
+              style={styles.select}
+            >
               <option value="conference">Konferens</option>
               <option value="workshop">Workshop</option>
               <option value="seminar">Seminarium</option>

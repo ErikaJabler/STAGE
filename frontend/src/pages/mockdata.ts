@@ -1,4 +1,4 @@
-import type { Event, Participant, EventWithCount } from '@stage/shared';
+import type { Participant, EventWithCount } from '@stage/shared';
 
 export const mockEvents: EventWithCount[] = [
   {

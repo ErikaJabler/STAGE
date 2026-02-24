@@ -1,9 +1,9 @@
-import { Hono } from "hono";
-import type { Env } from "../bindings";
-import { loginSchema } from "@stage/shared";
-import { parseBody } from "../utils/validation";
-import { getUserByEmail, getUserByToken, createUser } from "../db/user.queries";
-import { loginRateLimiter } from "../middleware/rate-limiter";
+import { Hono } from 'hono';
+import type { Env } from '../bindings';
+import { loginSchema } from '@stage/shared';
+import { parseBody } from '../utils/validation';
+import { getUserByEmail, getUserByToken, createUser } from '../db/user.queries';
+import { loginRateLimiter } from '../middleware/rate-limiter';
 
 const auth = new Hono<{ Bindings: Env }>();
 
@@ -13,7 +13,7 @@ const auth = new Hono<{ Bindings: Env }>();
  * Creates user if not exists, returns existing token if already registered.
  * In production, replace with Azure AD flow.
  */
-auth.post("/login", loginRateLimiter, async (c) => {
+auth.post('/login', loginRateLimiter, async (c) => {
   const body = await c.req.json();
   const { email, name } = parseBody(loginSchema, body);
 
@@ -31,15 +31,15 @@ auth.post("/login", loginRateLimiter, async (c) => {
 });
 
 /** GET /api/auth/me — returns current user from token */
-auth.get("/me", async (c) => {
-  const token = c.req.header("X-Auth-Token");
+auth.get('/me', async (c) => {
+  const token = c.req.header('X-Auth-Token');
   if (!token) {
-    return c.json({ error: "Autentisering krävs" }, 401);
+    return c.json({ error: 'Autentisering krävs' }, 401);
   }
 
   const user = await getUserByToken(c.env.DB, token);
   if (!user) {
-    return c.json({ error: "Ogiltig token" }, 401);
+    return c.json({ error: 'Ogiltig token' }, 401);
   }
 
   return c.json({

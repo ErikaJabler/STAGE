@@ -1,4 +1,4 @@
-import type { EventWithCount, AdminDashboardData, EventConflict } from "@stage/shared";
+import type { EventWithCount, AdminDashboardData, EventConflict } from '@stage/shared';
 
 export const AdminService = {
   /** List ALL non-deleted events (admin-only, no permission filter) */
@@ -10,7 +10,7 @@ export const AdminService = {
          LEFT JOIN participants p ON p.event_id = e.id
          WHERE e.deleted_at IS NULL
          GROUP BY e.id
-         ORDER BY e.date ASC`
+         ORDER BY e.date ASC`,
       )
       .all<EventWithCount>();
     return result.results;
@@ -18,7 +18,7 @@ export const AdminService = {
 
   /** Get aggregated dashboard data across all events */
   async getDashboardData(db: D1Database): Promise<AdminDashboardData> {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split('T')[0];
 
     // Total events (active vs historical)
     const eventStats = await db
@@ -27,7 +27,7 @@ export const AdminService = {
            COUNT(*) AS total,
            SUM(CASE WHEN date >= ? THEN 1 ELSE 0 END) AS active,
            SUM(CASE WHEN date < ? THEN 1 ELSE 0 END) AS historical
-         FROM events WHERE deleted_at IS NULL`
+         FROM events WHERE deleted_at IS NULL`,
       )
       .bind(today, today)
       .first<{ total: number; active: number; historical: number }>();
@@ -37,7 +37,7 @@ export const AdminService = {
       .prepare(
         `SELECT COUNT(*) AS total FROM participants p
          INNER JOIN events e ON e.id = p.event_id
-         WHERE e.deleted_at IS NULL`
+         WHERE e.deleted_at IS NULL`,
       )
       .first<{ total: number }>();
 
@@ -47,7 +47,7 @@ export const AdminService = {
         `SELECT p.category, COUNT(*) AS count FROM participants p
          INNER JOIN events e ON e.id = p.event_id
          WHERE e.deleted_at IS NULL
-         GROUP BY p.category`
+         GROUP BY p.category`,
       )
       .all<{ category: string; count: number }>();
 
@@ -65,17 +65,15 @@ export const AdminService = {
          WHERE e.deleted_at IS NULL AND e.date >= ?
          GROUP BY e.id
          ORDER BY e.date ASC
-         LIMIT 10`
+         LIMIT 10`,
       )
       .bind(today)
       .all<EventWithCount>();
 
-    const todayMs = new Date(today + "T00:00:00Z").getTime();
+    const todayMs = new Date(today + 'T00:00:00Z').getTime();
     const upcomingWithDays = upcoming.results.map((e) => ({
       ...e,
-      days_until: Math.round(
-        (new Date(e.date + "T00:00:00Z").getTime() - todayMs) / 86400000
-      ),
+      days_until: Math.round((new Date(e.date + 'T00:00:00Z').getTime() - todayMs) / 86400000),
     }));
 
     // Recent mailings (last 20, cross-event)
@@ -86,7 +84,7 @@ export const AdminService = {
          INNER JOIN events e ON e.id = m.event_id
          WHERE e.deleted_at IS NULL
          ORDER BY m.created_at DESC
-         LIMIT 20`
+         LIMIT 20`,
       )
       .all<{
         id: number;
@@ -114,7 +112,7 @@ export const AdminService = {
     db: D1Database,
     date: string,
     location: string,
-    excludeEventId?: number
+    excludeEventId?: number,
   ): Promise<EventConflict[]> {
     const query = excludeEventId
       ? `SELECT id, name, date, time, location FROM events

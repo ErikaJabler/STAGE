@@ -224,8 +224,23 @@ export function registerPageBlocks(editor: Editor) {
  */
 export function buildInitialPageHtml(
   template: string,
-  event: { name: string; date: string; time: string; end_time?: string | null; location: string; organizer: string; description?: string | null; image_url?: string | null },
-  websiteData?: { hero_title?: string; hero_subtitle?: string; program_items?: { time: string; title: string; description?: string }[]; venue_description?: string; venue_address?: string }
+  event: {
+    name: string;
+    date: string;
+    time: string;
+    end_time?: string | null;
+    location: string;
+    organizer: string;
+    description?: string | null;
+    image_url?: string | null;
+  },
+  websiteData?: {
+    hero_title?: string;
+    hero_subtitle?: string;
+    program_items?: { time: string; title: string; description?: string }[];
+    venue_description?: string;
+    venue_address?: string;
+  },
 ): string {
   const heroTitle = websiteData?.hero_title || event.name;
   const heroSubtitle = websiteData?.hero_subtitle || '';
@@ -244,8 +259,15 @@ export function buildInitialPageHtml(
   // Info grid
   const formatDate = (d: string) => {
     try {
-      return new Date(d + 'T00:00:00').toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    } catch { return d; }
+      return new Date(d + 'T00:00:00').toLocaleDateString('sv-SE', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch {
+      return d;
+    }
   };
   const timeStr = event.end_time ? `${event.time} – ${event.end_time}` : event.time;
   html += `
@@ -272,7 +294,11 @@ export function buildInitialPageHtml(
 </section>`;
 
   // Program (hero-program-plats only)
-  if (template === 'hero-program-plats' && websiteData?.program_items && websiteData.program_items.length > 0) {
+  if (
+    template === 'hero-program-plats' &&
+    websiteData?.program_items &&
+    websiteData.program_items.length > 0
+  ) {
     html += `
 <section style="max-width:700px; margin:0 auto; padding:32px 24px;">
   <h2 style="font-family:${FONT}; font-size:1.5rem; font-weight:600; color:#701131; margin:0 0 20px;">Program</h2>
@@ -294,7 +320,10 @@ export function buildInitialPageHtml(
   }
 
   // Venue (hero-program-plats only)
-  if (template === 'hero-program-plats' && (websiteData?.venue_description || websiteData?.venue_address)) {
+  if (
+    template === 'hero-program-plats' &&
+    (websiteData?.venue_description || websiteData?.venue_address)
+  ) {
     html += `
 <section style="max-width:700px; margin:0 auto; padding:32px 24px;">
   <h2 style="font-family:${FONT}; font-size:1.5rem; font-weight:600; color:#701131; margin:0 0 20px;">Plats</h2>

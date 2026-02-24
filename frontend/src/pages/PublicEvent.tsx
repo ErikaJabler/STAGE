@@ -70,13 +70,14 @@ export function PublicEvent() {
   }
 
   // Registration form or confirmation (shared between custom page and template page)
-  const registrationForm = event && slug && (
-    state === 'registered' && regResult ? (
+  const registrationForm =
+    event &&
+    slug &&
+    (state === 'registered' && regResult ? (
       <RegistrationConfirmation event={event} regResult={regResult} />
     ) : state === 'loaded' ? (
       <PublicRegistrationForm event={event} slug={slug} onRegistered={handleRegistered} />
-    ) : null
-  );
+    ) : null);
 
   return (
     <div style={s.page}>
@@ -97,10 +98,7 @@ export function PublicEvent() {
       {/* Custom page (GrapeJS-generated HTML) */}
       {(state === 'loaded' || state === 'registered') && event && hasCustomPage && (
         <>
-          <div
-            ref={customPageRef}
-            dangerouslySetInnerHTML={{ __html: sanitizedPageHtml }}
-          />
+          <div ref={customPageRef} dangerouslySetInnerHTML={{ __html: sanitizedPageHtml }} />
           {/* Portal the React registration form into the placeholder */}
           {formPortalTarget && registrationForm && createPortal(registrationForm, formPortalTarget)}
         </>
@@ -127,20 +125,33 @@ const s: Record<string, CSSProperties> = {
     color: '#1C1C1C',
   },
   loadingBox: {
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: '100vh',
   },
   loadingText: { fontSize: '1rem', color: '#A99B94' },
   errorBox: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    justifyContent: 'center', minHeight: '100vh', padding: '40px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    padding: '40px',
     textAlign: 'center',
   },
   errorIcon: {
-    width: '56px', height: '56px', borderRadius: '50%',
-    backgroundColor: '#B5223F', color: '#fff', display: 'flex',
-    alignItems: 'center', justifyContent: 'center', fontSize: '28px',
-    fontWeight: 700, marginBottom: '16px',
+    width: '56px',
+    height: '56px',
+    borderRadius: '50%',
+    backgroundColor: '#B5223F',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '28px',
+    fontWeight: 700,
+    marginBottom: '16px',
   },
   errorTitle: { fontSize: '1.5rem', fontWeight: 600, color: '#701131', margin: '0 0 8px' },
   errorText: { fontSize: '1rem', color: '#A99B94' },

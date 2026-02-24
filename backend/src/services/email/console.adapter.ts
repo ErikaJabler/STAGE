@@ -1,4 +1,4 @@
-import type { EmailMessage, EmailResult, EmailProvider } from "./email.interface";
+import type { EmailMessage, EmailResult, EmailProvider } from './email.interface';
 
 /** Console/log provider for development and testing */
 export class ConsoleEmailProvider implements EmailProvider {

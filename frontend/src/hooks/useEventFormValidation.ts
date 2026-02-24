@@ -51,8 +51,7 @@ export function useEventFormValidation() {
 
     if (form.end_date && !/^\d{4}-\d{2}-\d{2}$/.test(form.end_date))
       errs.end_date = 'Måste vara YYYY-MM-DD';
-    if (form.end_time && !/^\d{2}:\d{2}$/.test(form.end_time))
-      errs.end_time = 'Måste vara HH:MM';
+    if (form.end_time && !/^\d{2}:\d{2}$/.test(form.end_time)) errs.end_time = 'Måste vara HH:MM';
 
     if (form.max_participants) {
       const n = Number(form.max_participants);

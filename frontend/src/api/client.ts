@@ -1,25 +1,33 @@
-import type { Event, EventWithCount, Participant, Mailing, Activity, AdminDashboardData, EventConflict } from "@stage/shared";
+import type {
+  Event,
+  EventWithCount,
+  Participant,
+  Mailing,
+  Activity,
+  AdminDashboardData,
+  EventConflict,
+} from '@stage/shared';
 
-const BASE_URL = "/stage/api";
+const BASE_URL = '/stage/api';
 const TOKEN_KEY = 'stage_auth_token';
 
 class ApiError extends Error {
   constructor(
     public status: number,
-    public details?: string[]
+    public details?: string[],
   ) {
     super(`API-fel: ${status}`);
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
-    headers["X-Auth-Token"] = token;
+    headers['X-Auth-Token'] = token;
   }
   return headers;
 }
@@ -32,10 +40,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(
-      res.status,
-      (body as { details?: string[] }).details
-    );
+    throw new ApiError(res.status, (body as { details?: string[] }).details);
   }
 
   return res.json() as Promise<T>;
@@ -43,30 +48,30 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 /** Event API */
 export const eventsApi = {
-  list: () => request<EventWithCount[]>("/events"),
+  list: () => request<EventWithCount[]>('/events'),
 
   get: (id: number) => request<EventWithCount>(`/events/${id}`),
 
   create: (data: CreateEventPayload) =>
-    request<Event>("/events", {
-      method: "POST",
+    request<Event>('/events', {
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
   update: (id: number, data: UpdateEventPayload) =>
     request<Event>(`/events/${id}`, {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   delete: (id: number) =>
     request<{ ok: boolean }>(`/events/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
     }),
 
   clone: (id: number) =>
     request<Event>(`/events/${id}/clone`, {
-      method: "POST",
+      method: 'POST',
     }),
 };
 
@@ -117,40 +122,39 @@ export interface UpdateEventPayload {
 
 /** Participant API */
 export const participantsApi = {
-  list: (eventId: number) =>
-    request<Participant[]>(`/events/${eventId}/participants`),
+  list: (eventId: number) => request<Participant[]>(`/events/${eventId}/participants`),
 
   create: (eventId: number, data: CreateParticipantPayload) =>
     request<Participant>(`/events/${eventId}/participants`, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
   update: (eventId: number, id: number, data: UpdateParticipantPayload) =>
     request<Participant>(`/events/${eventId}/participants/${id}`, {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   delete: (eventId: number, id: number) =>
     request<{ ok: boolean }>(`/events/${eventId}/participants/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
     }),
 
   reorder: (eventId: number, id: number, queuePosition: number) =>
     request<Participant>(`/events/${eventId}/participants/${id}/reorder`, {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify({ queue_position: queuePosition }),
     }),
 
   import: async (eventId: number, file: File): Promise<ImportParticipantsResult> => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
     const headers: Record<string, string> = {};
     const token = localStorage.getItem(TOKEN_KEY);
-    if (token) headers["X-Auth-Token"] = token;
+    if (token) headers['X-Auth-Token'] = token;
     const res = await fetch(`${BASE_URL}/events/${eventId}/participants/import`, {
-      method: "POST",
+      method: 'POST',
       headers,
       body: formData,
     });
@@ -196,34 +200,33 @@ export interface UpdateParticipantPayload {
 
 /** Mailing API */
 export const mailingsApi = {
-  list: (eventId: number) =>
-    request<Mailing[]>(`/events/${eventId}/mailings`),
+  list: (eventId: number) => request<Mailing[]>(`/events/${eventId}/mailings`),
 
   create: (eventId: number, data: CreateMailingPayload) =>
     request<Mailing>(`/events/${eventId}/mailings`, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
   update: (eventId: number, mailingId: number, data: UpdateMailingPayload) =>
     request<Mailing>(`/events/${eventId}/mailings/${mailingId}`, {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   send: (eventId: number, mailingId: number) =>
     request<SendMailingResult>(`/events/${eventId}/mailings/${mailingId}/send`, {
-      method: "POST",
+      method: 'POST',
     }),
 
   sendTest: (eventId: number, mailingId: number) =>
     request<{ ok: boolean; sentTo: string }>(`/events/${eventId}/mailings/${mailingId}/test`, {
-      method: "POST",
+      method: 'POST',
     }),
 
   sendToNew: (eventId: number, mailingId: number) =>
     request<SendMailingResult>(`/events/${eventId}/mailings/${mailingId}/send-to-new`, {
-      method: "POST",
+      method: 'POST',
     }),
 };
 
@@ -263,18 +266,20 @@ export interface PermissionEntry {
 }
 
 export const permissionsApi = {
-  list: (eventId: number) =>
-    request<PermissionEntry[]>(`/events/${eventId}/permissions`),
+  list: (eventId: number) => request<PermissionEntry[]>(`/events/${eventId}/permissions`),
 
   add: (eventId: number, data: { email: string; name: string; role: string }) =>
-    request<{ id: number; user_id: number; event_id: number; role: string }>(`/events/${eventId}/permissions`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    request<{ id: number; user_id: number; event_id: number; role: string }>(
+      `/events/${eventId}/permissions`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    ),
 
   remove: (eventId: number, userId: number) =>
     request<{ ok: boolean }>(`/events/${eventId}/permissions/${userId}`, {
-      method: "DELETE",
+      method: 'DELETE',
     }),
 };
 
@@ -308,25 +313,24 @@ export interface RsvpResponse {
 }
 
 export interface RsvpRespondPayload {
-  status: "attending" | "declined";
+  status: 'attending' | 'declined';
   dietary_notes?: string | null;
   plus_one_name?: string | null;
   plus_one_email?: string | null;
 }
 
 export const rsvpApi = {
-  get: (token: string) =>
-    request<RsvpInfo>(`/rsvp/${token}`),
+  get: (token: string) => request<RsvpInfo>(`/rsvp/${token}`),
 
   respond: (token: string, data: RsvpRespondPayload) =>
     request<RsvpResponse>(`/rsvp/${token}/respond`, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
   cancel: (token: string) =>
     request<RsvpResponse>(`/rsvp/${token}/cancel`, {
-      method: "POST",
+      method: 'POST',
     }),
 };
 
@@ -334,12 +338,12 @@ export const rsvpApi = {
 export const imagesApi = {
   upload: async (file: File): Promise<{ url: string; key: string }> => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
     const headers: Record<string, string> = {};
     const token = localStorage.getItem(TOKEN_KEY);
-    if (token) headers["X-Auth-Token"] = token;
+    if (token) headers['X-Auth-Token'] = token;
     const res = await fetch(`${BASE_URL}/images`, {
-      method: "POST",
+      method: 'POST',
       headers,
       body: formData,
     });
@@ -354,13 +358,12 @@ export const imagesApi = {
 /** Activities API */
 export const activitiesApi = {
   list: (eventId: number, limit?: number) =>
-    request<Activity[]>(`/events/${eventId}/activities${limit ? `?limit=${limit}` : ""}`),
+    request<Activity[]>(`/events/${eventId}/activities${limit ? `?limit=${limit}` : ''}`),
 };
 
 /** Search API */
 export const searchApi = {
-  search: (q: string) =>
-    request<EventWithCount[]>(`/search?q=${encodeURIComponent(q)}`),
+  search: (q: string) => request<EventWithCount[]>(`/search?q=${encodeURIComponent(q)}`),
 };
 
 /** Templates API */
@@ -373,7 +376,7 @@ export interface EmailTemplate {
 }
 
 export const templatesApi = {
-  list: () => request<EmailTemplate[]>("/templates"),
+  list: () => request<EmailTemplate[]>('/templates'),
 };
 
 /** Website API */
@@ -392,7 +395,7 @@ export interface WebsiteConfig {
 
 export interface UpdateWebsitePayload {
   template?: string;
-  data?: WebsiteConfig["data"];
+  data?: WebsiteConfig['data'];
   published?: boolean;
 }
 
@@ -415,22 +418,21 @@ export interface RegisterResult {
 }
 
 export const websiteApi = {
-  get: (eventId: number) =>
-    request<WebsiteConfig>(`/events/${eventId}/website`),
+  get: (eventId: number) => request<WebsiteConfig>(`/events/${eventId}/website`),
 
   save: (eventId: number, data: UpdateWebsitePayload) =>
     request<WebsiteConfig>(`/events/${eventId}/website`, {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   register: async (slug: string, data: PublicRegisterPayload): Promise<RegisterResult> => {
     const res = await fetch(`${BASE_URL}/events/${slug}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    const body = await res.json() as RegisterResult & { error?: string };
+    const body = (await res.json()) as RegisterResult & { error?: string };
     if (!res.ok) {
       throw new ApiError(res.status, body.error ? [body.error] : undefined);
     }
@@ -440,15 +442,15 @@ export const websiteApi = {
 
 /** Admin API */
 export const adminApi = {
-  dashboard: () => request<AdminDashboardData>("/admin/dashboard"),
-  events: () => request<EventWithCount[]>("/admin/events"),
+  dashboard: () => request<AdminDashboardData>('/admin/dashboard'),
+  events: () => request<EventWithCount[]>('/admin/events'),
 };
 
 /** Conflicts API */
 export const conflictsApi = {
   check: (date: string, location: string, excludeId?: number) => {
     const params = new URLSearchParams({ date, location });
-    if (excludeId) params.set("excludeId", String(excludeId));
+    if (excludeId) params.set('excludeId', String(excludeId));
     return request<{ conflicts: EventConflict[] }>(`/events/conflicts?${params}`);
   },
 };
