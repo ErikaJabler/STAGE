@@ -33,8 +33,8 @@
 ### TC-0.4: Automatiska tester
 **Steg:**
 1. Kör `npm run test` i terminalen
-**Förväntat resultat:** 113 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service inkl. admin-bypass, activity.service, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e)
-**Status:** ☑ Testad (session 19)
+**Förväntat resultat:** 148 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service, permission.service inkl. admin-bypass, activity.service, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e, mailing.service inkl. send/sendToNew/sendTest, rsvp.service inkl. auto-waitlist+cancel+promote, template-renderer inkl. XSS-escape+merge fields)
+**Status:** ☑ Testad (session 20b)
 
 ---
 

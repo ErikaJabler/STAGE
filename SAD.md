@@ -374,7 +374,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
-- **Antal:** 113 tester (13 testfiler)
+- **Antal:** 148 tester (16 testfiler)
 
 ### Teststruktur
 
@@ -391,6 +391,9 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 | Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts` | 10 | PermissionService, roller, admin-bypass |
 | Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts` | 5 | ActivityService, loggning |
 | Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts` | 8 | WebsiteService, CRUD, registrering, ogiltig JSON |
+| Service-enhetstester | `backend/src/services/__tests__/mailing.service.test.ts` | 14 | MailingService: send, sendToNew, sendTest, update |
+| Service-enhetstester | `backend/src/services/__tests__/rsvp.service.test.ts` | 10 | RsvpService: respond, cancel, getByToken, auto-waitlist |
+| Service-enhetstester | `backend/src/services/email/__tests__/template-renderer.test.ts` | 11 | Template-renderer: renderHtml, renderText, XSS-escape, buildMergeContext |
 | Säkerhetstester | `backend/src/__tests__/security.test.ts` | 8 | Path traversal, rate limiting |
 
 ### E2E-integrationstester (session 13b)

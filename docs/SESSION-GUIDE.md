@@ -89,9 +89,8 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
-## Session 20b: Saknade tester
-**Mål:** Tester för MailingService (~8-10), RsvpService (~6-8), template-renderer (~5).
-**Filer:** 3 nya testfiler. ~20 nya testfall.
+## Session 20b: Saknade tester ✅ DONE
+**Levererat:** 3 nya testfiler: mailing.service.test.ts (14 tester), rsvp.service.test.ts (10 tester), template-renderer.test.ts (11 tester). Totalt 35 nya tester (148 totalt). Full täckning av MailingService (send/sendToNew/sendTest/update), RsvpService (respond/cancel/auto-waitlist), template-renderer (renderHtml/renderText/XSS-escape/buildMergeContext).
 
 ---
 

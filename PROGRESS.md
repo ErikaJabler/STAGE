@@ -899,7 +899,7 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 |---------|-------|--------|
 | 19 | Säkerhetsfixar (XSS, rate limiting, path traversal) | DONE |
 | 20a | Backend-refaktorering (20.1–20.4) | DONE |
-| 20b | Saknade tester (20.5–20.7) | TODO |
+| 20b | Saknade tester (20.5–20.7) | DONE |
 | 21 | Frontend-refaktorering (7 filer >400 rader, a11y) | TODO |
 | 22 | Developer Experience (CI/CD, linting, docs) | TODO |
 
@@ -954,3 +954,27 @@ Inga avvikelser — alla 5 säkerhetsfynd åtgärdade.
 - Inga nya migrationer behövdes
 - Inga frontend-ändringar
 - Netto: ~70 rader borttagna (duplicering eliminerad)
+
+---
+
+## Session 20b: Saknade tester (MailingService, RsvpService, template-renderer)
+**Datum:** 2026-02-24
+**Status:** DONE
+
+### Deliverables
+- [x] `backend/src/services/__tests__/mailing.service.test.ts` — 14 nya tester: create+list, update draft/sent/non-existent, send direkt (≤5), send kö (>5), send redan skickad, send inga mottagare, send non-existent, sendToNew (nya/status/inga nya), sendTest (ok + non-existent)
+- [x] `backend/src/services/__tests__/rsvp.service.test.ts` — 10 nya tester: getByToken (valid + ogiltig), respond attending/declined/dietary+plus_one/auto-waitlist/ogiltig token, cancel (ok + promote + ogiltig token)
+- [x] `backend/src/services/email/__tests__/template-renderer.test.ts` — 11 nya tester: buildMergeContext, renderText (ersättning + multipel + ej escape), renderHtml (ersättning + XSS-escape + URL ej escape + specialtecken), renderEmail (komplett + auto-append rsvp + ej dubbla rsvp)
+- [x] Alla 148 tester passerar (113 befintliga + 35 nya)
+- [x] `npm run typecheck` grönt (enbart förväntade `cloudflare:test` TS2307-fel)
+- [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
+
+### Avvikelser från plan
+- Planen estimerade ~20 testfall, levererade 35 — fler edge cases täckta
+- Inga avvikelser i scope — alla tre service-komponenter testade
+
+### Anteckningar
+- Template-renderer-tester använder inga DB-beroenden (rena funktioner)
+- MailingService-tester skapar alla tabeller (events, participants, mailings, email_queue) i beforeAll
+- RsvpService-tester verifierar auto-waitlist och auto-promote via WaitlistService-integration
+- ConsoleEmailProvider används som fallback i alla tester (ingen RESEND_API_KEY)
