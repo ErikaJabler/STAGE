@@ -146,12 +146,14 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 600,
     margin: '0 0 12px',
     lineHeight: 1.15,
+    color: 'inherit',
   },
   heroSubtitle: {
     fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
     opacity: 0.9,
     margin: 0,
     lineHeight: 1.5,
+    color: 'inherit',
   },
   section: {
     maxWidth: '700px',
