@@ -979,8 +979,8 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0008      | admin_role.sql                  | (ALTER users: is_admin)                                           | ✅    | ✅     |
 | 0009      | rate_limits.sql                 | rate_limits                                                       | ✅    | ✅     |
 | 0010      | email_queue_recipient_index.sql | (INDEX email_queue: event_id, to_email)                           | ✅    | ✅     |
-| 0011      | plus_one_dietary_notes.sql      | (ALTER participants: plus_one_dietary_notes)                      | ✅    | ❌     |
-| 0012      | activity_participant_id.sql     | (ALTER activities: participant_id + index)                        | ✅    | ❌     |
+| 0011      | plus_one_dietary_notes.sql      | (ALTER participants: plus_one_dietary_notes)                      | ✅    | ✅     |
+| 0012      | activity_participant_id.sql     | (ALTER activities: participant_id + index)                        | ✅    | ✅     |
 
 ---
 
