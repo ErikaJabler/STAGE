@@ -72,7 +72,7 @@ export async function updateUserAdmin(
   isAdmin: boolean,
 ): Promise<void> {
   await db
-    .prepare('UPDATE users SET is_admin = ?, updated_at = datetime(?) WHERE id = ?')
+    .prepare('UPDATE users SET is_admin = ?, updated_at = ? WHERE id = ?')
     .bind(isAdmin ? 1 : 0, new Date().toISOString(), userId)
     .run();
 }

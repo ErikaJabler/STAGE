@@ -49,7 +49,9 @@ export function AdminUserList() {
                       {u.is_admin ? 'Admin' : 'Användare'}
                     </span>
                   </td>
-                  <td style={styles.td}>{new Date(u.created_at).toLocaleDateString('sv-SE')}</td>
+                  <td style={styles.td}>
+                    {new Date(u.created_at.replace(' ', 'T') + 'Z').toLocaleDateString('sv-SE')}
+                  </td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>
                     {isSelf ? (
                       <span style={styles.selfNote}>Du</span>
