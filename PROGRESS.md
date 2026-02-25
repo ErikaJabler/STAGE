@@ -979,6 +979,8 @@ Inga avvikelser — alla 5 flöden implementerade och gröna.
 | 0008      | admin_role.sql                  | (ALTER users: is_admin)                                           | ✅    | ✅     |
 | 0009      | rate_limits.sql                 | rate_limits                                                       | ✅    | ✅     |
 | 0010      | email_queue_recipient_index.sql | (INDEX email_queue: event_id, to_email)                           | ✅    | ✅     |
+| 0011      | plus_one_dietary_notes.sql      | (ALTER participants: plus_one_dietary_notes)                      | ✅    | ❌     |
+| 0012      | activity_participant_id.sql     | (ALTER activities: participant_id + index)                        | ✅    | ❌     |
 
 ---
 
@@ -1289,6 +1291,50 @@ frontend/src/components/features/participants/ParticipantTimeline.tsx
 - Tidslinjen slår ihop activities + email_queue-historik i en sorterad lista (nyast först)
 - Max 15 entries initialt, "Visa alla (N)" knapp om fler
 - `created_by` visas diskret för admin-triggade händelser
+
+---
+
+## Kompakt detaljpanel + separat plus-one kost + anonymiserad cateringlista
+
+**Datum:** 2026-02-25
+**Status:** DONE
+
+### Deliverables
+
+- [x] `migrations/0011_plus_one_dietary_notes.sql` — ny kolumn `plus_one_dietary_notes TEXT` på participants
+- [x] `packages/shared/src/types.ts` — `plus_one_dietary_notes` på Participant
+- [x] `packages/shared/src/schemas.ts` — `plus_one_dietary_notes` i Zod-schemas
+- [x] `backend/src/db/participant.queries.ts` — ny kolumn i INSERT/UPDATE/SELECT
+- [x] `backend/src/services/participant.service.ts` — cateringlista: förnamn + initial, separat plus-one kost-kolumn, inga e-postkolumner
+- [x] `backend/src/routes/rsvp.ts` + `backend/src/services/rsvp.service.ts` — sparar plus_one_dietary_notes vid RSVP-svar
+- [x] `backend/src/services/website.service.ts` — sparar plus_one_dietary_notes vid webbregistrering
+- [x] `frontend/src/pages/RsvpResponseForm.tsx` — textarea för gästens kostpreferenser i plus-one-sektionen
+- [x] `frontend/src/components/features/participants/ParticipantDetailPanel.tsx` — kompakt horisontell layout (label: värde), döljer tomma fält, visar plus-one kost
+- [x] `frontend/src/components/features/participants/ParticipantRow.tsx` — formatDateTime() med klockslag, differentierad tooltip "Kost:" vs "+1 kost:"
+- [x] `frontend/src/components/features/participants/EditParticipantModal.tsx` — villkorligt plus-one kost-fält
+- [x] `frontend/src/api/client.ts` — `plus_one_dietary_notes` i payloads
+- [x] Alla 162 tester passerar
+
+### Avvikelser från plan
+
+Ingen plan — ad hoc-förbättringar baserade på användarfeedback.
+
+### Anteckningar
+
+- Migration 0011 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0011_plus_one_dietary_notes.sql`
+- Cateringlistan anonymiseras: förnamn + initial (t.ex. "Anna A.") istf fullständigt namn, inga e-postkolumner
+- Plus-one kost separeras från deltagarens egna kostpreferenser
+
+---
+
+## Förbättrad kontrast på muted text
+
+**Datum:** 2026-02-25
+**Status:** DONE
+
+### Deliverables
+
+- [x] `frontend/src/styles/globals.css` — greige #a99b94 → #7a6e68 för bättre WCAG-kontrast
 
 ---
 

@@ -141,6 +141,12 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 
 ---
 
+## Kompakt detaljpanel + plus-one kost + anonymiserad cateringlista ✅ DONE
+
+**Levererat:** Migration 0011 (plus_one_dietary_notes). Separata kostpreferenser för plus-one i RSVP, webbregistrering, detaljpanel och redigeringsmodal. Anonymiserad cateringlista (förnamn + initial, inga e-poster, separat +1 kost). Kompakt horisontell detaljpanel. Datum med klockslag. Förbättrad kontrast på muted text (#a99b94 → #7a6e68). 162 tester.
+
+---
+
 ## Användarhantering i Admin-dashboard ✅ DONE
 
 **Levererat:** Fullständig användarhantering i admin-dashboard. AdminUser shared type. 3 nya backend-endpoints (GET/PUT/DELETE /admin/users) med self-protection. Frontend: AdminUserList-komponent med tabell (email, namn, roll-badge, registreringsdatum), toggle admin-knapp, ta bort med bekräftelse, summary. Self-protection i UI ("Du"). 162 tester. 1 ny fil.

@@ -143,27 +143,28 @@ Integrationer:
 | updated_at        | TEXT NOT NULL        | Senast ändrad                                                  |
 | deleted_at        | TEXT                 | Soft-delete tidsstämpel                                        |
 
-### participants (migration 0001)
+### participants (migration 0001, utökad 0005 + 0011)
 
-| Kolumn             | Typ                  | Beskrivning                                         |
-| ------------------ | -------------------- | --------------------------------------------------- |
-| id                 | INTEGER PK           | Auto-increment                                      |
-| event_id           | INTEGER FK           | Referens till events                                |
-| name               | TEXT NOT NULL        | Deltagarnamn                                        |
-| email              | TEXT NOT NULL        | Email                                               |
-| company            | TEXT                 | Företag                                             |
-| category           | TEXT NOT NULL        | internal/public_sector/private_sector/partner/other |
-| status             | TEXT NOT NULL        | invited/attending/declined/waitlisted/cancelled     |
-| queue_position     | INTEGER              | Köplats (för väntlista)                             |
-| response_deadline  | TEXT                 | Svarsfrist                                          |
-| dietary_notes      | TEXT                 | Allergier/kostpreferenser                           |
-| plus_one_name      | TEXT                 | +1 gästens namn                                     |
-| plus_one_email     | TEXT                 | +1 gästens email                                    |
-| cancellation_token | TEXT NOT NULL UNIQUE | Token för RSVP/avbokning                            |
-| email_status       | TEXT                 | Senaste mailstatus                                  |
-| gdpr_consent_at    | TEXT                 | GDPR-samtycke tidsstämpel                           |
-| created_at         | TEXT NOT NULL        | Skapades                                            |
-| updated_at         | TEXT NOT NULL        | Senast ändrad                                       |
+| Kolumn                 | Typ                  | Beskrivning                                         |
+| ---------------------- | -------------------- | --------------------------------------------------- |
+| id                     | INTEGER PK           | Auto-increment                                      |
+| event_id               | INTEGER FK           | Referens till events                                |
+| name                   | TEXT NOT NULL        | Deltagarnamn                                        |
+| email                  | TEXT NOT NULL        | Email                                               |
+| company                | TEXT                 | Företag                                             |
+| category               | TEXT NOT NULL        | internal/public_sector/private_sector/partner/other |
+| status                 | TEXT NOT NULL        | invited/attending/declined/waitlisted/cancelled     |
+| queue_position         | INTEGER              | Köplats (för väntlista)                             |
+| response_deadline      | TEXT                 | Svarsfrist                                          |
+| dietary_notes          | TEXT                 | Allergier/kostpreferenser                           |
+| plus_one_name          | TEXT                 | +1 gästens namn                                     |
+| plus_one_email         | TEXT                 | +1 gästens email                                    |
+| plus_one_dietary_notes | TEXT                 | +1 gästens kostpreferenser (migration 0011)         |
+| cancellation_token     | TEXT NOT NULL UNIQUE | Token för RSVP/avbokning                            |
+| email_status           | TEXT                 | Senaste mailstatus                                  |
+| gdpr_consent_at        | TEXT                 | GDPR-samtycke tidsstämpel                           |
+| created_at             | TEXT NOT NULL        | Skapades                                            |
+| updated_at             | TEXT NOT NULL        | Senast ändrad                                       |
 
 ### mailings (migration 0002 + 0006)
 

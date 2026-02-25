@@ -1798,6 +1798,60 @@
 
 ---
 
+## Kompakt detaljpanel + plus-one kost + anonymiserad cateringlista
+
+### TC-KD.1: Plus-one kostpreferenser i RSVP
+
+**Steg:**
+
+1. Öppna RSVP-sida → klicka "+ Ta med en gäst"
+2. Fyll i gästnamn, gästemail och "Allergier / kostpreferenser" för gästen
+3. Klicka "Jag kommer"
+   **Förväntat resultat:** `plus_one_dietary_notes` sparas separat från deltagarens egna `dietary_notes`
+   **Status:** ☐ Ej testad
+
+### TC-KD.2: Plus-one kost visas i detaljpanel
+
+**Steg:**
+
+1. Expandera deltagare med plus-one som har kostpreferenser
+   **Förväntat resultat:** Detaljpanelen visar separat "+1 kost:" med gästens kostinfo. Deltagarens egen kost visas som "Kost:".
+   **Status:** ☐ Ej testad
+
+### TC-KD.3: Info-kolumn differentierar kost och +1 kost
+
+**Steg:**
+
+1. Öppna Deltagare-tab med deltagare som har dietary_notes OCH plus_one_dietary_notes
+   **Förväntat resultat:** Tooltip visar "Kost: ..." och "+1 kost: ..." separat.
+   **Status:** ☐ Ej testad
+
+### TC-KD.4: Anonymiserad cateringlista
+
+**Steg:**
+
+1. Klicka "Exportera" → "Cateringlista (CSV)"
+   **Förväntat resultat:** CSV visar förnamn + initial (t.ex. "Anna A.") istf fullständigt namn. Inga e-postkolumner. Separat kolumn för plus-one allergier/kost.
+   **Status:** ☐ Ej testad
+
+### TC-KD.5: Kompakt detaljpanel layout
+
+**Steg:**
+
+1. Expandera en deltagare i deltagarlistan
+   **Förväntat resultat:** Horisontell layout (label: värde), tomma fält döljs, kompakt padding.
+   **Status:** ☐ Ej testad
+
+### TC-KD.6: Datum med klockslag i deltagarrad
+
+**Steg:**
+
+1. Öppna Deltagare-tab
+   **Förväntat resultat:** "Ändrad"-kolumnen visar datum + klockslag (t.ex. "2026-02-25 10:30").
+   **Status:** ☐ Ej testad
+
+---
+
 ## Användarhantering i Admin-dashboard
 
 ### TC-UH.1: Användarlista visas i admin-dashboard
