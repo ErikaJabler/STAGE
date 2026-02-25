@@ -50,7 +50,11 @@ export function AdminUserList() {
                     </span>
                   </td>
                   <td style={styles.td}>
-                    {new Date(u.created_at.replace(' ', 'T') + 'Z').toLocaleDateString('sv-SE')}
+                    {new Date(
+                      u.created_at.includes('T')
+                        ? u.created_at
+                        : u.created_at.replace(' ', 'T') + 'Z',
+                    ).toLocaleDateString('sv-SE')}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>
                     {isSelf ? (
