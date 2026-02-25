@@ -36,7 +36,13 @@ participants.post('/', async (c) => {
   const input = parseBody(createParticipantSchema, body);
 
   const participant = await ParticipantService.create(c.env.DB, eventId, input);
-  await ActivityService.logParticipantAdded(c.env.DB, eventId, input.name, user.email);
+  await ActivityService.logParticipantAdded(
+    c.env.DB,
+    eventId,
+    input.name,
+    user.email,
+    participant.id,
+  );
   return c.json(participant, 201);
 });
 
@@ -80,12 +86,63 @@ participants.put('/:id', async (c) => {
 
   const id = parseIdParam(c.req.param('id'), 'deltagare-ID');
 
+  // Fetch before-state for change detection
+  const before = (await ParticipantService.list(c.env.DB, eventId)).find((p) => p.id === id);
+
   const body = await c.req.json();
   const input = parseBody(updateParticipantSchema, body);
 
   const participant = await ParticipantService.update(c.env.DB, eventId, id, input);
   if (!participant) {
     return c.json({ error: 'Deltagare hittades inte' }, 404);
+  }
+
+  // Log changes
+  if (before) {
+    const changedFields: string[] = [];
+    const fieldLabels: Record<string, string> = {
+      name: 'namn',
+      email: 'e-post',
+      company: 'företag',
+      category: 'kategori',
+      status: 'status',
+      dietary_notes: 'kost',
+      plus_one_name: 'plus-one',
+      plus_one_email: 'plus-one e-post',
+      plus_one_dietary_notes: 'plus-one kost',
+      response_deadline: 'svarsfrist',
+    };
+    const inputRec = input as unknown as Record<string, unknown>;
+    const beforeRec = before as unknown as Record<string, unknown>;
+    for (const [key, label] of Object.entries(fieldLabels)) {
+      if (key in input && inputRec[key] !== beforeRec[key]) {
+        changedFields.push(label);
+      }
+    }
+
+    if (changedFields.length > 0) {
+      await ActivityService.logParticipantEdited(
+        c.env.DB,
+        eventId,
+        id,
+        participant.name,
+        changedFields,
+        user.email,
+      );
+    }
+
+    // Log status change separately if status changed
+    if (input.status && input.status !== before.status) {
+      await ActivityService.logParticipantStatusChanged(
+        c.env.DB,
+        eventId,
+        participant.name,
+        before.status,
+        input.status,
+        user.email,
+        id,
+      );
+    }
   }
 
   return c.json(participant);
@@ -149,6 +206,20 @@ participants.get('/export-catering', async (c) => {
   });
 });
 
+/** GET /api/events/:eventId/participants/:id/activities — Activity log for participant (viewer+) */
+participants.get('/:id/activities', async (c) => {
+  const { eventId } = await requireEvent(c.env.DB, c.req.param('eventId') as string);
+
+  const user = c.var.user;
+  if (!(await PermissionService.canView(c.env.DB, user.id, eventId))) {
+    return c.json({ error: 'Åtkomst nekad' }, 403);
+  }
+
+  const id = parseIdParam(c.req.param('id'), 'deltagare-ID');
+  const activities = await ActivityService.listForParticipant(c.env.DB, eventId, id);
+  return c.json(activities);
+});
+
 /** GET /api/events/:eventId/participants/:id/emails — Email history for participant (viewer+) */
 participants.get('/:id/emails', async (c) => {
   const { eventId } = await requireEvent(c.env.DB, c.req.param('eventId') as string);
@@ -178,13 +249,14 @@ participants.delete('/:id', async (c) => {
   const participants_list = await ParticipantService.list(c.env.DB, eventId);
   const target = participants_list.find((p) => p.id === id);
 
+  // Log activity BEFORE delete to satisfy FK constraint
+  if (target) {
+    await ActivityService.logParticipantRemoved(c.env.DB, eventId, target.name, user.email, id);
+  }
+
   const deleted = await ParticipantService.delete(c.env.DB, eventId, id);
   if (!deleted) {
     return c.json({ error: 'Deltagare hittades inte' }, 404);
-  }
-
-  if (target) {
-    await ActivityService.logParticipantRemoved(c.env.DB, eventId, target.name, user.email);
   }
 
   return c.json({ ok: true });

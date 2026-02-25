@@ -73,6 +73,11 @@ export const ACTIVITY_TYPE = {
   EVENT_UPDATED: 'event_updated',
   PERMISSION_ADDED: 'permission_added',
   PERMISSION_REMOVED: 'permission_removed',
+  RSVP_RESPONDED: 'rsvp_responded',
+  RSVP_CANCELLED: 'rsvp_cancelled',
+  PARTICIPANT_EDITED: 'participant_edited',
+  PARTICIPANT_REGISTERED: 'participant_registered',
+  WAITLIST_PROMOTED: 'waitlist_promoted',
 } as const;
 
 export type ActivityType = (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];

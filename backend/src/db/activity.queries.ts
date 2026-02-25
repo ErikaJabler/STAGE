@@ -14,6 +14,23 @@ export async function listActivities(
   return result.results;
 }
 
+/** List activities for a specific participant, newest first */
+export async function listParticipantActivities(
+  db: D1Database,
+  eventId: number,
+  participantId: number,
+  limit = 50,
+): Promise<Activity[]> {
+  const result = await db
+    .prepare(
+      'SELECT * FROM activities WHERE event_id = ? AND participant_id = ? ORDER BY created_at DESC LIMIT ?',
+    )
+    .bind(eventId, participantId, limit)
+    .all<Activity>();
+
+  return result.results;
+}
+
 /** Create an activity log entry */
 export async function createActivity(
   db: D1Database,
@@ -22,16 +39,17 @@ export async function createActivity(
   description: string,
   createdBy?: string,
   metadata?: Record<string, unknown>,
+  participantId?: number,
 ): Promise<Activity> {
   const now = new Date().toISOString();
   const metadataJson = metadata ? JSON.stringify(metadata) : null;
 
   const result = await db
     .prepare(
-      `INSERT INTO activities (event_id, type, description, metadata, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO activities (event_id, participant_id, type, description, metadata, created_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(eventId, type, description, metadataJson, createdBy ?? null, now)
+    .bind(eventId, participantId ?? null, type, description, metadataJson, createdBy ?? null, now)
     .run();
 
   const id = result.meta.last_row_id;

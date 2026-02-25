@@ -1,33 +1,9 @@
 import { useState } from 'react';
-import { Badge, Button } from '../../ui';
-import { useParticipantEmailHistory } from '../../../hooks/useParticipants';
+import { Button } from '../../ui';
 import type { Participant } from '@stage/shared';
 import { getCategoryLabel, formatDateTime } from '../shared-helpers';
 import { EditParticipantModal } from './EditParticipantModal';
-
-function getEmailStatusVariant(status: string) {
-  switch (status) {
-    case 'sent':
-      return 'success' as const;
-    case 'failed':
-      return 'danger' as const;
-    default:
-      return 'muted' as const;
-  }
-}
-
-function getEmailStatusLabel(status: string) {
-  switch (status) {
-    case 'sent':
-      return 'Skickat';
-    case 'failed':
-      return 'Misslyckades';
-    case 'pending':
-      return 'Väntar';
-    default:
-      return status;
-  }
-}
+import { ParticipantTimeline } from './ParticipantTimeline';
 
 export function ParticipantDetailPanel({
   eventId,
@@ -37,10 +13,6 @@ export function ParticipantDetailPanel({
   participant: Participant;
 }) {
   const [editOpen, setEditOpen] = useState(false);
-  const { data: emailHistory, isLoading: historyLoading } = useParticipantEmailHistory(
-    eventId,
-    participant.id,
-  );
 
   return (
     <div style={styles.panel}>
@@ -75,26 +47,7 @@ export function ParticipantDetailPanel({
         </div>
       </div>
 
-      <div style={styles.emailSection}>
-        <h4 style={styles.emailTitle}>Mailhistorik</h4>
-        {historyLoading ? (
-          <p style={styles.emailEmpty}>Laddar...</p>
-        ) : !emailHistory || emailHistory.length === 0 ? (
-          <p style={styles.emailEmpty}>Inga utskick</p>
-        ) : (
-          <div style={styles.emailList}>
-            {emailHistory.map((e) => (
-              <div key={e.id} style={styles.emailRow}>
-                <span style={styles.emailSubject}>{e.subject}</span>
-                <Badge variant={getEmailStatusVariant(e.status)}>
-                  {getEmailStatusLabel(e.status)}
-                </Badge>
-                <span style={styles.emailDate}>{formatDateTime(e.sent_at ?? e.created_at)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <ParticipantTimeline eventId={eventId} participantId={participant.id} />
 
       <div style={styles.actionRow}>
         <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
@@ -154,45 +107,6 @@ const styles: Record<string, React.CSSProperties> = {
   detailValue: {
     fontSize: 'var(--font-size-sm)',
     color: 'var(--color-text-primary)',
-  },
-  emailSection: {
-    borderTop: '1px solid var(--color-border)',
-    paddingTop: '12px',
-    marginBottom: '12px',
-  },
-  emailTitle: {
-    fontSize: 'var(--font-size-sm)',
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    color: 'var(--color-text-primary)',
-    marginBottom: '8px',
-  },
-  emailEmpty: {
-    fontSize: 'var(--font-size-sm)',
-    color: 'var(--color-text-muted)',
-    fontStyle: 'italic',
-  },
-  emailList: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '6px',
-  },
-  emailRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: 'var(--font-size-sm)',
-  },
-  emailSubject: {
-    flex: 1,
-    color: 'var(--color-text-primary)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-  },
-  emailDate: {
-    fontSize: 'var(--font-size-xs)',
-    color: 'var(--color-text-muted)',
-    whiteSpace: 'nowrap' as const,
   },
   actionRow: {
     display: 'flex',

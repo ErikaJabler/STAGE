@@ -1243,3 +1243,49 @@ frontend/src/components/features/participants/ParticipantRow.tsx
 - Mailhistorik laddas lazy (bara vid expanderad rad) via `useParticipantEmailHistory`
 - `/export-catering` registrerad FÖRE `/:id`-routes i participants.ts (Hono route-ordning kritisk)
 - Migration 0010 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0010_email_queue_recipient_index.sql`
+
+---
+
+## Aktivitetslogg per deltagare
+
+**Datum:** 2026-02-25
+**Status:** DONE
+
+### Deliverables
+
+- [x] `migrations/0012_activity_participant_id.sql` — ny kolumn `participant_id` med `ON DELETE SET NULL` + index
+- [x] `packages/shared/src/constants.ts` — 5 nya activity types: `rsvp_responded`, `rsvp_cancelled`, `participant_edited`, `participant_registered`, `waitlist_promoted`
+- [x] `packages/shared/src/types.ts` — `Activity` interface utökad med `participant_id: number | null`
+- [x] `backend/src/db/activity.queries.ts` — `createActivity` med `participantId`, ny `listParticipantActivities`
+- [x] `backend/src/services/activity.service.ts` — 6 nya loggmetoder (`logRsvpResponded`, `logRsvpCancelled`, `logParticipantEdited`, `logParticipantRegistered`, `logWaitlistPromoted`, `listForParticipant`) + `participantId` parameter på befintliga
+- [x] `backend/src/routes/participants.ts` — nytt `GET /:id/activities` endpoint, edit-loggning i PUT, participantId i POST/DELETE
+- [x] `backend/src/services/rsvp.service.ts` — loggar RSVP-svar och avbokningar (try/catch)
+- [x] `backend/src/services/waitlist.service.ts` — loggar waitlist-promotions (try/catch)
+- [x] `backend/src/services/website.service.ts` — loggar registreringar via hemsidan (try/catch)
+- [x] `frontend/src/api/client.ts` — ny `participantsApi.activities()` metod
+- [x] `frontend/src/hooks/useParticipants.ts` — ny `useParticipantActivities` hook
+- [x] `frontend/src/components/features/participants/ParticipantTimeline.tsx` — ny komponent (activities + email → kronologisk tidslinje)
+- [x] `frontend/src/components/features/participants/ParticipantDetailPanel.tsx` — "Mailhistorik" ersatt med `<ParticipantTimeline>`
+- [x] 7 nya tester i `activity.service.test.ts` (12 totalt), alla 162 tester passerar
+- [x] 6 testfiler uppdaterade med `participant_id` i ACTIVITIES_SQL
+- [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
+
+### Avvikelser från plan
+
+- FK constraint `REFERENCES participants(id)` krävde `ON DELETE SET NULL` — utan detta blockerade FK deltagarborttagning
+- DELETE-routen loggar aktivitet FÖRE borttagning (FK kräver att deltagaren finns vid INSERT)
+- Alla loggningsanrop i publika endpoints (RSVP, waitlist promote, website register) wrappade i try/catch
+
+### Nya filer
+
+```
+migrations/0012_activity_participant_id.sql
+frontend/src/components/features/participants/ParticipantTimeline.tsx
+```
+
+### Anteckningar
+
+- Migration 0012 behöver köras på remote: `npx wrangler d1 execute stage_db_v2 --remote --file=migrations/0012_activity_participant_id.sql`
+- Tidslinjen slår ihop activities + email_queue-historik i en sorterad lista (nyast först)
+- Max 15 entries initialt, "Visa alla (N)" knapp om fler
+- `created_by` visas diskret för admin-triggade händelser

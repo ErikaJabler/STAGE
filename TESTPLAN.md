@@ -41,8 +41,8 @@
 **Steg:**
 
 1. Kör `npm run test` i terminalen
-   **Förväntat resultat:** 155 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service inkl. emailHistory+cateringCSV, permission.service inkl. admin-bypass, activity.service, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e, mailing.service inkl. send/sendToNew/sendTest, rsvp.service inkl. auto-waitlist+cancel+promote, template-renderer inkl. XSS-escape+merge fields)
-   **Status:** ☑ Testad (förbättrad deltagarhantering — 155 tester, +7 nya)
+   **Förväntat resultat:** 162 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service inkl. emailHistory+cateringCSV, permission.service inkl. admin-bypass, activity.service inkl. participant activities+RSVP+cancel+edit+register+promote, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e, mailing.service inkl. send/sendToNew/sendTest, rsvp.service inkl. auto-waitlist+cancel+promote, template-renderer inkl. XSS-escape+merge fields)
+   **Status:** ☑ Testad (aktivitetslogg — 162 tester, +7 nya)
 
 ---
 
@@ -1718,3 +1718,80 @@
    **Förväntat resultat:** 7 nya tester gröna: getEmailHistory (3 tester: med mail, utan mail, fel eventId), exportCateringCSV (4 tester: bara attending+waitlisted, väntelista-label, dietary/plus_one-fält, CSV-escaping). Totalt 155 tester.
    **Status:** ☑ Testad (155 tester)
    **Status:** ☑ Automatiskt testad (2 tester i website.service.test.ts)
+
+---
+
+## Aktivitetslogg per deltagare
+
+### TC-AL.1: Tidslinje visas i detaljpanel
+
+**Förutsättning:** Inloggad, event med deltagare som har aktivitetshändelser (tillagd, redigerad, utskick)
+**Steg:**
+
+1. Expandera en deltagare i deltagarlistan
+   **Förväntat resultat:** Sektionen "Aktivitet" visas med kronologisk tidslinje (nyast först). Varje rad har ikon, beskrivning och tidsstämpel. Utskick visas med kuvertikon i orange. Admin-triggade händelser visar "(av admin@consid.se)".
+   **Status:** ☐ Ej testad
+
+### TC-AL.2: Visa alla-knapp
+
+**Förutsättning:** Deltagare med >15 aktivitetshändelser
+**Steg:**
+
+1. Expandera deltagaren
+   **Förväntat resultat:** Max 15 rader visas initialt. Knappen "Visa alla (N)" syns. Klick visar alla händelser.
+   **Status:** ☐ Ej testad
+
+### TC-AL.3: RSVP-svar loggas
+
+**Förutsättning:** Deltagare med RSVP-länk
+**Steg:**
+
+1. Svara "Deltar" via RSVP-sidan
+2. Expandera deltagaren i admin
+   **Förväntat resultat:** Tidslinjen visar "Anna svarade: Deltar" med grön ikon.
+   **Status:** ☐ Ej testad
+
+### TC-AL.4: Avbokning loggas
+
+**Steg:**
+
+1. Avboka via RSVP-sidan
+2. Expandera deltagaren i admin
+   **Förväntat resultat:** Tidslinjen visar "Anna avbokade" med röd ikon.
+   **Status:** ☐ Ej testad
+
+### TC-AL.5: Redigering loggas med ändrade fält
+
+**Steg:**
+
+1. Redigera en deltagare (ändra namn + allergier)
+2. Expandera deltagaren
+   **Förväntat resultat:** Tidslinjen visar "Anna redigerad: namn, kost (av admin@consid.se)".
+   **Status:** ☐ Ej testad
+
+### TC-AL.6: Webbregistrering loggas
+
+**Steg:**
+
+1. Registrera deltagare via publik event-hemsida
+2. Expandera deltagaren i admin
+   **Förväntat resultat:** Tidslinjen visar "Anna anmälde sig via hemsidan".
+   **Status:** ☐ Ej testad
+
+### TC-AL.7: Waitlist-promotion loggas
+
+**Steg:**
+
+1. Skapa event med max_participants=1, fyll plats, waitlista en deltagare
+2. Avboka den som deltar → auto-promote
+3. Expandera den promotade deltagaren
+   **Förväntat resultat:** Tidslinjen visar "Anna flyttad från väntelista" med grön ikon.
+   **Status:** ☐ Ej testad
+
+### TC-AL.8: Aktivitetslogg (automatiska tester)
+
+**Steg:**
+
+1. Kör `npm run test`
+   **Förväntat resultat:** 7 nya tester gröna i activity.service.test.ts: participantId, listForParticipant, logRsvpResponded, logRsvpCancelled, logParticipantEdited, logParticipantRegistered, logWaitlistPromoted. Totalt 162 tester.
+   **Status:** ☑ Testad (162 tester)

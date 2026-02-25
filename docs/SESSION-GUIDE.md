@@ -132,3 +132,9 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 ## Förbättrad deltagarhantering ✅ DONE
 
 **Levererat:** Expanderbara deltagarrader med detaljpanel (kostinfo, plus-one, mailhistorik, redigera-knapp). EditParticipantModal. Info-kolumn med ikoner (kost + plus-one). Ändrad-kolumn. Exportmeny (dropdown) med deltagarlista + cateringlista (CSV). Backend: email-historik-endpoint, cateringexport-endpoint, migration 0010 (index). 7 nya tester (155 totalt). 4 nya filer.
+
+---
+
+## Aktivitetslogg per deltagare ✅ DONE
+
+**Levererat:** Fullständig aktivitetslogg per deltagare. Migration 0012 (participant_id på activities). 5 nya activity types (rsvp_responded, rsvp_cancelled, participant_edited, participant_registered, waitlist_promoted). Loggning i RSVP, waitlist, website, participant-routes. Nytt GET /:id/activities endpoint. Frontend: ParticipantTimeline-komponent (activities + email → kronologisk tidslinje). "Mailhistorik" ersatt med "Aktivitet". 7 nya tester (162 totalt). 2 nya filer.

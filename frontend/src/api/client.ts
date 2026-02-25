@@ -164,6 +164,9 @@ export const participantsApi = {
   emailHistory: (eventId: number, participantId: number) =>
     request<ParticipantEmailHistory[]>(`/events/${eventId}/participants/${participantId}/emails`),
 
+  activities: (eventId: number, participantId: number) =>
+    request<Activity[]>(`/events/${eventId}/participants/${participantId}/activities`),
+
   import: async (eventId: number, file: File): Promise<ImportParticipantsResult> => {
     const formData = new FormData();
     formData.append('file', file);

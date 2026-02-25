@@ -1,10 +1,20 @@
 import type { Activity, ActivityType } from '@stage/shared';
-import { listActivities, createActivity } from '../db/activity.queries';
+import { listActivities, listParticipantActivities, createActivity } from '../db/activity.queries';
 
 export const ActivityService = {
   /** List activities for an event */
   list(db: D1Database, eventId: number, limit?: number): Promise<Activity[]> {
     return listActivities(db, eventId, limit);
+  },
+
+  /** List activities for a specific participant */
+  listForParticipant(
+    db: D1Database,
+    eventId: number,
+    participantId: number,
+    limit?: number,
+  ): Promise<Activity[]> {
+    return listParticipantActivities(db, eventId, participantId, limit);
   },
 
   /** Log an activity */
@@ -15,8 +25,9 @@ export const ActivityService = {
     description: string,
     createdBy?: string,
     metadata?: Record<string, unknown>,
+    participantId?: number,
   ): Promise<Activity> {
-    return createActivity(db, eventId, type, description, createdBy, metadata);
+    return createActivity(db, eventId, type, description, createdBy, metadata, participantId);
   },
 
   /** Log mailing created */
@@ -48,6 +59,7 @@ export const ActivityService = {
     eventId: number,
     participantName: string,
     createdBy?: string,
+    participantId?: number,
   ) {
     return this.log(
       db,
@@ -55,6 +67,8 @@ export const ActivityService = {
       'participant_added',
       `Deltagare tillagd: ${participantName}`,
       createdBy,
+      undefined,
+      participantId,
     );
   },
 
@@ -64,6 +78,7 @@ export const ActivityService = {
     eventId: number,
     participantName: string,
     createdBy?: string,
+    participantId?: number,
   ) {
     return this.log(
       db,
@@ -71,6 +86,8 @@ export const ActivityService = {
       'participant_removed',
       `Deltagare borttagen: ${participantName}`,
       createdBy,
+      undefined,
+      participantId,
     );
   },
 
@@ -82,6 +99,7 @@ export const ActivityService = {
     oldStatus: string,
     newStatus: string,
     createdBy?: string,
+    participantId?: number,
   ) {
     return this.log(
       db,
@@ -90,6 +108,7 @@ export const ActivityService = {
       `${participantName}: ${oldStatus} → ${newStatus}`,
       createdBy,
       { oldStatus, newStatus },
+      participantId,
     );
   },
 
@@ -143,6 +162,92 @@ export const ActivityService = {
       'permission_removed',
       `Behörighet borttagen: ${userEmail}`,
       createdBy,
+    );
+  },
+
+  /** Log RSVP response */
+  logRsvpResponded(
+    db: D1Database,
+    eventId: number,
+    participantId: number,
+    name: string,
+    status: string,
+  ) {
+    const statusLabel =
+      status === 'attending'
+        ? 'Deltar'
+        : status === 'declined'
+          ? 'Avböjde'
+          : status === 'waitlisted'
+            ? 'Väntelista'
+            : status;
+    return this.log(
+      db,
+      eventId,
+      'rsvp_responded',
+      `${name} svarade: ${statusLabel}`,
+      undefined,
+      { status },
+      participantId,
+    );
+  },
+
+  /** Log RSVP cancellation */
+  logRsvpCancelled(db: D1Database, eventId: number, participantId: number, name: string) {
+    return this.log(
+      db,
+      eventId,
+      'rsvp_cancelled',
+      `${name} avbokade`,
+      undefined,
+      undefined,
+      participantId,
+    );
+  },
+
+  /** Log participant edited by admin */
+  logParticipantEdited(
+    db: D1Database,
+    eventId: number,
+    participantId: number,
+    name: string,
+    changedFields: string[],
+    createdBy?: string,
+  ) {
+    return this.log(
+      db,
+      eventId,
+      'participant_edited',
+      `${name} redigerad: ${changedFields.join(', ')}`,
+      createdBy,
+      { changedFields },
+      participantId,
+    );
+  },
+
+  /** Log participant self-registration via website */
+  logParticipantRegistered(db: D1Database, eventId: number, participantId: number, name: string) {
+    return this.log(
+      db,
+      eventId,
+      'participant_registered',
+      `${name} anmälde sig via hemsidan`,
+      undefined,
+      undefined,
+      participantId,
+    );
+  },
+
+  /** Log waitlist promotion */
+  logWaitlistPromoted(db: D1Database, eventId: number, participantId: number, name: string) {
+    return this.log(
+      db,
+      eventId,
+      'waitlist_promoted',
+      `${name} flyttad från väntelista`,
+      undefined,
+      undefined,
+      participantId,
     );
   },
 };

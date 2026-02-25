@@ -1,6 +1,7 @@
 import type { Event, Participant } from '@stage/shared';
 import { getParticipantByToken, updateParticipantStatus, getMaxQueuePosition } from '../db/queries';
 import { WaitlistService } from './waitlist.service';
+import { ActivityService } from './activity.service';
 
 export const RsvpService = {
   /** Get participant + event info by RSVP token */
@@ -83,6 +84,18 @@ export const RsvpService = {
           .bind(token)
           .first<{ status: string; name: string }>();
 
+        try {
+          await ActivityService.logRsvpResponded(
+            db,
+            existing.participant.event_id,
+            existing.participant.id,
+            existing.participant.name,
+            'waitlisted',
+          );
+        } catch {
+          /* logging must not break RSVP */
+        }
+
         return {
           ok: true,
           status: updated?.status ?? 'waitlisted',
@@ -95,6 +108,18 @@ export const RsvpService = {
     const participant = await updateParticipantStatus(db, token, status);
     if (!participant) {
       return { ok: false, status: '', name: '', error: 'Kunde inte uppdatera svar' };
+    }
+
+    try {
+      await ActivityService.logRsvpResponded(
+        db,
+        existing.participant.event_id,
+        existing.participant.id,
+        participant.name,
+        status,
+      );
+    } catch {
+      /* logging must not break RSVP */
     }
 
     return { ok: true, status: participant.status, name: participant.name };
@@ -120,6 +145,17 @@ export const RsvpService = {
     const participant = await updateParticipantStatus(db, token, 'cancelled');
     if (!participant) {
       return { ok: false, status: '', name: '', error: 'Kunde inte avboka' };
+    }
+
+    try {
+      await ActivityService.logRsvpCancelled(
+        db,
+        existing.participant.event_id,
+        existing.participant.id,
+        participant.name,
+      );
+    } catch {
+      /* logging must not break RSVP */
     }
 
     // If participant was attending, promote next from waitlist

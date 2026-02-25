@@ -143,6 +143,7 @@ export interface EventPermissionWithUser extends EventPermission {
 export interface Activity {
   id: number;
   event_id: number;
+  participant_id: number | null;
   type: ActivityType;
   description: string;
   metadata: string | null;

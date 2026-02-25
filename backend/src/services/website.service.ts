@@ -2,6 +2,7 @@ import type { Event, WebsiteData } from '@stage/shared';
 import { WaitlistService } from './waitlist.service';
 import { createParticipant } from '../db/queries';
 import type { CreateParticipantInput } from '@stage/shared';
+import { ActivityService } from './activity.service';
 
 export const WebsiteService = {
   /** Get website data for an event */
@@ -181,6 +182,12 @@ export const WebsiteService = {
         .bind(maxPos, new Date().toISOString(), participant.id)
         .run();
 
+      try {
+        await ActivityService.logParticipantRegistered(db, event.id, participant.id, input.name);
+      } catch {
+        /* logging must not break registration */
+      }
+
       return { ok: true, status: 'waitlisted', waitlisted: true };
     }
 
@@ -189,6 +196,12 @@ export const WebsiteService = {
       .prepare('UPDATE participants SET gdpr_consent_at = ? WHERE id = ?')
       .bind(new Date().toISOString(), participant.id)
       .run();
+
+    try {
+      await ActivityService.logParticipantRegistered(db, event.id, participant.id, input.name);
+    } catch {
+      /* logging must not break registration */
+    }
 
     return { ok: true, status: 'attending' };
   },

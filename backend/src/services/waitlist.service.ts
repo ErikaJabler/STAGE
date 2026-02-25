@@ -9,6 +9,7 @@ import {
   shouldWaitlist,
   type CreateParticipantInput,
 } from '../db/queries';
+import { ActivityService } from './activity.service';
 
 export const WaitlistService = {
   /** Check if event is at capacity */
@@ -27,8 +28,16 @@ export const WaitlistService = {
   },
 
   /** Promote next waitlisted participant to attending */
-  promoteNext(db: D1Database, eventId: number): Promise<Participant | null> {
-    return promoteFromWaitlist(db, eventId);
+  async promoteNext(db: D1Database, eventId: number): Promise<Participant | null> {
+    const promoted = await promoteFromWaitlist(db, eventId);
+    if (promoted) {
+      try {
+        await ActivityService.logWaitlistPromoted(db, eventId, promoted.id, promoted.name);
+      } catch {
+        /* logging must not break promotion */
+      }
+    }
+    return promoted;
   },
 
   /** Create a participant as waitlisted with queue position */

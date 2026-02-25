@@ -81,6 +81,7 @@ Integrationer:
 | GET    | `/api/events/:id/participants/export`          | Exportera deltagare som CSV                            | 9       |
 | GET    | `/api/events/:id/participants/export-catering` | Exportera cateringlista som CSV (attending+waitlisted) | DH      |
 | GET    | `/api/events/:id/participants/:pid/emails`     | Hämta mailhistorik för deltagare                       | DH      |
+| GET    | `/api/events/:id/participants/:pid/activities` | Hämta aktivitetslogg för deltagare (viewer+)           | AL      |
 | POST   | `/api/images`                                  | Ladda upp bild till R2 (multipart form-data)           | 9       |
 | GET    | `/api/images/:prefix/:filename`                | Hämta bild från R2                                     | 9       |
 | POST   | `/api/auth/login`                              | Logga in (email + name → token)                        | 10      |
@@ -199,17 +200,18 @@ Integrationer:
 | created_at                | TEXT NOT NULL | Skapades                   |
 | UNIQUE(user_id, event_id) |               | En roll per user per event |
 
-### activities (migration 0004)
+### activities (migration 0004, utökad 0012)
 
-| Kolumn      | Typ           | Beskrivning                                                          |
-| ----------- | ------------- | -------------------------------------------------------------------- |
-| id          | INTEGER PK    | Auto-increment                                                       |
-| event_id    | INTEGER FK    | Referens till events                                                 |
-| type        | TEXT NOT NULL | Aktivitetstyp (event_created, participant_added, mailing_sent, etc.) |
-| description | TEXT NOT NULL | Beskrivning av händelsen                                             |
-| metadata    | TEXT          | JSON-metadata (extra detaljer)                                       |
-| created_by  | TEXT          | Användarens email                                                    |
-| created_at  | TEXT NOT NULL | Tidsstämpel                                                          |
+| Kolumn         | Typ           | Beskrivning                                                                                                                                                         |
+| -------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id             | INTEGER PK    | Auto-increment                                                                                                                                                      |
+| event_id       | INTEGER FK    | Referens till events                                                                                                                                                |
+| participant_id | INTEGER FK    | Referens till participants (ON DELETE SET NULL), NULL för event-level aktiviteter (migration 0012)                                                                  |
+| type           | TEXT NOT NULL | Aktivitetstyp (event_created, participant_added, mailing_sent, rsvp_responded, rsvp_cancelled, participant_edited, participant_registered, waitlist_promoted, etc.) |
+| description    | TEXT NOT NULL | Beskrivning av händelsen                                                                                                                                            |
+| metadata       | TEXT          | JSON-metadata (extra detaljer)                                                                                                                                      |
+| created_by     | TEXT          | Användarens email (NULL för self-service)                                                                                                                           |
+| created_at     | TEXT NOT NULL | Tidsstämpel                                                                                                                                                         |
 
 ### email_queue (migration 0004)
 
@@ -305,18 +307,18 @@ Integrationer:
 
 ## Service-layer (session 8a)
 
-| Service            | Fil                                           | Beskrivning                                                                                                                                           |
-| ------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| EventService       | `backend/src/services/event.service.ts`       | Slug-generering, ICS-generering, event CRUD, clone                                                                                                    |
-| ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering, emailHistory, cateringCSV-export                                                                  |
-| WaitlistService    | `backend/src/services/waitlist.service.ts`    | shouldWaitlist, promoteNext, reorder                                                                                                                  |
-| MailingService     | `backend/src/services/mailing.service.ts`     | Utskickshantering, send med per-mottagare RSVP-länk, sendTest. Refaktorerad session 20a: buildQueueItem(), sendEmailsDirect(), DIRECT_SEND_THRESHOLD. |
-| RsvpService        | `backend/src/services/rsvp.service.ts`        | RSVP-svar, avbokning, auto-waitlist vid kapacitet                                                                                                     |
-| SearchService      | `backend/src/services/search.service.ts`      | Sök events (namn, plats, arrangör), user-scoped (session 20a)                                                                                         |
-| ImageService       | `backend/src/services/image.service.ts`       | Bilduppladdning till R2, validering (typ/storlek), servering                                                                                          |
-| PermissionService  | `backend/src/services/permission.service.ts`  | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter                                                                                             |
-| ActivityService    | `backend/src/services/activity.service.ts`    | Aktivitetsloggning per event (log, logMailingCreated, logParticipantAdded, etc.)                                                                      |
-| WebsiteService     | `backend/src/services/website.service.ts`     | Webbplats CRUD, publik eventdata, registrering via webbformulär                                                                                       |
+| Service            | Fil                                           | Beskrivning                                                                                                                                                                     |
+| ------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EventService       | `backend/src/services/event.service.ts`       | Slug-generering, ICS-generering, event CRUD, clone                                                                                                                              |
+| ParticipantService | `backend/src/services/participant.service.ts` | Deltagarhantering, CSV-import/parsning, validering, emailHistory, cateringCSV-export                                                                                            |
+| WaitlistService    | `backend/src/services/waitlist.service.ts`    | shouldWaitlist, promoteNext, reorder                                                                                                                                            |
+| MailingService     | `backend/src/services/mailing.service.ts`     | Utskickshantering, send med per-mottagare RSVP-länk, sendTest. Refaktorerad session 20a: buildQueueItem(), sendEmailsDirect(), DIRECT_SEND_THRESHOLD.                           |
+| RsvpService        | `backend/src/services/rsvp.service.ts`        | RSVP-svar, avbokning, auto-waitlist vid kapacitet                                                                                                                               |
+| SearchService      | `backend/src/services/search.service.ts`      | Sök events (namn, plats, arrangör), user-scoped (session 20a)                                                                                                                   |
+| ImageService       | `backend/src/services/image.service.ts`       | Bilduppladdning till R2, validering (typ/storlek), servering                                                                                                                    |
+| PermissionService  | `backend/src/services/permission.service.ts`  | Rollkontroll (canView/canEdit/isOwner), CRUD behörigheter                                                                                                                       |
+| ActivityService    | `backend/src/services/activity.service.ts`    | Aktivitetsloggning per event + per deltagare (log, logRsvpResponded, logRsvpCancelled, logParticipantEdited, logParticipantRegistered, logWaitlistPromoted, listForParticipant) |
+| WebsiteService     | `backend/src/services/website.service.ts`     | Webbplats CRUD, publik eventdata, registrering via webbformulär                                                                                                                 |
 
 **Emailflöde vid utskick (session 11 — template-renderer + email-kö, utökat session 14 med GrapeJS):**
 
@@ -405,23 +407,23 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 
 ### Teststruktur
 
-| Typ                  | Plats                                                            | Antal | Beskrivning                                                              |
-| -------------------- | ---------------------------------------------------------------- | ----- | ------------------------------------------------------------------------ |
-| Route-integration    | `backend/src/__tests__/events.test.ts`                           | 11    | Events CRUD, auth, clone                                                 |
-| Route-integration    | `backend/src/__tests__/participants.test.ts`                     | 9     | Participants CRUD                                                        |
-| Route-integration    | `backend/src/__tests__/mailings.test.ts`                         | 10    | Mailings, RSVP, templates, testmail                                      |
-| Route-integration    | `backend/src/__tests__/waitlist.test.ts`                         | 4     | Waitlist auto-promote, ICS                                               |
-| Route-integration    | `backend/src/__tests__/health.test.ts`                           | 1     | Health endpoint                                                          |
-| E2E-integration      | `backend/src/__tests__/integration.test.ts`                      | 14    | Fullständiga flöden (session 13b)                                        |
-| Service-enhetstester | `backend/src/services/__tests__/event.service.test.ts`           | 10    | EventService, slug, ICS                                                  |
-| Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts`     | 21    | ParticipantService, CSV, emailHistory, cateringCSV                       |
-| Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts`      | 10    | PermissionService, roller, admin-bypass                                  |
-| Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts`        | 5     | ActivityService, loggning                                                |
-| Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts`         | 8     | WebsiteService, CRUD, registrering, ogiltig JSON                         |
-| Service-enhetstester | `backend/src/services/__tests__/mailing.service.test.ts`         | 14    | MailingService: send, sendToNew, sendTest, update                        |
-| Service-enhetstester | `backend/src/services/__tests__/rsvp.service.test.ts`            | 10    | RsvpService: respond, cancel, getByToken, auto-waitlist                  |
-| Service-enhetstester | `backend/src/services/email/__tests__/template-renderer.test.ts` | 11    | Template-renderer: renderHtml, renderText, XSS-escape, buildMergeContext |
-| Säkerhetstester      | `backend/src/__tests__/security.test.ts`                         | 8     | Path traversal, rate limiting                                            |
+| Typ                  | Plats                                                            | Antal | Beskrivning                                                                          |
+| -------------------- | ---------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------ |
+| Route-integration    | `backend/src/__tests__/events.test.ts`                           | 11    | Events CRUD, auth, clone                                                             |
+| Route-integration    | `backend/src/__tests__/participants.test.ts`                     | 9     | Participants CRUD                                                                    |
+| Route-integration    | `backend/src/__tests__/mailings.test.ts`                         | 10    | Mailings, RSVP, templates, testmail                                                  |
+| Route-integration    | `backend/src/__tests__/waitlist.test.ts`                         | 4     | Waitlist auto-promote, ICS                                                           |
+| Route-integration    | `backend/src/__tests__/health.test.ts`                           | 1     | Health endpoint                                                                      |
+| E2E-integration      | `backend/src/__tests__/integration.test.ts`                      | 14    | Fullständiga flöden (session 13b)                                                    |
+| Service-enhetstester | `backend/src/services/__tests__/event.service.test.ts`           | 10    | EventService, slug, ICS                                                              |
+| Service-enhetstester | `backend/src/services/__tests__/participant.service.test.ts`     | 21    | ParticipantService, CSV, emailHistory, cateringCSV                                   |
+| Service-enhetstester | `backend/src/services/__tests__/permission.service.test.ts`      | 10    | PermissionService, roller, admin-bypass                                              |
+| Service-enhetstester | `backend/src/services/__tests__/activity.service.test.ts`        | 12    | ActivityService, loggning, participant activities, RSVP/cancel/edit/register/promote |
+| Service-enhetstester | `backend/src/services/__tests__/website.service.test.ts`         | 8     | WebsiteService, CRUD, registrering, ogiltig JSON                                     |
+| Service-enhetstester | `backend/src/services/__tests__/mailing.service.test.ts`         | 14    | MailingService: send, sendToNew, sendTest, update                                    |
+| Service-enhetstester | `backend/src/services/__tests__/rsvp.service.test.ts`            | 10    | RsvpService: respond, cancel, getByToken, auto-waitlist                              |
+| Service-enhetstester | `backend/src/services/email/__tests__/template-renderer.test.ts` | 11    | Template-renderer: renderHtml, renderText, XSS-escape, buildMergeContext             |
+| Säkerhetstester      | `backend/src/__tests__/security.test.ts`                         | 8     | Path traversal, rate limiting                                                        |
 
 ### E2E-integrationstester (session 13b)
 
