@@ -42,7 +42,7 @@
 
 1. Kör `npm run test` i terminalen
    **Förväntat resultat:** 162 tester gröna (health, events inkl. auth+clone, participants inkl. dietary/plus_one, mailings/RSVP inkl. template-preview+testmail, waitlist/ICS, event.service, participant.service inkl. emailHistory+cateringCSV, permission.service inkl. admin-bypass, activity.service inkl. participant activities+RSVP+cancel+edit+register+promote, website.service inkl. ogiltig JSON, admin.service, security inkl. path traversal+rate limiting, integration e2e, mailing.service inkl. send/sendToNew/sendTest, rsvp.service inkl. auto-waitlist+cancel+promote, template-renderer inkl. XSS-escape+merge fields)
-   **Status:** ☑ Testad (aktivitetslogg — 162 tester, +7 nya)
+   **Status:** ☑ Testad (användarhantering — 162 tester)
 
 ---
 
@@ -1795,3 +1795,87 @@
 1. Kör `npm run test`
    **Förväntat resultat:** 7 nya tester gröna i activity.service.test.ts: participantId, listForParticipant, logRsvpResponded, logRsvpCancelled, logParticipantEdited, logParticipantRegistered, logWaitlistPromoted. Totalt 162 tester.
    **Status:** ☑ Testad (162 tester)
+
+---
+
+## Användarhantering i Admin-dashboard
+
+### TC-UH.1: Användarlista visas i admin-dashboard
+
+**Förutsättning:** Inloggad som admin (is_admin = 1)
+**Steg:**
+
+1. Navigera till Admin-dashboard (`/stage/admin`)
+   **Förväntat resultat:** Sektion "Användare" visas med tabell: Email, Namn, Roll, Registrerad, Åtgärder. Summary visar "N användare, M admin".
+   **Status:** ☐ Ej testad
+
+### TC-UH.2: Admin-badge och Användare-badge
+
+**Förutsättning:** Inloggad som admin, minst en admin och en vanlig användare finns
+**Steg:**
+
+1. Öppna Admin-dashboard → Användare-sektion
+   **Förväntat resultat:** Admins har röd badge "Admin" (Raspberry Red), vanliga användare har muted badge "Användare".
+   **Status:** ☐ Ej testad
+
+### TC-UH.3: Ge admin-behörighet
+
+**Förutsättning:** Inloggad som admin, en vanlig användare finns
+**Steg:**
+
+1. Klicka "Gör admin" på en vanlig användare
+   **Förväntat resultat:** Användaren får badge "Admin", knappen ändras till "Ta bort admin". Summary uppdateras.
+   **Status:** ☐ Ej testad
+
+### TC-UH.4: Ta bort admin-behörighet
+
+**Förutsättning:** Inloggad som admin, en annan admin-användare finns
+**Steg:**
+
+1. Klicka "Ta bort admin" på den andra admin-användaren
+   **Förväntat resultat:** Användaren får badge "Användare", knappen ändras till "Gör admin". Summary uppdateras.
+   **Status:** ☐ Ej testad
+
+### TC-UH.5: Kan inte ändra sig själv
+
+**Förutsättning:** Inloggad som admin
+**Steg:**
+
+1. Titta på din egen rad i användarlistan
+   **Förväntat resultat:** Inga åtgärdsknappar visas. Texten "Du" visas istället.
+   **Status:** ☐ Ej testad
+
+### TC-UH.6: Ta bort användare med bekräftelse
+
+**Förutsättning:** Inloggad som admin, annan användare finns
+**Steg:**
+
+1. Klicka "Ta bort" på en användare
+2. Bekräfta med "Ja"
+   **Förväntat resultat:** Användaren försvinner ur listan. Summary uppdateras.
+   **Status:** ☐ Ej testad
+
+### TC-UH.7: Avbryt borttagning
+
+**Steg:**
+
+1. Klicka "Ta bort" på en användare
+2. Klicka "Nej"
+   **Förväntat resultat:** Bekräftelsefrågan försvinner. Användaren kvarstår.
+   **Status:** ☐ Ej testad
+
+### TC-UH.8: Admin API skydd — ej ta bort sig själv
+
+**Steg:**
+
+1. Skicka `DELETE /api/admin/users/<eget-id>` med admin-token
+   **Förväntat resultat:** 400 `{ "error": "Du kan inte ta bort dig själv" }`
+   **Status:** ☐ Ej testad
+
+### TC-UH.9: Admin API skydd — ej ändra egen admin-status
+
+**Steg:**
+
+1. Skicka `PUT /api/admin/users/<eget-id>` med `{ "is_admin": false }` med admin-token
+   **Förväntat resultat:** 400 `{ "error": "Du kan inte ändra din egen admin-behörighet" }`
+   **Status:** ☐ Ej testad

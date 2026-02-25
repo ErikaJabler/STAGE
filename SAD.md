@@ -52,7 +52,7 @@ Integrationer:
 | `backend/src/db/`                         | Typsäkra D1-frågor per domän (event, participant, mailing, waitlist, user, permission, search)                                                                                                                                                               |
 | `frontend/src/components/features/`       | Feature-komponenter per domän (events, participants, email, settings). Settings: SettingsTab orkestrerare + EventInfoSection, HeroImageSection, VisibilitySection (inkl. Sender/GDPR), DangerZone, WebsitePanel + WebsiteTemplateSelector, WebsiteFormFields |
 | `frontend/src/hooks/`                     | Custom hooks: TanStack Query hooks, useWebsiteForm (website state/handlers), useRsvpState (RSVP state-maskin + ICS), useEventFormValidation (validering + payload), useConflictCheck (krockkontroll), useMailingForm (mailing formulärstate)                 |
-| `frontend/src/pages/`                     | Sidkomponenter: RsvpPage orkestrerare + RsvpResponseForm, RsvpConfirmation, RsvpIcons. PublicEvent orkestrerare + PublicRegistrationForm, PublicEventRenderer. AdminDashboard orkestrerare + DashboardStats, DashboardEventList                              |
+| `frontend/src/pages/`                     | Sidkomponenter: RsvpPage orkestrerare + RsvpResponseForm, RsvpConfirmation, RsvpIcons. PublicEvent orkestrerare + PublicRegistrationForm, PublicEventRenderer. AdminDashboard orkestrerare + DashboardStats, DashboardEventList, AdminUserList               |
 | `frontend/src/`                           | React-app (Vite)                                                                                                                                                                                                                                             |
 | `packages/shared/src/`                    | Delade typer, konstanter + Zod-schemas                                                                                                                                                                                                                       |
 | `migrations/`                             | Inkrementella D1 SQL-filer                                                                                                                                                                                                                                   |
@@ -105,6 +105,9 @@ Integrationer:
 | GET    | `/api/events/conflicts`                        | Krockkontroll (datum + plats)                          | 17      |
 | GET    | `/api/admin/dashboard`                         | Admin dashboard-data (admin)                           | 17      |
 | GET    | `/api/admin/events`                            | Alla events oavsett behörighet (admin)                 | 17      |
+| GET    | `/api/admin/users`                             | Lista alla registrerade användare (admin)              | —       |
+| PUT    | `/api/admin/users/:id`                         | Uppdatera admin-status (admin, ej sig själv)           | —       |
+| DELETE | `/api/admin/users/:id`                         | Ta bort användare (admin, ej sig själv)                | —       |
 
 ## Databasschema
 
@@ -271,6 +274,7 @@ Integrationer:
 | rsvpRespondRateLimiter | `backend/src/middleware/rate-limiter.ts`        | 5 req/token/minut på RSVP respond (session 19)      |
 | PermissionService      | `backend/src/services/permission.service.ts`    | Rollkontroll: canView, canEdit, isOwner, isAdmin    |
 | AdminService           | `backend/src/services/admin.service.ts`         | Cross-event dashboard, krockkontroll (session 17)   |
+| user.queries           | `backend/src/db/user.queries.ts`                | listAllUsers, updateUserAdmin, deleteUser (admin)   |
 | TemplateLockService    | `backend/src/services/template-lock.service.ts` | Låsta zoner per malltyp (session 17)                |
 
 **Roller:** `owner` (full kontroll + hantera behörigheter), `editor` (redigera event/deltagare/utskick), `viewer` (enbart läsåtkomst).
@@ -403,7 +407,7 @@ All input-validering sker via **Zod-schemas** i `packages/shared/src/schemas.ts`
 - **Framework:** Vitest + @cloudflare/vitest-pool-workers
 - **D1-tester:** Kör mot riktig D1 i miniflare
 - **Kör:** `npm run test` (alla), `npm run test:watch` (watch-läge)
-- **Antal:** 155 tester (16 testfiler)
+- **Antal:** 162 tester (16 testfiler)
 
 ### Teststruktur
 

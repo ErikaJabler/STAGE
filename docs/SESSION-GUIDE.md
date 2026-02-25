@@ -138,3 +138,9 @@ Publik eventwebbsida med 2 templates (Hero + Info, Hero + Program + Plats). Anm�
 ## Aktivitetslogg per deltagare ✅ DONE
 
 **Levererat:** Fullständig aktivitetslogg per deltagare. Migration 0012 (participant_id på activities). 5 nya activity types (rsvp_responded, rsvp_cancelled, participant_edited, participant_registered, waitlist_promoted). Loggning i RSVP, waitlist, website, participant-routes. Nytt GET /:id/activities endpoint. Frontend: ParticipantTimeline-komponent (activities + email → kronologisk tidslinje). "Mailhistorik" ersatt med "Aktivitet". 7 nya tester (162 totalt). 2 nya filer.
+
+---
+
+## Användarhantering i Admin-dashboard ✅ DONE
+
+**Levererat:** Fullständig användarhantering i admin-dashboard. AdminUser shared type. 3 nya backend-endpoints (GET/PUT/DELETE /admin/users) med self-protection. Frontend: AdminUserList-komponent med tabell (email, namn, roll-badge, registreringsdatum), toggle admin-knapp, ta bort med bekräftelse, summary. Self-protection i UI ("Du"). 162 tester. 1 ny fil.

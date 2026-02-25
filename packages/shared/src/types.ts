@@ -101,6 +101,14 @@ export interface User {
   updated_at: string;
 }
 
+export interface AdminUser {
+  id: number;
+  email: string;
+  name: string;
+  is_admin: boolean;
+  created_at: string;
+}
+
 export interface AdminDashboardData {
   total_events: number;
   active_events: number;

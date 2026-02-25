@@ -5,6 +5,7 @@ import type {
   Mailing,
   Activity,
   AdminDashboardData,
+  AdminUser,
   EventConflict,
   ParticipantEmailHistory,
 } from '@stage/shared';
@@ -469,6 +470,16 @@ export const websiteApi = {
 export const adminApi = {
   dashboard: () => request<AdminDashboardData>('/admin/dashboard'),
   events: () => request<EventWithCount[]>('/admin/events'),
+  users: () => request<AdminUser[]>('/admin/users'),
+  toggleAdmin: (id: number, isAdmin: boolean) =>
+    request<{ ok: boolean }>(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_admin: isAdmin }),
+    }),
+  deleteUser: (id: number) =>
+    request<{ ok: boolean }>(`/admin/users/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 /** Conflicts API */

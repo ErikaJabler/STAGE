@@ -1289,3 +1289,39 @@ frontend/src/components/features/participants/ParticipantTimeline.tsx
 - Tidslinjen slår ihop activities + email_queue-historik i en sorterad lista (nyast först)
 - Max 15 entries initialt, "Visa alla (N)" knapp om fler
 - `created_by` visas diskret för admin-triggade händelser
+
+---
+
+## Användarhantering i Admin-dashboard
+
+**Datum:** 2026-02-25
+**Status:** DONE
+
+### Deliverables
+
+- [x] `packages/shared/src/types.ts` — Ny `AdminUser` interface (id, email, name, is_admin, created_at)
+- [x] `backend/src/db/user.queries.ts` — 3 nya funktioner: `listAllUsers()`, `updateUserAdmin()`, `deleteUser()`
+- [x] `backend/src/routes/admin.ts` — 3 nya endpoints: `GET /users`, `PUT /users/:id`, `DELETE /users/:id` med self-protection
+- [x] `frontend/src/api/client.ts` — `adminApi.users()`, `adminApi.toggleAdmin()`, `adminApi.deleteUser()`
+- [x] `frontend/src/hooks/useAdmin.ts` — `useAdminUsers()`, `useToggleAdmin()`, `useDeleteUser()` hooks
+- [x] `frontend/src/pages/AdminUserList.tsx` — Användartabell med admin-badge, toggle, ta bort med bekräftelse
+- [x] `frontend/src/pages/AdminDashboard.tsx` — Integrerad `<AdminUserList />` som ny sektion
+- [x] Alla 162 tester passerar
+- [x] Dokumentation uppdaterad (PROGRESS.md, SAD.md, TESTPLAN.md, SESSION-GUIDE.md)
+
+### Avvikelser från plan
+
+Inga avvikelser — alla planerade features implementerade.
+
+### Nya filer
+
+```
+frontend/src/pages/AdminUserList.tsx
+```
+
+### Anteckningar
+
+- Ingen ny migration behövdes — befintliga users-tabellen har redan alla nödvändiga kolumner
+- Admin kan inte ta bort sig själv eller ändra sin egen admin-status (400-svar)
+- `listAllUsers()` mappar `is_admin` från number (0/1) till boolean i svaret
+- `AdminUser` inkluderar inte token (säkerhet)

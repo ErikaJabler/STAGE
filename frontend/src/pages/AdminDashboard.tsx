@@ -1,6 +1,7 @@
 import { useAdminDashboard, useAdminEvents } from '../hooks/useAdmin';
 import { DashboardStats } from './DashboardStats';
 import { DashboardEventList } from './DashboardEventList';
+import { AdminUserList } from './AdminUserList';
 
 export function AdminDashboard() {
   const {
@@ -48,6 +49,9 @@ export function AdminDashboard() {
         <>
           <DashboardStats dashboard={dashboard} totalEvents={allEvents?.length ?? 0} />
           <DashboardEventList dashboard={dashboard} allEvents={allEvents ?? []} />
+          <div style={{ marginTop: '32px' }}>
+            <AdminUserList />
+          </div>
         </>
       )}
     </div>
