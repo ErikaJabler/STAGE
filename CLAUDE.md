@@ -157,6 +157,17 @@ Varje session MÅSTE avslutas med:
    - Inkludera risker och mittigeringar om planen nämner sådana
    - ALDRIG vara kortare än planens sessionsbeskrivning — all information ska med
 
+## Efter varje fix eller ny funktionalitet — OBLIGATORISKT
+
+Efter varje commit (oavsett om det är en session, bugfix eller ad hoc-feature), överväg om dokumentation behöver uppdateras:
+
+1. **SAD.md** — nya/ändrade endpoints, schemaändringar (nya kolumner, migrationer), nya integrationer
+2. **TESTPLAN.md** — nya manuella testfall för ändrad/ny funktionalitet + uppdatera TC-0.4 testantal om automatiska tester ändrats
+3. **PROGRESS.md** — ny sektion med deliverables, migrationslogg om ny migration
+4. **docs/SESSION-GUIDE.md** — ny rad om det är en avslutad feature
+
+Gör dokumentationsuppdateringen i **samma commit** som kodändringen, eller direkt efter om det missades. Vänta inte.
+
 ## Vad INTE göra
 
 - Använd INTE egna färger — bara Consid-paletten
