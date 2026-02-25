@@ -44,7 +44,7 @@
   /* Complementary colors */
   --color-black: #1c1c1c;
   --color-dark-purple: #492a34;
-  --color-greige: #a99b94;
+  --color-greige: #7a6e68;
   --color-orange: #ec6b6a;
   --color-beige: #efe6dd;
   --color-white: #ffffff;
@@ -62,7 +62,7 @@
   --color-text-on-dark: var(--color-beige);
   --color-text-on-burgundy: var(--color-white);
 
-  --color-border: rgba(169, 155, 148, 0.3);
+  --color-border: rgba(122, 110, 104, 0.3);
   --color-border-strong: var(--color-greige);
 
   --color-accent: var(--color-raspberry-red);
